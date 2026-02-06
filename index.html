@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V9.4</title>
+    <title>MASSINE'S CHALLENGE V9.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -52,10 +53,19 @@
             white-space: nowrap;
             font-size: 1.5rem;
         }
-        @media (max-width: 400px) { .boss-button { font-size: 1.1rem; } }
         
-        .subject-icon { font-size: 1.2em; line-height: 1; display: inline-block; width: 40px; text-align: center; font-style: normal; }
+        .reset-btn-small {
+            background: rgba(220, 38, 38, 0.6);
+            color: white;
+            font-size: 0.6rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
 
+        .subject-icon { font-size: 1.2em; line-height: 1; display: inline-block; width: 40px; text-align: center; font-style: normal; }
         @keyframes pulse-gold { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
         .setup-trigger { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); opacity: 0.2; font-size: 20px; background: none; border: none; color: white; padding: 10px; cursor: pointer; }
         .reset-flash { background: white !important; transition: background 0.2s; }
@@ -64,7 +74,7 @@
 <body id="mainBody">
     <div id="bg-container"></div>
     <div class="overlay"></div>
-    <div id="app" class="h-full w-full flex items-center justify-center p-3 sm:p-6"></div>
+    <div id="app" class="h-full w-full flex items-center justify-center p-3 sm:p-6" ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event)"></div>
 
     <script>
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -74,9 +84,8 @@
 
         function changeBackground(isInitial = false) {
             let selectedImg;
-            if (isInitial) {
-                selectedImg = "massinewall.png";
-            } else {
+            if (isInitial) { selectedImg = "massinewall.png"; } 
+            else {
                 let availableImages = images.filter(img => img !== lastImage);
                 selectedImg = availableImages[Math.floor(Math.random() * availableImages.length)];
             }
@@ -91,10 +100,7 @@
             render();
         }
 
-        window.addEventListener('load', () => { 
-            changeBackground(true); 
-            render(); 
-        });
+        window.addEventListener('load', () => { changeBackground(true); render(); });
 
         function playSound(type) {
             if (!audioCtx) audioCtx = new AudioContext();
@@ -124,7 +130,10 @@
             try {
                 const response = await fetch(state.scriptUrl);
                 const data = await response.json();
-                if (data.lessons) { state.lessons = data.lessons; localStorage.setItem('study_data_v7', JSON.stringify(data.lessons)); }
+                if (data.lessons) { 
+                    state.lessons = data.lessons; 
+                    localStorage.setItem('study_data_v7', JSON.stringify(data.lessons)); 
+                }
                 state.isLoading = false;
                 if (shouldNavigate) navigate('subjects'); else render();
             } catch(e) { state.isLoading = false; render(); }
@@ -132,17 +141,28 @@
 
         let touchStartX = 0;
         function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
-        function handleTouchEnd(e, element) {
+        function handleTouchEnd(e) {
             let touchEndX = e.changedTouches[0].screenX;
-            if (touchStartX - touchEndX > 100) {
-                element.classList.add('reset-flash');
+            if (state.view !== 'quiz' && state.view !== 'start' && touchStartX - touchEndX > 100) {
+                document.body.classList.add('reset-flash');
                 setTimeout(() => {
-                    element.classList.remove('reset-flash');
+                    document.body.classList.remove('reset-flash');
                     localStorage.removeItem('study_data_v7');
                     state.lessons = [];
                     fetchCloudData(true);
                 }, 200);
             }
+        }
+
+        function resetLocalProgress(subject, theme, lessonName = null) {
+            state.lessons.forEach(l => {
+                if (l.subject === subject && l.theme === theme && (!lessonName || l.name === lessonName)) {
+                    l.items.forEach(item => item.alreadyFailed = false);
+                }
+            });
+            localStorage.setItem('study_data_v7', JSON.stringify(state.lessons));
+            playSound('correct');
+            render();
         }
 
         function startThemeBoss(subject, theme) {
@@ -174,7 +194,7 @@
                 container.innerHTML = `<div class="glass p-6 sm:p-10 max-w-xl">
                     <h2 class="text-header text-3xl sm:text-6xl text-yellow-400 mb-6 text-center title-glow uppercase">MISSIONS</h2>
                     <div class="scroll-area grid gap-4">
-                        <button ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, this)" onclick="navigate('boss_selection')" class="fn-button boss-button text-3xl py-8 mb-4"><span>🔥</span> BOSS LEVELS <span>🔥</span></button>
+                        <button onclick="navigate('boss_selection')" class="fn-button boss-button text-3xl py-8 mb-4"><span>🔥</span> BOSS LEVELS <span>🔥</span></button>
                         ${['Frans', 'Taal', 'WO'].map(s => `<button onclick="state.selectedSubject='${s.toUpperCase()}'; navigate('lessons');" class="fn-button bg-white/20 border-l-[10px] border-yellow-400 text-3xl py-8 shadow-lg active:bg-yellow-400"><i class="subject-icon">${getSubjectIcon(s)}</i> ${s}</button>`).join('')}
                     </div>
                 </div>`;
@@ -192,7 +212,10 @@
                     <div class="flex justify-between items-center mb-6"><button onclick="navigate('boss_selection');" class="bg-yellow-400 text-black px-4 py-2 fn-button text-xs font-black">← BACK</button>
                     <h2 class="text-header text-2xl text-white uppercase title-glow">${state.selectedBossSubject} BOSS</h2></div>
                     <div class="scroll-area grid gap-4">
-                        ${themes.map(t => `<button onclick="startThemeBoss('${state.selectedBossSubject}', '${t}')" class="fn-button bg-red-600/20 border-l-[10px] border-red-600 text-xl py-6">${t} ULTIMATE</button>`).join('')}
+                        ${themes.map(t => `<div class="flex flex-col gap-1">
+                            <button onclick="startThemeBoss('${state.selectedBossSubject}', '${t}')" class="fn-button bg-red-600/20 border-l-[10px] border-red-600 text-xl py-6">${t} ULTIMATE</button>
+                            <button onclick="resetLocalProgress('${state.selectedBossSubject}', '${t}')" class="reset-btn-small self-end">Reset Boss Progress</button>
+                        </div>`).join('')}
                     </div>
                 </div>`;
             } else if (state.view === 'lessons') {
@@ -203,7 +226,10 @@
                     <h2 class="text-header text-2xl text-white uppercase">${state.selectedSubject}</h2></div>
                     <div class="scroll-area space-y-6">
                         ${themes.map(t => `<div class="mb-4"><h3 class="bg-yellow-400 text-black font-black text-xs mb-3 px-3 py-1 uppercase inline-block italic skew-x-[-10deg]">${t}</h3><div class="grid gap-2">
-                            ${filtered.filter(l => l.theme === t).map(l => `<button onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="w-full p-5 border-l-4 bg-white/20 border-white/30 text-left font-black uppercase text-xl active:bg-yellow-400 active:text-black">${l.name}</button>`).join('')}
+                            ${filtered.filter(l => l.theme === t).map(l => `<div class="flex flex-col gap-1">
+                                <button onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="w-full p-5 border-l-4 bg-white/20 border-white/30 text-left font-black uppercase text-xl active:bg-yellow-400 active:text-black">${l.name}</button>
+                                <button onclick="resetLocalProgress('${l.subject}','${l.theme}','${l.name}')" class="reset-btn-small self-end">Reset Lesson</button>
+                            </div>`).join('')}
                         </div></div>`).join('')}
                     </div></div>`;
             } else if (state.view === 'quiz') {
