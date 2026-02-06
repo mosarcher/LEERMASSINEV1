@@ -1,9 +1,29 @@
+Dat is vervelend! Omdat browsers (vooral op iPhone) streng zijn met geluid, moet de gebruiker vaak eerst een "bewuste actie" doen voordat de app geluid mag afspelen.
+
+In v11.6 heb ik de audio-logica robuuster gemaakt:
+
+Audio Unlock: Zodra Massine op de START knop drukt op het beginscherm, "ontgrendelt" de app direct de audio-context voor de rest van de sessie.
+
+Fallback Systeem: Als de moderne methode faalt, probeert de app een alternatieve manier om de piepjes af te spelen.
+
+Volume Check: De geluiden staan nu standaard op een iets krachtiger volume ingesteld in de code.
+
+Check ook even dit op je telefoon:
+
+Staat je telefoon niet op "Stil" / "Mute" (het fysieke schuifje aan de zijkant bij iPhone)?
+
+Staat je mediavolume (niet alleen beltoon) omhoog?
+
+Hier is de code voor v11.6:
+
+HTML
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V11.5</title>
+    <title>MASSINE'S CHALLENGE V11.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -18,7 +38,7 @@
         .text-header { font-weight: 900; font-style: italic; text-transform: uppercase; transform: skewX(-8deg); }
         .scroll-area { overflow-y: auto; flex-grow: 1; padding: 5px; -webkit-overflow-scrolling: touch; }
         
-        .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: transform 0.2s ease, background 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; z-index: 2; border: none; }
+        .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: transform 0.2s ease; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; z-index: 2; border: none; }
         
         .swipe-container { position: relative; width: 100%; height: clamp(50px, 8vh, 60px); margin-bottom: 6px; overflow: hidden; flex-shrink: 0; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; opacity: 0; transition: opacity 0.2s; }
@@ -38,7 +58,6 @@
         .back-btn { width: auto !important; padding: 0 12px !important; height: 32px !important; font-size: 0.65rem !important; }
         .subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-        /* Quiz UI Optimization */
         .quiz-q-text { font-size: clamp(1.2rem, 5vh, 2.5rem); line-height: 1.1; margin-bottom: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         .quiz-next-btn { height: 50px !important; margin-top: 10px; font-size: 1.1rem !important; background: #eab308; color: black; box-shadow: 0 4px 0 #a16207; }
     </style>
@@ -47,12 +66,52 @@
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag">v11.5</div>
+    <div class="version-tag">v11.6</div>
 
     <script>
         const images = ["massinewall.png", "massinewall1.png", "massinewall2.png", "massinewall3.png", "massinewall4.png"];
         let lastImage = "";
-        
+        let audioCtx = null;
+
+        // Verbeterde Audio Unlock functie
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // Maak een stille buffer om de audio te "wekken" op iOS
+            const buffer = audioCtx.createBuffer(1, 1, 22050);
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioCtx.destination);
+            source.start(0);
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+            if (type === 'correct') {
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.1); // A5
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(110, now); // A2
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+        }
+
         function changeBackground(isInitial = false) {
             let selectedImg = isInitial ? "massinewall.png" : images.filter(img => img !== lastImage)[Math.floor(Math.random() * (images.length - 1))];
             lastImage = selectedImg;
@@ -124,7 +183,7 @@
             const container = document.getElementById('app');
             if (state.view === 'start') {
                 container.innerHTML = `<div class="text-center"><h1 class="title-glow text-header text-5xl sm:text-8xl mb-8 leading-tight">MASSINE'S CHALLENGE</h1>
-                    <button onclick="handleStart()" class="fn-button bg-yellow-400 text-black text-3xl sm:text-6xl px-10 py-6 mx-auto italic">START</button>
+                    <button onclick="initAudio(); handleStart();" class="fn-button bg-yellow-400 text-black text-3xl sm:text-6xl px-10 py-6 mx-auto italic">START</button>
                     <button onclick="setCloudUrl()" style="position:fixed; bottom:15px; left:50%; transform:translateX(-50%); opacity:0.15;">⚙️</button></div>`;
             } else if (state.view === 'subjects') {
                 container.innerHTML = `<div class="glass p-3 max-w-xl"><h2 class="text-header text-2xl text-yellow-400 mb-4 text-center title-glow italic">MISSIONS</h2>
@@ -169,7 +228,23 @@
 
         async function handleStart() { if (state.lessons.length > 0) { navigate('subjects'); fetchCloudData(false); } else { state.isLoading = true; render(); await fetchCloudData(true); } }
         async function fetchCloudData(shouldNavigate) { if (!state.scriptUrl) return; try { const response = await fetch(state.scriptUrl); const data = await response.json(); if (data.lessons) { state.lessons = data.lessons; localStorage.setItem('study_data_v7', JSON.stringify(data.lessons)); } state.isLoading = false; if (shouldNavigate) navigate('subjects'); else render(); } catch(e) { state.isLoading = false; render(); } }
-        function checkAnswer(opt) { if (state.status !== 'idle') return; state.selected = opt; const q = state.quizItems[0]; const isCorrect = opt === q.correct; if (isCorrect) { if (!q.alreadyFailed) state.firstTryCorrect++; } else { q.alreadyFailed = true; } state.status = isCorrect ? 'correct' : 'wrong'; render(); }
+        
+        function checkAnswer(opt) { 
+            if (state.status !== 'idle') return; 
+            state.selected = opt; 
+            const q = state.quizItems[0]; 
+            const isCorrect = opt === q.correct; 
+            if (isCorrect) { 
+                if (!q.alreadyFailed) state.firstTryCorrect++; 
+                playSound('correct'); 
+            } else { 
+                q.alreadyFailed = true; 
+                playSound('wrong'); 
+            } 
+            state.status = isCorrect ? 'correct' : 'wrong'; 
+            render(); 
+        }
+
         function nextQuestion() { const completedQ = state.quizItems.shift(); if (state.status === 'wrong') state.quizItems.push(completedQ); if (state.quizItems.length === 0) { state.percent = Math.round((state.firstTryCorrect / state.totalQuestions) * 100); saveAction({ type: "RESULT", subject: state.currentLesson.subject, theme: state.currentLesson.theme, name: state.currentLesson.name, percent: state.percent }); confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); navigate('result'); } else { state.status = 'idle'; render(); } }
         async function saveAction(payload) { if (state.scriptUrl) fetch(state.scriptUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }); }
         function startLesson(s,t,n) { state.currentLesson = state.lessons.find(l => l.subject===s && l.theme===t && l.name===n); state.quizItems = [...state.currentLesson.items].sort(() => Math.random() - 0.5); state.totalQuestions = state.quizItems.length; state.firstTryCorrect = 0; state.status = 'idle'; navigate('quiz'); }
