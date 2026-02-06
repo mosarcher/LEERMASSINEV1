@@ -1,11 +1,9 @@
-
-
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V9.0</title>
+    <title>MASSINE'S CHALLENGE V9.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -56,7 +54,6 @@
         }
         @media (max-width: 400px) { .boss-button { font-size: 1.1rem; } }
         
-        /* Icoon styling voor gelijke grootte */
         .subject-icon { font-size: 1.2em; line-height: 1; display: inline-block; width: 40px; text-align: center; font-style: normal; }
 
         @keyframes pulse-gold { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
@@ -229,13 +226,13 @@
                             }).join('')}
                         </div>
                     </div>
-                    ${state.status !== 'idle' ? `<button onclick="nextQuestion()" class="mt-4 w-full p-6 bg-yellow-400 text-black text-3xl sm:text-5xl fn-button font-black italic shadow-2xl">NEXT MISSION →</button>` : ''}
+                    ${state.status !== 'idle' ? `<button onclick="nextQuestion()" class="mt-4 w-full p-6 bg-yellow-400 text-black text-3xl sm:text-5xl fn-button font-black italic shadow-2xl">NEXT QUESTION →</button>` : ''}
                 </div>`;
             } else if (state.view === 'result') {
                 container.innerHTML = `<div class="glass p-10 flex flex-col items-center justify-center text-center max-md w-full border-4 border-yellow-400 shadow-2xl">
                     <h1 class="text-header text-5xl sm:text-7xl mb-4 text-yellow-400 title-glow uppercase">MISSION CLEARED!</h1>
                     <div class="text-3xl font-black text-white/80 mb-10">SCORE: ${state.percent}% ${state.percent === 100 ? '🏆' : ''}</div>
-                    <button onclick="navigate('subjects');" class="fn-button bg-yellow-400 text-black text-4xl px-16 py-8 shadow-lg">BACK TO BASE</button>
+                    <button onclick="navigate('subjects');" class="fn-button bg-yellow-400 text-black text-4xl px-16 py-8 shadow-lg">BACK TO MISSIONS</button>
                 </div>`;
             }
         }
