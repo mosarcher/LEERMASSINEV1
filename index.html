@@ -1,23 +1,9 @@
-Je hebt gelijk, dat komt doordat de background-color van de body op donkerblauw staat en de foto pas een fractie later laadt, of omdat de overlay te sterk was ingesteld voor de startpagina.
-
-In v8.3 heb ik de openingspagina lichter en frisser gemaakt door:
-
-Directe achtergrond: De donkere kleur van de body is aangepast naar een zachtere tint die beter past bij de foto's.
-
-Start-Overlay: De donkere waas op de startpagina is bijna volledig weggehaald, zodat je de foto van Massine meteen bij het openen in volle glorie ziet.
-
-Tandwiel positie: Het tandwiel staat nu subtiel helemaal onderaan, los van de rest.
-
-Hier is de code:
-
-HTML
-
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V8.3</title>
+    <title>MASSINE'S CHALLENGE V8.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -38,6 +24,7 @@ HTML
         .text-readable { text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
         .boss-button { background: linear-gradient(90deg, #b45309 0%, #f59e0b 50%, #b45309 100%); color: white; border: 2px solid #fde047; box-shadow: 0 0 20px rgba(234, 179, 8, 0.6); animation: pulse-gold 2s infinite; touch-action: none; }
         .setup-trigger { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); opacity: 0.2; font-size: 20px; background: none; border: none; color: white; padding: 10px; cursor: pointer; }
+        .reset-flash { background: white !important; transition: background 0.2s; }
     </style>
 </head>
 <body id="mainBody">
@@ -92,11 +79,26 @@ HTML
             } catch(e) { state.isLoading = false; render(); }
         }
 
+        let touchStartX = 0;
+        function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
+        function handleTouchEnd(e, element) {
+            let touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 100) {
+                element.classList.add('reset-flash');
+                setTimeout(() => {
+                    element.classList.remove('reset-flash');
+                    localStorage.removeItem('study_data_v7');
+                    state.lessons = [];
+                    fetchCloudData(true);
+                }, 200);
+            }
+        }
+
         function startBossLevel() {
             const allItems = state.lessons.flatMap(l => l.items);
-            if (allItems.length === 0) return alert("Eerst lessen laden!");
+            if (allItems.length === 0) return;
             state.currentLesson = { name: "ULTIMATE BOSS", subject: "ALL", theme: "CHALLENGE", items: allItems };
-            state.quizItems = [...allItems].sort(() => Math.random() - 0.5).slice(0, 20);
+            state.quizItems = [...allItems].sort(() => Math.random() - 0.5);
             state.totalQuestions = state.quizItems.length;
             state.firstTryCorrect = 0;
             state.status = 'idle';
@@ -117,7 +119,7 @@ HTML
                 container.innerHTML = `<div class="glass p-6 sm:p-10 max-w-xl">
                     <h2 class="text-header text-3xl sm:text-6xl text-yellow-400 mb-6 text-center title-glow uppercase">MISSIONS</h2>
                     <div class="scroll-area grid gap-4">
-                        <button onclick="startBossLevel()" class="fn-button boss-button text-3xl py-8 mb-4">🔥 BOSS LEVEL 🔥</button>
+                        <button ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, this)" onclick="startBossLevel()" class="fn-button boss-button text-3xl py-8 mb-4">🔥 BOSS LEVEL 🔥</button>
                         ${['Frans', 'Taal', 'WO'].map(s => `<button onclick="state.selectedSubject='${s.toUpperCase()}'; navigate('lessons');" class="fn-button bg-white/20 border-l-[10px] border-yellow-400 text-3xl py-8 shadow-lg active:bg-yellow-400">${s}</button>`).join('')}
                     </div>
                 </div>`;
