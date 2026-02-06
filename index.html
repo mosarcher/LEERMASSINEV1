@@ -3,34 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V12.1</title>
+    <title>MASSINE'S CHALLENGE V12.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #0a051a; color: white; margin: 0; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
-        
         #bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-size: cover; background-position: center; transition: background-image 0.6s; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(10,5,26,0.1), rgba(10,5,26,0.6)); z-index: -1; }
-
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; flex-direction: column; width: 100%; max-height: 98%; border-radius: 1.5rem; padding: 5px; }
         .scroll-area { overflow-y: auto; flex-grow: 1; padding: 5px; }
-        
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: transform 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: none; }
-        
         .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; opacity: 0; transition: opacity 0.2s; }
         .swiped .swipe-actions { opacity: 1; }
-        
         .action-btn { height: 100%; padding: 0 15px; font-weight: 900; font-size: 0.7rem; color: white; border: none; text-transform: uppercase; }
         .btn-reset { background: #3b82f6; }
         .btn-delete { background: #ef4444; }
-
         .swiped .fn-button { transform: translateX(-150px); }
         .subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
         .resume-pill { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #eab308; color: black; font-size: 0.55rem; padding: 3px 7px; border-radius: 99px; font-weight: 900; z-index: 10; pointer-events: auto; }
-        
         .subject-icon { font-size: 1.2em; margin-right: 8px; font-style: normal; }
         .version-tag { position: fixed; bottom: 5px; right: 10px; font-size: 10px; opacity: 0.3; font-weight: 900; }
         .back-btn { width: auto !important; padding: 0 12px !important; height: 32px !important; font-size: 0.65rem !important; }
@@ -40,7 +32,7 @@
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag">v12.1</div>
+    <div class="version-tag">v12.2</div>
 
     <script>
         const images = ["massinewall.png", "massinewall1.png", "massinewall2.png", "massinewall3.png", "massinewall4.png"];
@@ -74,6 +66,13 @@
         }
         function closeAllSwipes() { document.querySelectorAll('.swipe-container').forEach(el => el.classList.remove('swiped')); }
 
+        function navigate(v) { changeBackground(); state.view = v; render(); }
+        window.addEventListener('load', () => { changeBackground(true); render(); });
+
+        async function handleStart() { if (state.lessons.length > 0) navigate('subjects'); else fetchCloudData(true); }
+
+        async function fetchCloudData(nav) { if (!state.scriptUrl) return; try { const res = await fetch(state.scriptUrl); const d = await res.json(); if (d.lessons) { state.lessons = d.lessons; localStorage.setItem('study_data_v7', JSON.stringify(d.lessons)); } if (nav) navigate('subjects'); } catch(e) {} }
+
         function startLesson(s,t,n, resume = false) {
             const key = `${s}-${t}-${n}`;
             const lesson = state.lessons.find(l => l.subject===s && l.theme===t && l.name===n);
@@ -99,6 +98,14 @@
             localStorage.setItem('study_data_v7', JSON.stringify(state.lessons));
             if (state.quizItems.length === 0) navigate('lessons'); else { state.status = 'idle'; render(); }
         }
+
+        function executeReset(s,t,n) { state.lessons.forEach(l => { if(l.subject===s && l.theme===t && (!n || l.name===n)) l.items.forEach(i => i.alreadyFailed = false); }); localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); closeAllSwipes(); render(); }
+        function executeDelete(s,t,n) { state.lessons = state.lessons.filter(l => !(l.subject===s && l.theme===t && (!n || l.name===n))); localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); closeAllSwipes(); render(); }
+        function startThemeBoss(subject, theme) { const items = state.lessons.filter(l => l.subject === subject && l.theme === theme).flatMap(l => l.items); state.currentLesson = { name: theme, subject, theme, items }; state.quizItems = [...items].sort(() => Math.random() - 0.5); state.totalQuestions = items.length; state.firstTryCorrect = 0; state.status = 'idle'; navigate('quiz'); }
+        function saveCheckpoint() { const key = `${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`; state.checkpoints[key] = { items: state.quizItems, total: state.totalQuestions, correct: state.firstTryCorrect }; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); }
+        function checkAnswer(opt) { if (state.status !== 'idle') return; state.selected = opt; const q = state.quizItems[0]; const isCorrect = opt === q.correct; if (isCorrect) { if (!q.alreadyFailed) state.firstTryCorrect++; playSound('correct'); } else { q.alreadyFailed = true; playSound('wrong'); } state.status = isCorrect ? 'correct' : 'wrong'; render(); }
+        function nextQuestion() { const completedQ = state.quizItems.shift(); if (state.status === 'wrong') state.quizItems.push(completedQ); if (state.quizItems.length === 0) { delete state.checkpoints[`${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`]; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); confetti({ particleCount: 150, spread: 70 }); navigate('lessons'); } else { state.status = 'idle'; saveCheckpoint(); render(); } }
+        function setCloudUrl() { const url = prompt("Google Web App URL:", state.scriptUrl); if (url) { state.scriptUrl = url; localStorage.setItem('script_url', url); fetchCloudData(true); } }
 
         function render() {
             const container = document.getElementById('app');
@@ -164,17 +171,6 @@
                         </div>`}).join('')}</div></div>`;
             }
         }
-
-        function saveCheckpoint() { const key = `${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`; state.checkpoints[key] = { items: state.quizItems, total: state.totalQuestions, correct: state.firstTryCorrect }; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); }
-        function checkAnswer(opt) { if (state.status !== 'idle') return; state.selected = opt; const q = state.quizItems[0]; const isCorrect = opt === q.correct; if (isCorrect) { if (!q.alreadyFailed) state.firstTryCorrect++; playSound('correct'); } else { q.alreadyFailed = true; playSound('wrong'); } state.status = isCorrect ? 'correct' : 'wrong'; render(); }
-        function nextQuestion() { const completedQ = state.quizItems.shift(); if (state.status === 'wrong') state.quizItems.push(completedQ); if (state.quizItems.length === 0) { delete state.checkpoints[`${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`]; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); confetti({ particleCount: 150, spread: 70 }); navigate('lessons'); } else { state.status = 'idle'; saveCheckpoint(); render(); } }
-        async function handleStart() { if (state.lessons.length > 0) navigate('subjects'); else fetchCloudData(true); }
-        async function fetchCloudData(nav) { if (!state.scriptUrl) return; try { const res = await fetch(state.scriptUrl); const d = await res.json(); if (d.lessons) { state.lessons = d.lessons; localStorage.setItem('study_data_v7', JSON.stringify(d.lessons)); } if (nav) navigate('subjects'); } catch(e) {} }
-        function navigate(v) { changeBackground(); state.view = v; render(); }
-        function executeReset(s,t,n) { state.lessons.forEach(l => { if(l.subject===s && l.theme===t && (!n || l.name===n)) l.items.forEach(i => i.alreadyFailed = false); }); localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); closeAllSwipes(); render(); }
-        function executeDelete(s,t,n) { state.lessons = state.lessons.filter(l => !(l.subject===s && l.theme===t && (!n || l.name===n))); localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); closeAllSwipes(); render(); }
-        function startThemeBoss(subject, theme) { const items = state.lessons.filter(l => l.subject === subject && l.theme === theme).flatMap(l => l.items); state.currentLesson = { name: theme, subject, theme, items }; state.quizItems = [...items].sort(() => Math.random() - 0.5); state.totalQuestions = items.length; state.firstTryCorrect = 0; state.status = 'idle'; navigate('quiz'); }
-        function setCloudUrl() { const url = prompt("Google Web App URL:", state.scriptUrl); if (url) { state.scriptUrl = url; localStorage.setItem('script_url', url); fetchCloudData(true); } }
     </script>
 </body>
 </html>
