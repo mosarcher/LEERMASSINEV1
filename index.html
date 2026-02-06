@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V9.2</title>
+    <title>MASSINE'S CHALLENGE V9.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -72,11 +72,16 @@
         const images = ["massinewall.png", "massinewall1.png", "massinewall2.png", "massinewall3.png", "massinewall4.png"];
         let lastImage = "";
 
-        function changeBackground() {
-            let availableImages = images.filter(img => img !== lastImage);
-            const randomImg = availableImages[Math.floor(Math.random() * availableImages.length)];
-            lastImage = randomImg;
-            const url = `https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/${randomImg}`;
+        function changeBackground(isInitial = false) {
+            let selectedImg;
+            if (isInitial) {
+                selectedImg = "massinewall.png";
+            } else {
+                let availableImages = images.filter(img => img !== lastImage);
+                selectedImg = availableImages[Math.floor(Math.random() * availableImages.length)];
+            }
+            lastImage = selectedImg;
+            const url = `https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/${selectedImg}`;
             document.getElementById('bg-container').style.backgroundImage = `url('${url}')`;
         }
         
@@ -86,7 +91,10 @@
             render();
         }
 
-        window.addEventListener('load', () => { changeBackground(); render(); });
+        window.addEventListener('load', () => { 
+            changeBackground(true); 
+            render(); 
+        });
 
         function playSound(type) {
             if (!audioCtx) audioCtx = new AudioContext();
