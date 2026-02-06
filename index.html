@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V12.6</title>
+    <title>MASSINE'S CHALLENGE V12.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -13,7 +13,7 @@
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(10,5,26,0.1), rgba(10,5,26,0.6)); z-index: -1; }
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; flex-direction: column; width: 100%; max-height: 98%; border-radius: 1.5rem; padding: 5px; }
         .scroll-area { overflow-y: auto; flex-grow: 1; padding: 5px; }
-        .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: transform 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: none; }
+        .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: none; }
         .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; opacity: 0; transition: opacity 0.2s; }
         .swiped .swipe-actions { opacity: 1; }
@@ -27,16 +27,25 @@
         .version-tag { position: fixed; bottom: 5px; right: 10px; font-size: 10px; opacity: 0.3; font-weight: 900; }
         .back-btn { width: auto !important; padding: 0 15px !important; height: 35px !important; font-size: 0.75rem !important; flex-shrink: 0; }
         .quiz-q-text { font-weight: 900; font-style: italic; text-transform: uppercase; }
-        
-        /* Grote Thema Labels */
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 0.85rem; margin-bottom: 0.5rem; padding: 0.2rem 0.75rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); }
+
+        /* Feedback Styles */
+        .btn-correct { background-color: #22c55e !important; color: white !important; border: 3px solid white !important; opacity: 1 !important; z-index: 10; }
+        .btn-wrong { background-color: #ef4444 !important; color: white !important; border: 3px solid white !important; opacity: 1 !important; animation: shake 0.3s ease-in-out; }
+        .btn-inactive { opacity: 0.1 !important; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
     </style>
 </head>
 <body id="mainBody" onclick="closeAllSwipes()">
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag">v12.6</div>
+    <div class="version-tag">v12.7</div>
 
     <script>
         const images = ["massinewall.png", "massinewall1.png", "massinewall2.png", "massinewall3.png", "massinewall4.png"];
@@ -98,8 +107,7 @@
 
         function executeReset(s,t,n) { 
             state.lessons.forEach(l => { if(l.subject===s && l.theme===t && (!n || l.name===n)) l.items.forEach(i => i.alreadyFailed = false); }); 
-            const key = n ? `${s}-${t}-${n}` : null;
-            if (n) { delete state.checkpoints[key]; } 
+            if (n) { delete state.checkpoints[`${s}-${t}-${n}`]; } 
             else { Object.keys(state.checkpoints).forEach(k => { if(k.startsWith(`${s}-${t}-`)) delete state.checkpoints[k]; }); }
             localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); 
             localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints));
@@ -120,7 +128,22 @@
             if (state.quizItems.length === 0) { navigate('lessons'); } else { state.status = 'idle'; saveCheckpoint(); render(); }
         }
 
-        function checkAnswer(opt) { if (state.status !== 'idle') return; state.selected = opt; const q = state.quizItems[0]; const isCorrect = opt === q.correct; if (isCorrect) { if (!q.alreadyFailed) state.firstTryCorrect++; playSound('correct'); } else { q.alreadyFailed = true; playSound('wrong'); } state.status = isCorrect ? 'correct' : 'wrong'; render(); }
+        function checkAnswer(opt) { 
+            if (state.status !== 'idle') return; 
+            state.selected = opt; 
+            const q = state.quizItems[0]; 
+            const isCorrect = opt === q.correct; 
+            if (isCorrect) { 
+                if (!q.alreadyFailed) state.firstTryCorrect++; 
+                playSound('correct'); 
+            } else { 
+                q.alreadyFailed = true; 
+                playSound('wrong'); 
+            } 
+            state.status = isCorrect ? 'correct' : 'wrong'; 
+            render(); 
+        }
+
         function saveCheckpoint() { if(!state.currentLesson) return; const key = `${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`; state.checkpoints[key] = { items: state.quizItems, total: state.totalQuestions, correct: state.firstTryCorrect }; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); }
         function nextQuestion() { const completedQ = state.quizItems.shift(); if (state.status === 'wrong') state.quizItems.push(completedQ); if (state.quizItems.length === 0) { delete state.checkpoints[`${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`]; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); confetti({ particleCount: 150, spread: 70 }); navigate('lessons'); } else { state.status = 'idle'; saveCheckpoint(); render(); } }
         function startThemeBoss(subject, theme) { const items = state.lessons.filter(l => l.subject === subject && l.theme === theme).flatMap(l => l.items); state.currentLesson = { name: theme, subject, theme, items }; state.quizItems = [...items].sort(() => Math.random() - 0.5); state.totalQuestions = items.length; state.firstTryCorrect = 0; state.status = 'idle'; navigate('quiz'); }
@@ -155,8 +178,14 @@
                     <div class="scroll-area flex flex-col items-center"><h2 class="quiz-q-text text-2xl mb-4 text-center">${q.word}</h2>
                         <div class="w-full grid grid-cols-1 gap-2">${q.options.map(opt => {
                             const qid = `qbtn-${Math.random().toString(36).substr(2, 5)}`;
+                            let feedbackClass = "";
+                            if (state.status !== 'idle') {
+                                if (opt === q.correct) feedbackClass = "btn-correct";
+                                else if (opt === state.selected) feedbackClass = "btn-wrong";
+                                else feedbackClass = "btn-inactive";
+                            }
                             return `<div class="swipe-container"><div class="swipe-actions"><button onclick="deleteQuestionFromApp()" class="action-btn btn-delete">WISSEN</button></div>
-                                <button id="${qid}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${qid}')" onclick="checkAnswer('${opt}')" class="fn-button p-4 text-lg italic font-black ${state.status !== 'idle' ? (opt === q.correct ? 'bg-green-600 border-white' : (opt === state.selected ? 'bg-red-600 border-white' : 'opacity-20')) : 'bg-white/10 border-white/20'}">${opt}</button></div>`}).join('')}</div>
+                                <button id="${qid}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${qid}')" onclick="checkAnswer('${opt}')" class="fn-button p-4 text-lg italic font-black ${feedbackClass || 'bg-white/10 border-white/20'}">${opt}</button></div>`}).join('')}</div>
                         ${state.status !== 'idle' ? `<button onclick="nextQuestion()" class="mt-4 h-12 w-full bg-yellow-400 text-black fn-button italic">NEXT →</button>` : ''}</div></div>`;
             } else if (state.view === 'boss_selection') {
                 container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><div class="flex items-center mb-4 relative"><button onclick="navigate('subjects');" class="bg-yellow-400 text-black fn-button back-btn italic z-10">← BACK</button><h2 class="text-header text-xl text-white absolute w-full text-center left-0 pointer-events-none">SELECT VAK</h2></div>
