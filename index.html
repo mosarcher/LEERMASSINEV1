@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V11.7</title>
+    <title>MASSINE'S CHALLENGE V12.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -18,48 +18,37 @@
         
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: transform 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: none; }
         
-        .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; }
+        .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; opacity: 0; transition: opacity 0.2s; }
         .swiped .swipe-actions { opacity: 1; }
         
-        .action-btn { height: 100%; padding: 0 12px; font-weight: 900; font-size: 0.7rem; color: white; border: none; }
+        .action-btn { height: 100%; padding: 0 15px; font-weight: 900; font-size: 0.7rem; color: white; border: none; text-transform: uppercase; }
         .btn-reset { background: #3b82f6; }
         .btn-delete { background: #ef4444; }
 
-        .swiped .fn-button { transform: translateX(-140px); }
+        .swiped .fn-button { transform: translateX(-150px); }
         .subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-        /* Resume Button Styling */
-        .resume-pill { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #eab308; color: black; font-size: 0.6rem; padding: 4px 8px; border-radius: 99px; font-weight: 900; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .resume-pill { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #eab308; color: black; font-size: 0.55rem; padding: 3px 7px; border-radius: 99px; font-weight: 900; z-index: 10; pointer-events: auto; }
         
+        .subject-icon { font-size: 1.2em; margin-right: 8px; font-style: normal; }
         .version-tag { position: fixed; bottom: 5px; right: 10px; font-size: 10px; opacity: 0.3; font-weight: 900; }
+        .back-btn { width: auto !important; padding: 0 12px !important; height: 32px !important; font-size: 0.65rem !important; }
     </style>
 </head>
 <body id="mainBody" onclick="closeAllSwipes()">
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag">v11.7</div>
+    <div class="version-tag">v12.1</div>
 
     <script>
         const images = ["massinewall.png", "massinewall1.png", "massinewall2.png", "massinewall3.png", "massinewall4.png"];
         let lastImage = "";
         let audioCtx = null;
 
-        function initAudio() {
-            if (audioCtx) return;
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        function playSound(type) {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(type === 'correct' ? 600 : 120, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
-        }
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function playSound(type) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.frequency.setValueAtTime(type === 'correct' ? 600 : 120, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2); osc.start(); osc.stop(audioCtx.currentTime + 0.2); }
 
         function changeBackground(isInitial = false) {
             let selectedImg = isInitial ? "massinewall.png" : images.filter(img => img !== lastImage)[Math.floor(Math.random() * (images.length - 1))];
@@ -85,25 +74,9 @@
         }
         function closeAllSwipes() { document.querySelectorAll('.swipe-container').forEach(el => el.classList.remove('swiped')); }
 
-        function saveCheckpoint() {
-            const key = `${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`;
-            state.checkpoints[key] = {
-                items: state.quizItems,
-                total: state.totalQuestions,
-                correct: state.firstTryCorrect
-            };
-            localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints));
-        }
-
-        function clearCheckpoint(s,t,n) {
-            delete state.checkpoints[`${s}-${t}-${n}`];
-            localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints));
-        }
-
         function startLesson(s,t,n, resume = false) {
             const key = `${s}-${t}-${n}`;
             const lesson = state.lessons.find(l => l.subject===s && l.theme===t && l.name===n);
-            
             if (resume && state.checkpoints[key]) {
                 const cp = state.checkpoints[key];
                 state.quizItems = cp.items;
@@ -113,11 +86,18 @@
                 state.quizItems = [...lesson.items].sort(() => Math.random() - 0.5);
                 state.totalQuestions = state.quizItems.length;
                 state.firstTryCorrect = 0;
-                clearCheckpoint(s,t,n);
             }
             state.currentLesson = { subject:s, theme:t, name:n };
             state.status = 'idle';
             navigate('quiz');
+        }
+
+        function deleteQuestionFromApp() {
+            const currentQ = state.quizItems[0];
+            state.quizItems.shift(); state.totalQuestions--;
+            state.lessons.forEach(l => { l.items = l.items.filter(item => item.word !== currentQ.word); });
+            localStorage.setItem('study_data_v7', JSON.stringify(state.lessons));
+            if (state.quizItems.length === 0) navigate('lessons'); else { state.status = 'idle'; render(); }
         }
 
         function render() {
@@ -125,10 +105,18 @@
             if (state.view === 'start') {
                 container.innerHTML = `<div class="text-center"><h1 class="text-header text-5xl mb-8 title-glow">MASSINE'S CHALLENGE</h1>
                     <button onclick="initAudio(); handleStart();" class="fn-button bg-yellow-400 text-black text-3xl px-10 py-6 mx-auto italic">START</button></div>`;
+            } else if (state.view === 'subjects') {
+                container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><h2 class="text-header text-2xl text-yellow-400 mb-4 text-center italic">MISSIONS</h2>
+                    <div class="scroll-area grid grid-cols-1 gap-3"><button onclick="navigate('boss_selection')" class="fn-button bg-orange-600 text-white text-2xl py-8 italic shadow-lg">🔥 BOSS LEVELS 🔥</button>
+                        <div class="subject-grid">
+                            <button onclick="state.selectedSubject='FRANS'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><i class="subject-icon">🇫🇷</i> Frans</button>
+                            <button onclick="state.selectedSubject='TAAL'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><i class="subject-icon">🇳🇱</i> Taal</button>
+                            <button onclick="state.selectedSubject='WO'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><i class="subject-icon">🌍</i> WO</button>
+                        </div></div></div>`;
             } else if (state.view === 'lessons') {
                 const filtered = state.lessons.filter(l => l.subject === state.selectedSubject);
                 const themes = [...new Set(filtered.map(l => l.theme))];
-                container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><div class="flex justify-between items-center mb-3"><button onclick="navigate('subjects')" class="bg-yellow-400 text-black fn-button px-3 py-1 text-[10px] h-8 italic">← BACK</button><h2 class="text-header text-lg italic">${state.selectedSubject}</h2></div>
+                container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><div class="flex justify-between items-center mb-3"><button onclick="navigate('subjects')" class="bg-yellow-400 text-black fn-button back-btn italic">← BACK</button><h2 class="text-header text-lg italic">${state.selectedSubject}</h2></div>
                     <div class="scroll-area">${themes.map(t => `<div class="mb-4"><h3 class="bg-yellow-400 text-black font-black text-[10px] mb-2 px-2 py-0.5 uppercase italic inline-block skew-x-[-10deg]">${t}</h3>
                         ${filtered.filter(l => l.theme === t).map(l => {
                             const id = `btn-${Math.random().toString(36).substr(2, 5)}`;
@@ -138,7 +126,7 @@
                                     <button onclick="executeReset('${l.subject}','${l.theme}','${l.name}')" class="action-btn btn-reset">RESET</button>
                                     <button onclick="executeDelete('${l.subject}','${l.theme}','${l.name}')" class="action-btn btn-delete">WISSEN</button>
                                 </div>
-                                ${state.checkpoints[cpKey] ? `<div class="resume-pill" onclick="startLesson('${l.subject}','${l.theme}','${l.name}', true)">▶️ CONT.</div>` : ''}
+                                ${state.checkpoints[cpKey] ? `<div class="resume-pill" onclick="event.stopPropagation(); startLesson('${l.subject}','${l.theme}','${l.name}', true)">▶️ CONT.</div>` : ''}
                                 <button id="${id}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${id}')" onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="fn-button bg-white/10 border-l-[6px] border-white/30 text-lg py-5 italic text-left pl-6">${l.name}</button>
                             </div>`}).join('')}</div>`).join('')}</div></div>`;
             } else if (state.view === 'quiz') {
@@ -147,36 +135,46 @@
                     <div class="h-2 flex-1 mx-3 bg-black/20 rounded-full"><div class="h-full bg-yellow-400" style="width: ${((state.totalQuestions - state.quizItems.length) / state.totalQuestions) * 100}%"></div></div>
                     <span class="text-header text-xl text-yellow-400">${state.totalQuestions - state.quizItems.length + 1}/${state.totalQuestions}</span></div>
                     <div class="scroll-area flex flex-col items-center"><h2 class="text-header text-2xl mb-4 text-center">${q.word}</h2>
-                        <div class="w-full grid grid-cols-1 gap-2">${q.options.map(opt => `<button onclick="checkAnswer('${opt}')" class="fn-button p-4 text-lg italic font-black ${state.status !== 'idle' ? (opt === q.correct ? 'bg-green-600 border-white' : (opt === state.selected ? 'bg-red-600 border-white' : 'opacity-20')) : 'bg-white/10 border-white/20'}">${opt}</button>`).join('')}</div>
+                        <div class="w-full grid grid-cols-1 gap-2">${q.options.map(opt => {
+                            const qid = `qbtn-${Math.random().toString(36).substr(2, 5)}`;
+                            return `<div class="swipe-container">
+                                <div class="swipe-actions"><button onclick="deleteQuestionFromApp()" class="action-btn btn-delete">WISSEN</button></div>
+                                <button id="${qid}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${qid}')" onclick="checkAnswer('${opt}')" class="fn-button p-4 text-lg italic font-black ${state.status !== 'idle' ? (opt === q.correct ? 'bg-green-600 border-white' : (opt === state.selected ? 'bg-red-600 border-white' : 'opacity-20')) : 'bg-white/10 border-white/20'}">${opt}</button>
+                            </div>`}).join('')}</div>
                         ${state.status !== 'idle' ? `<button onclick="nextQuestion()" class="mt-4 h-12 w-full bg-yellow-400 text-black fn-button italic">NEXT →</button>` : ''}
                     </div></div>`;
-            } else if (state.view === 'subjects') {
-                container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><h2 class="text-header text-2xl text-yellow-400 mb-4 text-center italic">MISSIONS</h2>
-                    <div class="scroll-area grid grid-cols-1 gap-3"><button onclick="navigate('boss_selection')" class="fn-button bg-orange-600 text-white text-2xl py-8 italic shadow-lg">🔥 BOSS LEVELS 🔥</button>
-                        <div class="subject-grid">${['Frans', 'Taal', 'WO'].map(s => `<button onclick="state.selectedSubject='${s.toUpperCase()}'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic">${s}</button>`).join('')}</div></div></div>`;
+            } else if (state.view === 'boss_selection') {
+                container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><div class="flex justify-between items-center mb-3"><button onclick="navigate('subjects');" class="bg-yellow-400 text-black fn-button back-btn italic">← BACK</button><h2 class="text-header text-xl text-white">SELECT VAK</h2></div>
+                    <div class="scroll-area grid grid-cols-2 gap-3">
+                        <button onclick="state.selectedBossSubject='FRANS'; navigate('boss_themes');" class="fn-button bg-white/10 border-l-[10px] border-yellow-400 text-xl py-8 italic">FRANS</button>
+                        <button onclick="state.selectedBossSubject='TAAL'; navigate('boss_themes');" class="fn-button bg-white/10 border-l-[10px] border-yellow-400 text-xl py-8 italic">TAAL</button>
+                        <button onclick="state.selectedBossSubject='WO'; navigate('boss_themes');" class="fn-button bg-white/10 border-l-[10px] border-yellow-400 text-xl py-8 italic">WO</button>
+                    </div></div>`;
+            } else if (state.view === 'boss_themes') {
+                const themes = [...new Set(state.lessons.filter(l => l.subject === state.selectedBossSubject).map(l => l.theme))];
+                container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><div class="flex justify-between items-center mb-3"><button onclick="navigate('boss_selection');" class="bg-yellow-400 text-black fn-button back-btn italic">← BACK</button><h2 class="text-header text-lg text-white">${state.selectedBossSubject} BOSS</h2></div>
+                    <div class="scroll-area">${themes.map(t => {
+                        const bid = `boss-${Math.random().toString(36).substr(2, 5)}`;
+                        return `<div class="swipe-container">
+                            <div class="swipe-actions">
+                                <button onclick="executeReset('${state.selectedBossSubject}','${t}')" class="action-btn btn-reset">RESET</button>
+                                <button onclick="executeDelete('${state.selectedBossSubject}','${t}')" class="action-btn btn-delete">WISSEN</button>
+                            </div>
+                            <button id="${bid}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${bid}')" onclick="startThemeBoss('${state.selectedBossSubject}','${t}')" class="fn-button bg-red-600/20 border-l-[10px] border-red-600 text-xl py-8 italic">${t}</button>
+                        </div>`}).join('')}</div></div>`;
             }
         }
 
-        function checkAnswer(opt) {
-            if (state.status !== 'idle') return;
-            state.selected = opt; const q = state.quizItems[0]; const isCorrect = opt === q.correct;
-            if (isCorrect) { if (!q.alreadyFailed) state.firstTryCorrect++; playSound('correct'); } else { q.alreadyFailed = true; playSound('wrong'); }
-            state.status = isCorrect ? 'correct' : 'wrong'; render();
-        }
-
-        function nextQuestion() {
-            const completedQ = state.quizItems.shift(); if (state.status === 'wrong') state.quizItems.push(completedQ);
-            if (state.quizItems.length === 0) {
-                clearCheckpoint(state.currentLesson.subject, state.currentLesson.theme, state.currentLesson.name);
-                confetti({ particleCount: 150, spread: 70 }); navigate('lessons');
-            } else { state.status = 'idle'; saveCheckpoint(); render(); }
-        }
-
+        function saveCheckpoint() { const key = `${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`; state.checkpoints[key] = { items: state.quizItems, total: state.totalQuestions, correct: state.firstTryCorrect }; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); }
+        function checkAnswer(opt) { if (state.status !== 'idle') return; state.selected = opt; const q = state.quizItems[0]; const isCorrect = opt === q.correct; if (isCorrect) { if (!q.alreadyFailed) state.firstTryCorrect++; playSound('correct'); } else { q.alreadyFailed = true; playSound('wrong'); } state.status = isCorrect ? 'correct' : 'wrong'; render(); }
+        function nextQuestion() { const completedQ = state.quizItems.shift(); if (state.status === 'wrong') state.quizItems.push(completedQ); if (state.quizItems.length === 0) { delete state.checkpoints[`${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`]; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); confetti({ particleCount: 150, spread: 70 }); navigate('lessons'); } else { state.status = 'idle'; saveCheckpoint(); render(); } }
         async function handleStart() { if (state.lessons.length > 0) navigate('subjects'); else fetchCloudData(true); }
-        async function fetchCloudData(nav) { /* ... fetch logic ... */ }
+        async function fetchCloudData(nav) { if (!state.scriptUrl) return; try { const res = await fetch(state.scriptUrl); const d = await res.json(); if (d.lessons) { state.lessons = d.lessons; localStorage.setItem('study_data_v7', JSON.stringify(d.lessons)); } if (nav) navigate('subjects'); } catch(e) {} }
         function navigate(v) { changeBackground(); state.view = v; render(); }
-        function executeReset(s,t,n) { state.lessons.forEach(l => { if(l.subject===s && l.theme===t && l.name===n) l.items.forEach(i => i.alreadyFailed = false); }); localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); closeAllSwipes(); render(); }
-        function executeDelete(s,t,n) { state.lessons = state.lessons.filter(l => !(l.subject===s && l.theme===t && l.name===n)); localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); closeAllSwipes(); render(); }
+        function executeReset(s,t,n) { state.lessons.forEach(l => { if(l.subject===s && l.theme===t && (!n || l.name===n)) l.items.forEach(i => i.alreadyFailed = false); }); localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); closeAllSwipes(); render(); }
+        function executeDelete(s,t,n) { state.lessons = state.lessons.filter(l => !(l.subject===s && l.theme===t && (!n || l.name===n))); localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); closeAllSwipes(); render(); }
+        function startThemeBoss(subject, theme) { const items = state.lessons.filter(l => l.subject === subject && l.theme === theme).flatMap(l => l.items); state.currentLesson = { name: theme, subject, theme, items }; state.quizItems = [...items].sort(() => Math.random() - 0.5); state.totalQuestions = items.length; state.firstTryCorrect = 0; state.status = 'idle'; navigate('quiz'); }
+        function setCloudUrl() { const url = prompt("Google Web App URL:", state.scriptUrl); if (url) { state.scriptUrl = url; localStorage.setItem('script_url', url); fetchCloudData(true); } }
     </script>
 </body>
 </html>
