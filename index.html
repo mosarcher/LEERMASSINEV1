@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V7.8</title>
+    <title>MASSINE'S CHALLENGE V7.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -26,11 +26,12 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; 
             background-size: cover; background-position: center; background-repeat: no-repeat;
             transition: background-image 0.8s ease-in-out;
+            background-color: #0a051a;
         }
 
         .overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: radial-gradient(circle at center, rgba(10, 5, 26, 0.1) 0%, rgba(10, 5, 26, 0.4) 100%); 
+            background: radial-gradient(circle at center, rgba(10, 5, 26, 0.1) 0%, rgba(10, 5, 26, 0.5) 100%); 
             z-index: -1; 
         }
 
@@ -42,9 +43,8 @@
             font-style: italic; 
         }
 
-        /* EXTRA TRANSPARANT KADER */
         .glass { 
-            background: rgba(255, 255, 255, 0.05); /* Bijna onzichtbaar kader */
+            background: rgba(255, 255, 255, 0.05); 
             backdrop-filter: blur(12px); 
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.15); 
@@ -53,8 +53,7 @@
             width: 100%;
             max-height: 98%;
             border-radius: 2rem;
-            padding-left: 10px;
-            padding-right: 10px;
+            padding: 0 10px;
         }
 
         .title-glow { text-shadow: 0 4px 15px rgba(0,0,0,0.6), 0 0 25px rgba(234, 179, 8, 0.5); }
@@ -67,6 +66,20 @@
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
         }
+
+        /* Spinner Animatie */
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #eab308;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .flash-red { background-color: rgba(220, 38, 38, 0.4) !important; transition: background 0.1s; }
         .answers-grid { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
@@ -120,7 +133,8 @@
             view: 'start', 
             lessons: JSON.parse(localStorage.getItem('study_data_v7') || '[]'), 
             scriptUrl: localStorage.getItem('script_url') || '', 
-            selectedSubject: '', status: 'idle'
+            selectedSubject: '', status: 'idle',
+            isLoading: false
         };
 
         function navigate(newView) {
@@ -129,7 +143,23 @@
             render();
         }
 
-        async function fetchCloudData() {
+        async function handleStart() {
+            playSound('correct');
+            // Als we al lessen hebben, gaan we meteen door
+            if (state.lessons.length > 0) {
+                state.view = 'subjects';
+                render();
+                // En op de achtergrond verversen we de data
+                fetchCloudData(false); 
+            } else {
+                // Als er nog geen data is, moeten we wachten
+                state.isLoading = true;
+                render();
+                await fetchCloudData(true);
+            }
+        }
+
+        async function fetchCloudData(shouldNavigate) {
             if (!state.scriptUrl) return;
             try {
                 const response = await fetch(state.scriptUrl);
@@ -138,8 +168,14 @@
                     state.lessons = data.lessons;
                     localStorage.setItem('study_data_v7', JSON.stringify(data.lessons));
                 }
-                navigate('subjects');
-            } catch(e) { console.error("Cloud error"); }
+                state.isLoading = false;
+                if (shouldNavigate) navigate('subjects');
+                else render();
+            } catch(e) { 
+                state.isLoading = false;
+                render();
+                console.error("Sync error"); 
+            }
         }
 
         function render() {
@@ -147,7 +183,9 @@
             if (state.view === 'start') {
                 container.innerHTML = `<div class="text-center">
                     <h1 class="title-glow text-header text-5xl sm:text-8xl mb-10 leading-none">MASSINE'S CHALLENGE</h1>
-                    <button onclick="playSound('correct'); fetchCloudData();" class="fn-button bg-yellow-400 text-black text-4xl sm:text-7xl px-12 py-8 shadow-[0_10px_0_rgb(161,98,7)]">START MISSIONS</button>
+                    <button onclick="handleStart()" class="fn-button bg-yellow-400 text-black text-4xl sm:text-7xl px-12 py-8 shadow-[0_10px_0_rgb(161,98,7)] flex items-center justify-center mx-auto">
+                        ${state.isLoading ? '<span class="loader"></span> LOADING...' : 'START MISSIONS'}
+                    </button>
                     <div class="mt-12"><button onclick="setCloudUrl()" class="text-white/60 text-xs uppercase font-black border-b border-white/40 bg-black/20 px-4 py-2 rounded-full">⚙️ Cloud Setup</button></div>
                 </div>`;
             } else if (state.view === 'subjects') {
@@ -164,7 +202,7 @@
                     <div class="flex justify-between items-center mb-6"><button onclick="navigate('subjects');" class="bg-yellow-400 text-black px-4 py-2 fn-button text-xs font-black tracking-tighter shadow-md">← BACK</button>
                     <h2 class="text-header text-2xl text-white uppercase">${state.selectedSubject}</h2></div>
                     <div class="scroll-area space-y-6">
-                        ${themes.map(t => `<div class="mb-4"><h3 class="bg-yellow-400 text-black font-black text-xs mb-3 px-3 py-1 uppercase inline-block italic skew-x-[-10deg] shadow-md">${t}</h3><div class="grid gap-2">
+                        ${themes.map(t => `<div class="mb-4"><h3 class="bg-yellow-400 text-black font-black text-xs mb-3 px-3 py-1 uppercase inline-block italic skew-x-[-10deg] shadow-sm">${t}</h3><div class="grid gap-2">
                             ${filtered.filter(l => l.theme === t).map(l => `<button onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="w-full p-5 border-l-4 bg-white/20 border-white/30 text-left font-black uppercase text-xl shadow-md active:bg-yellow-400 active:text-black">${l.name}</button>`).join('')}
                         </div></div>`).join('')}
                     </div></div>`;
@@ -227,7 +265,7 @@
             navigate('quiz'); 
         }
 
-        function setCloudUrl() { const url = prompt("Google Web App URL:", state.scriptUrl); if (url) { state.scriptUrl = url; localStorage.setItem('script_url', url); fetchCloudData(); } }
+        function setCloudUrl() { const url = prompt("Google Web App URL:", state.scriptUrl); if (url) { state.scriptUrl = url; localStorage.setItem('script_url', url); fetchCloudData(true); } }
     </script>
 </body>
 </html>
