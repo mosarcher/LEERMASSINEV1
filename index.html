@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V8.5</title>
+    <title>MASSINE'S CHALLENGE V8.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -94,10 +94,10 @@
             }
         }
 
-        function startBossLevel() {
-            const allItems = state.lessons.flatMap(l => l.items);
-            if (allItems.length === 0) return;
-            state.currentLesson = { name: "ULTIMATE BOSS", subject: "ALL", theme: "CHALLENGE", items: allItems };
+        function startSubjectBoss(subject) {
+            const allItems = state.lessons.filter(l => l.subject === subject).flatMap(l => l.items);
+            if (allItems.length === 0) return alert("Geen vragen gevonden voor dit vak!");
+            state.currentLesson = { name: `${subject} BOSS MISSION`, subject: subject, theme: "ULTIMATE", items: allItems };
             state.quizItems = [...allItems].sort(() => Math.random() - 0.5);
             state.totalQuestions = state.quizItems.length;
             state.firstTryCorrect = 0;
@@ -119,15 +119,25 @@
                 container.innerHTML = `<div class="glass p-6 sm:p-10 max-w-xl">
                     <h2 class="text-header text-3xl sm:text-6xl text-yellow-400 mb-6 text-center title-glow uppercase">MISSIONS</h2>
                     <div class="scroll-area grid gap-4">
-                        <button ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, this)" onclick="startBossLevel()" class="fn-button boss-button text-3xl py-8 mb-4">🔥 BOSS LEVEL 🔥</button>
+                        <button ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, this)" onclick="navigate('boss_selection')" class="fn-button boss-button text-3xl py-8 mb-4">🔥 BOSS LEVELS 🔥</button>
                         ${['Frans', 'Taal', 'WO'].map(s => `<button onclick="state.selectedSubject='${s.toUpperCase()}'; navigate('lessons');" class="fn-button bg-white/20 border-l-[10px] border-yellow-400 text-3xl py-8 shadow-lg active:bg-yellow-400">${s}</button>`).join('')}
+                    </div>
+                </div>`;
+            } else if (state.view === 'boss_selection') {
+                container.innerHTML = `<div class="glass p-6 sm:p-10 max-w-xl">
+                    <div class="flex justify-between items-center mb-6"><button onclick="navigate('subjects');" class="bg-yellow-400 text-black px-4 py-2 fn-button text-xs font-black tracking-tighter shadow-md">← BACK</button>
+                    <h2 class="text-header text-2xl text-white uppercase title-glow">SELECT BOSS</h2></div>
+                    <div class="scroll-area grid gap-4">
+                        <button onclick="startSubjectBoss('FRANS')" class="fn-button bg-white/10 border-l-[10px] border-blue-500 text-2xl py-8">FRANS BOSS</button>
+                        <button onclick="startSubjectBoss('TAAL')" class="fn-button bg-white/10 border-l-[10px] border-green-500 text-2xl py-8">TAAL BOSS</button>
+                        <button onclick="startSubjectBoss('WO')" class="fn-button bg-white/10 border-l-[10px] border-red-500 text-2xl py-8">WO BOSS</button>
                     </div>
                 </div>`;
             } else if (state.view === 'lessons') {
                 const filtered = state.lessons.filter(l => l.subject === state.selectedSubject);
                 const themes = [...new Set(filtered.map(l => l.theme))];
                 container.innerHTML = `<div class="glass p-6 sm:p-10 max-w-xl">
-                    <div class="flex justify-between items-center mb-6"><button onclick="navigate('subjects');" class="bg-yellow-400 text-black px-4 py-2 fn-button text-xs font-black tracking-tighter">← BACK</button>
+                    <div class="flex justify-between items-center mb-6"><button onclick="navigate('subjects');" class="bg-yellow-400 text-black px-4 py-2 fn-button text-xs font-black tracking-tighter shadow-md">← BACK</button>
                     <h2 class="text-header text-2xl text-white uppercase">${state.selectedSubject}</h2></div>
                     <div class="scroll-area space-y-6">
                         ${themes.map(t => `<div class="mb-4"><h3 class="bg-yellow-400 text-black font-black text-xs mb-3 px-3 py-1 uppercase inline-block italic skew-x-[-10deg]">${t}</h3><div class="grid gap-2">
@@ -156,7 +166,7 @@
                 container.innerHTML = `<div class="glass p-10 flex flex-col items-center justify-center text-center max-md w-full border-4 border-yellow-400 shadow-2xl">
                     <h1 class="text-header text-5xl sm:text-7xl mb-4 text-yellow-400 title-glow uppercase">MISSION CLEARED!</h1>
                     <div class="text-3xl font-black text-white/80 mb-10">SCORE: ${state.percent}% ${state.percent === 100 ? '🏆' : ''}</div>
-                    <button onclick="navigate('lessons');" class="fn-button bg-yellow-400 text-black text-4xl px-16 py-8">BACK TO BASE</button>
+                    <button onclick="navigate('subjects');" class="fn-button bg-yellow-400 text-black text-4xl px-16 py-8">BACK TO BASE</button>
                 </div>`;
             }
         }
