@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V9.7</title>
+    <title>MASSINE'S CHALLENGE V9.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -23,7 +22,7 @@
             z-index: -1; 
         }
 
-        .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.1s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.1s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; gap: 8px; }
         
         .glass { 
             background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); 
@@ -44,15 +43,26 @@
         
         .text-readable { text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
 
+        /* BOSS LEVELS BUTTON AUTO-SCALE FIX */
         .boss-button { 
             background: linear-gradient(90deg, #b45309 0%, #f59e0b 50%, #b45309 100%); 
             color: white; border: 2px solid #fde047; 
             box-shadow: 0 0 20px rgba(234, 179, 8, 0.6); 
             animation: pulse-gold 2s infinite; 
             touch-action: none;
-            white-space: nowrap;
-            font-size: 1.5rem;
+            width: 100%;
+            max-width: 100%;
+            padding: 1.5rem 0.5rem;
+            overflow: hidden;
         }
+
+        .boss-text {
+            white-space: nowrap;
+            font-size: clamp(1rem, 5vw, 1.875rem); /* Scalet tussen 16px en 30px gebaseerd op schermbreedte */
+            flex-shrink: 1;
+        }
+
+        .flame { flex-shrink: 0; font-size: 1.2em; }
         
         .reset-btn-small {
             background: rgba(220, 38, 38, 0.6);
@@ -194,7 +204,11 @@
                 container.innerHTML = `<div class="glass p-6 sm:p-10 max-w-xl">
                     <h2 class="text-header text-3xl sm:text-6xl text-yellow-400 mb-6 text-center title-glow uppercase">MISSIONS</h2>
                     <div class="scroll-area grid gap-4">
-                        <button onclick="navigate('boss_selection')" class="fn-button boss-button text-3xl py-8 mb-4"><span>🔥</span> BOSS LEVELS <span>🔥</span></button>
+                        <button onclick="navigate('boss_selection')" class="fn-button boss-button mb-4">
+                            <span class="flame">🔥</span> 
+                            <span class="boss-text">BOSS LEVELS</span> 
+                            <span class="flame">🔥</span>
+                        </button>
                         ${['Frans', 'Taal', 'WO'].map(s => `<button onclick="state.selectedSubject='${s.toUpperCase()}'; navigate('lessons');" class="fn-button bg-white/20 border-l-[10px] border-yellow-400 text-3xl py-8 shadow-lg active:bg-yellow-400"><i class="subject-icon">${getSubjectIcon(s)}</i> ${s}</button>`).join('')}
                     </div>
                 </div>`;
