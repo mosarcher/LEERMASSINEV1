@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V9.1</title>
+    <title>MASSINE'S CHALLENGE V9.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -86,10 +86,7 @@
             render();
         }
 
-        window.addEventListener('load', () => {
-            changeBackground();
-            render();
-        });
+        window.addEventListener('load', () => { changeBackground(); render(); });
 
         function playSound(type) {
             if (!audioCtx) audioCtx = new AudioContext();
@@ -105,19 +102,13 @@
             view: 'start', 
             lessons: JSON.parse(localStorage.getItem('study_data_v7') || '[]'), 
             scriptUrl: localStorage.getItem('script_url') || '', 
-            selectedSubject: '', status: 'idle', isLoading: false 
+            selectedSubject: '', selectedBossSubject: '', status: 'idle', isLoading: false 
         };
 
         async function handleStart() {
             playSound('correct');
-            if (state.lessons.length > 0) {
-                navigate('subjects');
-                fetchCloudData(false);
-            } else {
-                state.isLoading = true;
-                render();
-                await fetchCloudData(true);
-            }
+            if (state.lessons.length > 0) { navigate('subjects'); fetchCloudData(false); } 
+            else { state.isLoading = true; render(); await fetchCloudData(true); }
         }
 
         async function fetchCloudData(shouldNavigate) {
@@ -125,13 +116,9 @@
             try {
                 const response = await fetch(state.scriptUrl);
                 const data = await response.json();
-                if (data.lessons) {
-                    state.lessons = data.lessons;
-                    localStorage.setItem('study_data_v7', JSON.stringify(data.lessons));
-                }
+                if (data.lessons) { state.lessons = data.lessons; localStorage.setItem('study_data_v7', JSON.stringify(data.lessons)); }
                 state.isLoading = false;
-                if (shouldNavigate) navigate('subjects');
-                else render();
+                if (shouldNavigate) navigate('subjects'); else render();
             } catch(e) { state.isLoading = false; render(); }
         }
 
@@ -150,10 +137,9 @@
             }
         }
 
-        function startSubjectBoss(subject) {
-            const allItems = state.lessons.filter(l => l.subject === subject).flatMap(l => l.items);
-            if (allItems.length === 0) return;
-            state.currentLesson = { name: `${subject} BOSS MISSION`, subject: subject, theme: "ULTIMATE", items: allItems };
+        function startThemeBoss(subject, theme) {
+            const allItems = state.lessons.filter(l => l.subject === subject && l.theme === theme).flatMap(l => l.items);
+            state.currentLesson = { name: `${theme} BOSS`, subject: subject, theme: theme, items: allItems };
             state.quizItems = [...allItems].sort(() => Math.random() - 0.5);
             state.totalQuestions = state.quizItems.length;
             state.firstTryCorrect = 0;
@@ -162,10 +148,8 @@
         }
 
         function getSubjectIcon(s) {
-            if (s.toUpperCase() === 'FRANS') return '🇫🇷';
-            if (s.toUpperCase() === 'TAAL') return '🇳🇱';
-            if (s.toUpperCase() === 'WO') return '🌍';
-            return '📖';
+            const icons = { 'FRANS': '🇫🇷', 'TAAL': '🇳🇱', 'WO': '🌍' };
+            return icons[s.toUpperCase()] || '📖';
         }
 
         function render() {
@@ -183,31 +167,35 @@
                     <h2 class="text-header text-3xl sm:text-6xl text-yellow-400 mb-6 text-center title-glow uppercase">MISSIONS</h2>
                     <div class="scroll-area grid gap-4">
                         <button ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, this)" onclick="navigate('boss_selection')" class="fn-button boss-button text-3xl py-8 mb-4"><span>🔥</span> BOSS LEVELS <span>🔥</span></button>
-                        ${['Frans', 'Taal', 'WO'].map(s => `
-                            <button onclick="state.selectedSubject='${s.toUpperCase()}'; navigate('lessons');" class="fn-button bg-white/20 border-l-[10px] border-yellow-400 text-3xl py-8 shadow-lg active:bg-yellow-400">
-                                <i class="subject-icon">${getSubjectIcon(s)}</i> ${s}
-                            </button>`).join('')}
+                        ${['Frans', 'Taal', 'WO'].map(s => `<button onclick="state.selectedSubject='${s.toUpperCase()}'; navigate('lessons');" class="fn-button bg-white/20 border-l-[10px] border-yellow-400 text-3xl py-8 shadow-lg active:bg-yellow-400"><i class="subject-icon">${getSubjectIcon(s)}</i> ${s}</button>`).join('')}
                     </div>
                 </div>`;
             } else if (state.view === 'boss_selection') {
                 container.innerHTML = `<div class="glass p-6 sm:p-10 max-w-xl">
-                    <div class="flex justify-between items-center mb-6"><button onclick="navigate('subjects');" class="bg-yellow-400 text-black px-4 py-2 fn-button text-xs font-black tracking-tighter shadow-md">← BACK</button>
-                    <h2 class="text-header text-2xl text-white uppercase title-glow">SELECT BOSS</h2></div>
+                    <div class="flex justify-between items-center mb-6"><button onclick="navigate('subjects');" class="bg-yellow-400 text-black px-4 py-2 fn-button text-xs font-black">← BACK</button>
+                    <h2 class="text-header text-2xl text-white uppercase title-glow">SELECT VAK</h2></div>
                     <div class="scroll-area grid gap-4">
-                        <button onclick="startSubjectBoss('FRANS')" class="fn-button bg-white/10 border-l-[10px] border-blue-500 text-2xl py-8"><i class="subject-icon">🇫🇷</i> FRANS BOSS</button>
-                        <button onclick="startSubjectBoss('TAAL')" class="fn-button bg-white/10 border-l-[10px] border-green-500 text-2xl py-8"><i class="subject-icon">🇳🇱</i> TAAL BOSS</button>
-                        <button onclick="startSubjectBoss('WO')" class="fn-button bg-white/10 border-l-[10px] border-red-500 text-2xl py-8"><i class="subject-icon">🌍</i> WO BOSS</button>
+                        ${['Frans', 'Taal', 'WO'].map(s => `<button onclick="state.selectedBossSubject='${s.toUpperCase()}'; navigate('boss_themes');" class="fn-button bg-white/10 border-l-[10px] border-yellow-400 text-2xl py-8"><i class="subject-icon">${getSubjectIcon(s)}</i> ${s} BOSS</button>`).join('')}
+                    </div>
+                </div>`;
+            } else if (state.view === 'boss_themes') {
+                const themes = [...new Set(state.lessons.filter(l => l.subject === state.selectedBossSubject).map(l => l.theme))];
+                container.innerHTML = `<div class="glass p-6 sm:p-10 max-w-xl">
+                    <div class="flex justify-between items-center mb-6"><button onclick="navigate('boss_selection');" class="bg-yellow-400 text-black px-4 py-2 fn-button text-xs font-black">← BACK</button>
+                    <h2 class="text-header text-2xl text-white uppercase title-glow">${state.selectedBossSubject} BOSS</h2></div>
+                    <div class="scroll-area grid gap-4">
+                        ${themes.map(t => `<button onclick="startThemeBoss('${state.selectedBossSubject}', '${t}')" class="fn-button bg-red-600/20 border-l-[10px] border-red-600 text-xl py-6">${t} ULTIMATE</button>`).join('')}
                     </div>
                 </div>`;
             } else if (state.view === 'lessons') {
                 const filtered = state.lessons.filter(l => l.subject === state.selectedSubject);
                 const themes = [...new Set(filtered.map(l => l.theme))];
                 container.innerHTML = `<div class="glass p-6 sm:p-10 max-w-xl">
-                    <div class="flex justify-between items-center mb-6"><button onclick="navigate('subjects');" class="bg-yellow-400 text-black px-4 py-2 fn-button text-xs font-black tracking-tighter shadow-md">← BACK</button>
+                    <div class="flex justify-between items-center mb-6"><button onclick="navigate('subjects');" class="bg-yellow-400 text-black px-4 py-2 fn-button text-xs font-black">← BACK</button>
                     <h2 class="text-header text-2xl text-white uppercase">${state.selectedSubject}</h2></div>
                     <div class="scroll-area space-y-6">
-                        ${themes.map(t => `<div class="mb-4"><h3 class="bg-yellow-400 text-black font-black text-xs mb-3 px-3 py-1 uppercase inline-block italic skew-x-[-10deg] shadow-sm">${t}</h3><div class="grid gap-2">
-                            ${filtered.filter(l => l.theme === t).map(l => `<button onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="w-full p-5 border-l-4 bg-white/20 border-white/30 text-left font-black uppercase text-xl shadow-md active:bg-yellow-400 active:text-black">${l.name}</button>`).join('')}
+                        ${themes.map(t => `<div class="mb-4"><h3 class="bg-yellow-400 text-black font-black text-xs mb-3 px-3 py-1 uppercase inline-block italic skew-x-[-10deg]">${t}</h3><div class="grid gap-2">
+                            ${filtered.filter(l => l.theme === t).map(l => `<button onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="w-full p-5 border-l-4 bg-white/20 border-white/30 text-left font-black uppercase text-xl active:bg-yellow-400 active:text-black">${l.name}</button>`).join('')}
                         </div></div>`).join('')}
                     </div></div>`;
             } else if (state.view === 'quiz') {
@@ -218,15 +206,13 @@
                     <span class="text-header text-2xl text-yellow-400 font-black">${state.totalQuestions - state.quizItems.length + 1}/${state.totalQuestions}</span></div>
                     <div class="scroll-area flex flex-col">
                         <h2 class="text-header text-2xl sm:text-5xl mb-6 text-center leading-tight text-readable">${q.word}</h2>
-                        <div class="answers-grid">
-                            ${q.options.map(opt => {
-                                let c = "bg-white/20 border-white/20 shadow-lg";
-                                if (state.status !== 'idle') { if (opt === q.correct) c = "bg-green-600 border-white shadow-xl scale-[1.02] z-10"; else if (opt === state.selected) c = "bg-red-600 border-white shadow-xl"; else c = "opacity-20"; }
-                                return `<button onclick="checkAnswer('${opt}')" class="fn-button p-5 sm:p-8 text-xl sm:text-2xl border-2 italic font-black ${c}">${opt}</button>`;
-                            }).join('')}
-                        </div>
+                        <div class="answers-grid">${q.options.map(opt => {
+                            let c = "bg-white/20 border-white/20 shadow-lg";
+                            if (state.status !== 'idle') { if (opt === q.correct) c = "bg-green-600 border-white shadow-xl scale-[1.02] z-10"; else if (opt === state.selected) c = "bg-red-600 border-white shadow-xl"; else c = "opacity-20"; }
+                            return `<button onclick="checkAnswer('${opt}')" class="fn-button p-5 sm:p-8 text-xl sm:text-2xl border-2 italic font-black ${c}">${opt}</button>`;
+                        }).join('')}</div>
                     </div>
-                    ${state.status !== 'idle' ? `<button onclick="nextQuestion()" class="mt-4 w-full p-6 bg-yellow-400 text-black text-3xl sm:text-5xl fn-button font-black italic shadow-2xl">NEXT QUESTION →</button>` : ''}
+                    ${state.status !== 'idle' ? `<button onclick="nextQuestion()" class="mt-4 w-full p-6 bg-yellow-400 text-black text-3xl sm:text-5xl fn-button font-black italic">NEXT QUESTION →</button>` : ''}
                 </div>`;
             } else if (state.view === 'result') {
                 container.innerHTML = `<div class="glass p-10 flex flex-col items-center justify-center text-center max-md w-full border-4 border-yellow-400 shadow-2xl">
