@@ -1,11 +1,9 @@
-
-
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V7.6</title>
+    <title>MASSINE'S CHALLENGE V7.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -20,12 +18,15 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            /* VOORKOMT SWIPE-BACK GEBAREN */
+            touch-action: pan-y; 
+            overscroll-behavior-x: none;
         }
         
         #bg-container { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; 
             background-size: cover; background-position: center; background-repeat: no-repeat;
-            transition: background-image 0.8s ease-in-out; /* Mooie overgang tussen foto's */
+            transition: background-image 0.8s ease-in-out;
         }
 
         .overlay { 
@@ -53,11 +54,23 @@
             max-height: 98%;
             border-radius: 2rem;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            /* Zorgt dat je vinger niet de rand raakt */
+            padding-left: 10px;
+            padding-right: 10px;
         }
 
         .title-glow { text-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 0 20px rgba(234, 179, 8, 0.4); }
         .text-header { font-weight: 900; font-style: italic; text-transform: uppercase; transform: skewX(-8deg); }
-        .scroll-area { overflow-y: auto; flex-grow: 1; padding: 10px; -webkit-overflow-scrolling: touch; }
+        
+        /* SCROLL GEBIED OPTIMALISATIE */
+        .scroll-area { 
+            overflow-y: auto; 
+            flex-grow: 1; 
+            padding: 15px 5px; 
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+
         .flash-red { background-color: rgba(220, 38, 38, 0.4) !important; transition: background 0.1s; }
         .answers-grid { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
         @media (min-width: 640px) { .answers-grid { grid-template-columns: 1fr 1fr; } }
@@ -73,18 +86,9 @@
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
         
-        // De lijst met foto's
-        const images = [
-            "massinewall.png",
-            "massinewall1.png",
-            "massinewall2.png",
-            "massinewall3.png",
-            "massinewall4.png"
-        ];
-
+        const images = ["massinewall.png", "massinewall1.png", "massinewall2.png", "massinewall3.png", "massinewall4.png"];
         let lastImage = "";
 
-        // Functie om een nieuwe willekeurige foto te kiezen (anders dan de vorige)
         function changeBackground() {
             let availableImages = images.filter(img => img !== lastImage);
             const randomImg = availableImages[Math.floor(Math.random() * availableImages.length)];
@@ -94,7 +98,7 @@
         }
         
         window.addEventListener('load', () => {
-            changeBackground(); // Eerste foto bij laden
+            changeBackground();
             render();
         });
 
@@ -122,7 +126,6 @@
             selectedSubject: '', status: 'idle'
         };
 
-        // Functie om van view te wisselen en direct de foto aan te passen
         function navigate(newView) {
             state.view = newView;
             changeBackground();
@@ -152,9 +155,9 @@
                 </div>`;
             } else if (state.view === 'subjects') {
                 container.innerHTML = `<div class="glass p-6 sm:p-10 max-w-xl">
-                    <h2 class="text-header text-3xl sm:text-6xl text-yellow-400 mb-6 text-center title-glow">MISSIONS</h2>
+                    <h2 class="text-header text-3xl sm:text-6xl text-yellow-400 mb-6 text-center title-glow uppercase">MISSIONS</h2>
                     <div class="scroll-area grid gap-4">
-                        ${['Frans', 'Taal', 'WO'].map(s => `<button onclick="state.selectedSubject='${s.toUpperCase()}'; navigate('lessons');" class="fn-button bg-white/20 border-l-[10px] border-yellow-400 text-3xl py-10 shadow-lg hover:bg-yellow-400 hover:text-black transition-all">${s}</button>`).join('')}
+                        ${['Frans', 'Taal', 'WO'].map(s => `<button onclick="state.selectedSubject='${s.toUpperCase()}'; navigate('lessons');" class="fn-button bg-white/20 border-l-[10px] border-yellow-400 text-3xl py-10 shadow-lg active:bg-yellow-400">${s}</button>`).join('')}
                     </div>
                 </div>`;
             } else if (state.view === 'lessons') {
@@ -164,8 +167,8 @@
                     <div class="flex justify-between items-center mb-6"><button onclick="navigate('subjects');" class="bg-yellow-400 text-black px-4 py-2 fn-button text-xs font-black tracking-tighter shadow-md">← BACK</button>
                     <h2 class="text-header text-2xl text-white uppercase">${state.selectedSubject}</h2></div>
                     <div class="scroll-area space-y-6">
-                        ${themes.map(t => `<div class="mb-4"><h3 class="bg-yellow-400 text-black font-black text-xs mb-3 px-3 py-1 uppercase inline-block italic skew-x-[-10deg] shadow-sm">${t}</h3><div class="grid gap-2">
-                            ${filtered.filter(l => l.theme === t).map(l => `<button onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="w-full p-5 border-l-4 bg-white/20 border-white/30 text-left font-black uppercase text-xl shadow-md">${l.name}</button>`).join('')}
+                        ${themes.map(t => `<div class="mb-4"><h3 class="bg-yellow-400 text-black font-black text-xs mb-3 px-3 py-1 uppercase inline-block italic skew-x-[-10deg]">${t}</h3><div class="grid gap-2">
+                            ${filtered.filter(l => l.theme === t).map(l => `<button onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="w-full p-5 border-l-4 bg-white/20 border-white/30 text-left font-black uppercase text-xl shadow-md active:bg-yellow-400 active:text-black">${l.name}</button>`).join('')}
                         </div></div>`).join('')}
                     </div></div>`;
             } else if (state.view === 'quiz') {
@@ -190,7 +193,7 @@
                 container.innerHTML = `<div class="glass p-10 flex flex-col items-center justify-center text-center max-md w-full border-4 border-yellow-400 shadow-2xl">
                     <h1 class="text-header text-5xl sm:text-7xl mb-4 text-yellow-400 title-glow uppercase">MISSION CLEARED!</h1>
                     <div class="text-3xl font-black text-white/80 mb-10">SCORE: ${state.percent}%</div>
-                    <button onclick="navigate('lessons');" class="fn-button bg-yellow-400 text-black text-4xl px-16 py-8 shadow-lg">BACK TO BASE</button>
+                    <button onclick="navigate('lessons');" class="fn-button bg-yellow-400 text-black text-4xl px-16 py-8">BACK TO BASE</button>
                 </div>`;
             }
         }
@@ -212,8 +215,6 @@
                 navigate('result');
             } else { 
                 state.status = 'idle'; 
-                // Optioneel: zelfs per vraag een nieuwe foto? (Verwijder comment hieronder als je dat wilt)
-                // changeBackground(); 
                 render(); 
             }
         }
