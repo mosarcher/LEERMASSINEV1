@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V9.8</title>
+    <title>MASSINE'S CHALLENGE V9.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -34,50 +34,35 @@
         .text-header { font-weight: 900; font-style: italic; text-transform: uppercase; transform: skewX(-8deg); }
         .scroll-area { overflow-y: auto; flex-grow: 1; padding: 15px 5px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
         
-        .loader { border: 4px solid rgba(255, 255, 255, 0.1); border-left-color: #eab308; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        .flash-red { background-color: rgba(220, 38, 38, 0.4) !important; transition: background 0.1s; }
-        .answers-grid { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
-        @media (min-width: 640px) { .answers-grid { grid-template-columns: 1fr 1fr; } }
-        
-        .text-readable { text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
-
-        /* BOSS LEVELS BUTTON AUTO-SCALE FIX */
         .boss-button { 
             background: linear-gradient(90deg, #b45309 0%, #f59e0b 50%, #b45309 100%); 
             color: white; border: 2px solid #fde047; 
             box-shadow: 0 0 20px rgba(234, 179, 8, 0.6); 
             animation: pulse-gold 2s infinite; 
-            touch-action: none;
-            width: 100%;
-            max-width: 100%;
-            padding: 1.5rem 0.5rem;
-            overflow: hidden;
+            width: 100%; padding: 1.5rem 0.5rem;
         }
 
-        .boss-text {
-            white-space: nowrap;
-            font-size: clamp(1rem, 5vw, 1.875rem); /* Scalet tussen 16px en 30px gebaseerd op schermbreedte */
-            flex-shrink: 1;
-        }
-
+        .boss-text { white-space: nowrap; font-size: clamp(1rem, 5vw, 1.875rem); flex-shrink: 1; }
         .flame { flex-shrink: 0; font-size: 1.2em; }
         
-        .reset-btn-small {
-            background: rgba(220, 38, 38, 0.6);
+        /* DUIDELIJKE RESET KNOP */
+        .btn-reset-clear {
+            background: rgba(185, 28, 28, 0.8);
+            border: 1px solid #ef4444;
             color: white;
-            font-size: 0.6rem;
-            padding: 4px 8px;
-            border-radius: 4px;
+            font-size: 0.75rem;
+            padding: 8px;
             font-weight: 900;
             text-transform: uppercase;
-            margin-top: 5px;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            width: 80%;
+            align-self: center;
+            clip-path: polygon(2% 0%, 100% 0%, 98% 100%, 0% 100%);
         }
 
         .subject-icon { font-size: 1.2em; line-height: 1; display: inline-block; width: 40px; text-align: center; font-style: normal; }
         @keyframes pulse-gold { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
-        .setup-trigger { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); opacity: 0.2; font-size: 20px; background: none; border: none; color: white; padding: 10px; cursor: pointer; }
         .reset-flash { background: white !important; transition: background 0.2s; }
     </style>
 </head>
@@ -198,17 +183,13 @@
                     <button onclick="handleStart()" class="fn-button bg-yellow-400 text-black text-4xl sm:text-7xl px-12 py-8 shadow-[0_10px_0_rgb(161,98,7)] flex items-center justify-center mx-auto">
                         ${state.isLoading ? '<span class="loader"></span> LOADING...' : 'START MISSIONS'}
                     </button>
-                    <button onclick="setCloudUrl()" class="setup-trigger">⚙️</button>
+                    <button onclick="setCloudUrl()" style="position:fixed; bottom:15px; left:50%; transform:translateX(-50%); opacity:0.2;">⚙️</button>
                 </div>`;
             } else if (state.view === 'subjects') {
                 container.innerHTML = `<div class="glass p-6 sm:p-10 max-w-xl">
                     <h2 class="text-header text-3xl sm:text-6xl text-yellow-400 mb-6 text-center title-glow uppercase">MISSIONS</h2>
                     <div class="scroll-area grid gap-4">
-                        <button onclick="navigate('boss_selection')" class="fn-button boss-button mb-4">
-                            <span class="flame">🔥</span> 
-                            <span class="boss-text">BOSS LEVELS</span> 
-                            <span class="flame">🔥</span>
-                        </button>
+                        <button onclick="navigate('boss_selection')" class="fn-button boss-button mb-4"><span class="flame">🔥</span> <span class="boss-text">BOSS LEVELS</span> <span class="flame">🔥</span></button>
                         ${['Frans', 'Taal', 'WO'].map(s => `<button onclick="state.selectedSubject='${s.toUpperCase()}'; navigate('lessons');" class="fn-button bg-white/20 border-l-[10px] border-yellow-400 text-3xl py-8 shadow-lg active:bg-yellow-400"><i class="subject-icon">${getSubjectIcon(s)}</i> ${s}</button>`).join('')}
                     </div>
                 </div>`;
@@ -226,9 +207,9 @@
                     <div class="flex justify-between items-center mb-6"><button onclick="navigate('boss_selection');" class="bg-yellow-400 text-black px-4 py-2 fn-button text-xs font-black">← BACK</button>
                     <h2 class="text-header text-2xl text-white uppercase title-glow">${state.selectedBossSubject} BOSS</h2></div>
                     <div class="scroll-area grid gap-4">
-                        ${themes.map(t => `<div class="flex flex-col gap-1">
-                            <button onclick="startThemeBoss('${state.selectedBossSubject}', '${t}')" class="fn-button bg-red-600/20 border-l-[10px] border-red-600 text-xl py-6">${t} ULTIMATE</button>
-                            <button onclick="resetLocalProgress('${state.selectedBossSubject}', '${t}')" class="reset-btn-small self-end">Reset Boss Progress</button>
+                        ${themes.map(t => `<div class="flex flex-col">
+                            <button onclick="startThemeBoss('${state.selectedBossSubject}', '${t}')" class="fn-button bg-red-600/20 border-l-[10px] border-red-600 text-xl py-6 mb-2">${t} ULTIMATE</button>
+                            <button onclick="resetLocalProgress('${state.selectedBossSubject}', '${t}')" class="btn-reset-clear">RESET ${t} PROGRESS</button>
                         </div>`).join('')}
                     </div>
                 </div>`;
@@ -240,9 +221,9 @@
                     <h2 class="text-header text-2xl text-white uppercase">${state.selectedSubject}</h2></div>
                     <div class="scroll-area space-y-6">
                         ${themes.map(t => `<div class="mb-4"><h3 class="bg-yellow-400 text-black font-black text-xs mb-3 px-3 py-1 uppercase inline-block italic skew-x-[-10deg]">${t}</h3><div class="grid gap-2">
-                            ${filtered.filter(l => l.theme === t).map(l => `<div class="flex flex-col gap-1">
-                                <button onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="w-full p-5 border-l-4 bg-white/20 border-white/30 text-left font-black uppercase text-xl active:bg-yellow-400 active:text-black">${l.name}</button>
-                                <button onclick="resetLocalProgress('${l.subject}','${l.theme}','${l.name}')" class="reset-btn-small self-end">Reset Lesson</button>
+                            ${filtered.filter(l => l.theme === t).map(l => `<div class="flex flex-col">
+                                <button onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="w-full p-5 border-l-4 bg-white/20 border-white/30 text-left font-black uppercase text-xl active:bg-yellow-400 active:text-black mb-1">${l.name}</button>
+                                <button onclick="resetLocalProgress('${l.subject}','${l.theme}','${l.name}')" class="btn-reset-clear !w-full !mb-4">RESET LESSON</button>
                             </div>`).join('')}
                         </div></div>`).join('')}
                     </div></div>`;
