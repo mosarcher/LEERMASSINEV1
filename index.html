@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V17.1</title>
+    <title>MASSINE'S CHALLENGE V17</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #0a051a; color: white; margin: 0; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
-        #bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-size: cover; background-position: center; transition: background-image 0.4s; background-image: url('https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/massinewall.png'); }
+        #bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-size: cover; background-position: center; background-image: url('https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/massinewall.png'); }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(10,5,26,0.1), rgba(10,5,26,0.6)); z-index: -1; }
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; flex-direction: column; width: 100%; max-height: 98%; border-radius: 1.5rem; padding: 5px; }
         .scroll-area { overflow-y: auto; flex-grow: 1; padding: 5px; -webkit-overflow-scrolling: touch; }
@@ -17,17 +17,19 @@
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; margin-bottom: 0.5rem; }
         .lesson-progress-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: #22c55e; z-index: 5; transition: width 0.5s ease-out; }
         
+        /* Swipe Actions */
         .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; touch-action: pan-y; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 50; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
         .swiped .swipe-actions { opacity: 1; pointer-events: auto; }
-        .btn-reset { background: #3b82f6; height: 100%; padding: 0 15px; font-weight: 900; font-size: 0.7rem; color: white; text-transform: uppercase; border: none; }
+        .btn-reset { background: #3b82f6; height: 100%; padding: 0 20px; font-weight: 900; font-size: 0.7rem; color: white; text-transform: uppercase; border: none; }
         .swiped .fn-button { transform: translateX(-80px); }
 
-        .btn-correct-full { background-color: #00ff00 !important; color: black !important; border: 4px solid white !important; transform: scale(1.05); }
+        /* Quiz States */
+        .btn-correct-full { background-color: #00ff00 !important; color: black !important; border: 4px solid white !important; transform: scale(1.02); }
         .btn-wrong-hard { background-color: #ff0000 !important; color: white !important; border: 4px solid white !important; animation: shake 0.3s; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
-        .btn-dimmed { opacity: 0.1 !important; }
-        .subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        
+        .subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     </style>
 </head>
 <body onclick="closeAllSwipes()">
@@ -36,89 +38,73 @@
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
 
     <script>
-        const MIJN_DATA = [
-            {"s": "WO", "t": "Lichaam", "n": "Ademhaling", "q": "Wat halen de longen uit de lucht?", "a": "Zuurstof", "d": ["Koolstofdioxide", "Water", "Voedsel"]},
-            {"s": "WO", "t": "Lichaam", "n": "Ademhaling", "q": "Waarom heeft de luchtpijp kraakbeenringen?", "a": "Zodat hij niet wordt dichtgedrukt", "d": ["Om harder te praten", "Om slijm te maken", "Om lucht te filteren"]},
-            {"s": "WO", "t": "Lichaam", "n": "Ademhaling", "q": "Waarop steunen de longen?", "a": "Het middenrif", "d": ["De maag", "De lever", "De ribbenkast"]},
-            {"s": "WO", "t": "Lichaam", "n": "Ademhaling", "q": "Wat geven de longblaasjes af om uit te ademen?", "a": "Koolstofdioxide en water", "d": ["Alleen zuurstof", "Energie", "Stofdeeltjes"]},
-            {"s": "WO", "t": "Lichaam", "n": "Bloedsomloop", "q": "Hoe vaak klopt het hart ongeveer per dag?", "a": "Ruim 100.000 maal", "d": ["1.000 maal", "70 maal", "10.000 maal"]},
-            {"s": "WO", "t": "Lichaam", "n": "Bloedsomloop", "q": "Waar kun je de hartslag voelen buiten de pols?", "a": "In de hals of de lies", "d": ["Op de vingertop", "Bij de elleboog", "Op de knie"]},
-            {"s": "WO", "t": "Lichaam", "n": "Bloedsomloop", "q": "Wat vertrekt er vanuit de linkerkamer?", "a": "Zuurstofrijk bloed via slagaders", "d": ["Zuurstofarm bloed via aders", "Alleen afvalstoffen", "Lucht"]},
-            {"s": "WO", "t": "Lichaam", "n": "Bloedsomloop", "q": "Wat gebeurt er in de kleine bloedsomloop?", "a": "Koolstofdioxide wordt geruild voor zuurstof", "d": ["Bloed wordt naar de hersenen gestuurd", "Voedingsstoffen worden opgenomen", "Spieren krijgen energie"]},
-            {"s": "WO", "t": "Lichaam", "n": "3 soorten spieren", "q": "Hoeveel spieren heeft een mens ongeveer?", "a": "Ruim 600", "d": ["100", "206", "1.000"]},
-            {"s": "WO", "t": "Lichaam", "n": "3 soorten spieren", "q": "Welke spieren kun je niet zelf sturen?", "a": "Onbewuste of onwillekeurige spieren", "d": ["Bewuste spieren", "Beenspieren", "Armspieren"]},
-            {"s": "WO", "t": "Lichaam", "n": "3 soorten spieren", "q": "Wat is een voorbeeld van een spier die automatisch werkt?", "a": "De hartspier", "d": ["De biceps", "De kauwspier", "De kuitspier"]},
-            {"s": "WO", "t": "Lichaam", "n": "3 soorten spieren", "q": "Wat is een voorbeeld van een bewuste spier?", "a": "De kauwspier", "d": ["De maagspier", "De darmspier", "De hartspier"]},
-            {"s": "WO", "t": "Lichaam", "n": "3 soorten spieren", "q": "Wat gebeurt er met een spier als je hem spant?", "a": "Hij wordt harder en dikker", "d": ["Hij wordt zachter", "Hij wordt langer", "Hij wordt blauw"]},
-            {"s": "WO", "t": "Lichaam", "n": "Spijsvertering", "q": "Hoe lang is de slokdarm ongeveer?", "a": "25 cm", "d": ["5 meter", "1,5 meter", "10 cm"]},
-            {"s": "WO", "t": "Lichaam", "n": "Spijsvertering", "q": "Welk orgaan is ongeveer 5 meter lang?", "a": "De dunne darm", "d": ["De dikke darm", "de slokdarm", "De maag"]},
-            {"s": "WO", "t": "Lichaam", "n": "Spijsvertering", "q": "Welk orgaan is ongeveer 1 à 1,5 meter lang?", "a": "De dikke darm", "d": ["De dunne darm", "De slokdarm", "De lever"]},
-            {"s": "WO", "t": "Lichaam", "n": "Spijsvertering", "q": "Waar worden de afvalstoffen opgeslagen?", "a": "De endeldarm", "d": ["De lever", "De maag", "De slokdarm"]},
-            {"s": "WO", "t": "Lichaam", "n": "Zintuigen", "q": "Hoe heet een seintje uit de omgeving?", "a": "Een prikkel", "d": ["Een zenuw", "Een reactie", "Een spierpijn"]},
-            {"s": "WO", "t": "Lichaam", "n": "Zintuigen", "q": "Wat verbindt de zintuigen met de hersenen?", "a": "Zenuwen", "d": ["Spieren", "Botten", "Bloedvaten"]},
-            {"s": "WO", "t": "Lichaam", "n": "Zintuigen", "q": "Welk orgaan stuurt een seintje terug naar je spieren?", "a": "De hersenen", "d": ["De maag", "Het hart", "De longen"]},
-            {"s": "WO", "t": "Lichaam", "n": "Tanden en botten", "q": "Wat is het hardste materiaal in je lichaam?", "a": "Het tandglazuur", "d": ["Het bot", "De nagels", "De spieren"]},
-            {"s": "WO", "t": "Lichaam", "n": "Tanden en botten", "q": "Uit hoeveel botten bestaat het skelet ongeveer?", "a": "Ruim 200", "d": ["100", "600", "50"]},
-            {"s": "WO", "t": "Lichaam", "n": "Tanden en botten", "q": "Wat zit er binnenin een bot?", "a": "Beenmerg", "d": ["Lucht", "Bloed", "Spier"]},
-            {"s": "WO", "t": "Lichaam", "n": "Tanden en botten", "q": "Welk mineraal heb je nodig voor sterke botten?", "a": "Calcium", "d": ["IJzer", "Zout", "Suiker"]},
-            {"s": "WO", "t": "Gezondheid", "n": "Ziekte", "q": "Wat zijn ziekteverwekkers?", "a": "Bacteriën en virussen", "d": ["Zenuwen", "Zuurstof", "Vitamines"]},
-            {"s": "WO", "t": "Gezondheid", "n": "Ziekte", "q": "Wat doet je lichaam om ziekteverwekkers te doden?", "a": "Koorts maken", "d": ["Kouder worden", "Slapen", "Eten"]},
-            {"s": "WO", "t": "Gezondheid", "n": "Ziekte", "q": "Welke cellen in je bloed vallen bacteriën aan?", "a": "Witte bloedcellen", "d": ["Rode bloedcellen", "Bloedplaatjes", "Zenuwcellen"]},
-            {"s": "WO", "t": "Gezondheid", "n": "Ziekte", "q": "Hoe heet een stof die je beschermt tegen ziektes?", "a": "Antistof", "d": ["Gif", "Afvalstof", "Prikkel"]},
-            {"s": "WO", "t": "Gezondheid", "n": "Eten", "q": "Welke stoffen geven je energie?", "a": "Brandstoffen (koolhydraten/vetten)", "d": ["Bouwstoffen", "Vitamines", "Water"]},
-            {"s": "WO", "t": "Gezondheid", "n": "Eten", "q": "Welke stoffen heb je nodig om te groeien?", "a": "Bouwstoffen (eiwitten)", "d": ["Brandstoffen", "Suikers", "Zouten"]},
-            {"s": "WO", "t": "Gezondheid", "n": "Eten", "q": "Wat zijn vitamines en mineralen?", "a": "Beschermstoffen", "d": ["Brandstoffen", "Eiwitten", "Vetten"]},
-            {"s": "WO", "t": "Voortplanting", "n": "Man en vrouw", "q": "Hoe heet de mannelijke geslachtscel?", "a": "Zaadcel", "d": ["Eicel", "Zenuwcel", "Hormoon"]},
-            {"s": "WO", "t": "Voortplanting", "n": "Man en vrouw", "q": "Waar worden eicellen bewaard?", "a": "Eierstokken", "d": ["Baarmoeder", "Eileiders", "Vagina"]},
-            {"s": "WO", "t": "Voortplanting", "n": "Man en vrouw", "q": "Wat is de puberteit?", "a": "De overgang van kind naar volwassene", "d": ["De tijd op de kleuterschool", "Een ziekte", "De vakantie"]},
-            {"s": "WO", "t": "Voortplanting", "n": "Baby", "q": "Hoe heet de verbinding tussen moeder en baby?", "a": "De navelstreng", "d": ["Een zenuw", "Een spier", "Een ader"]},
-            {"s": "WO", "t": "Voortplanting", "n": "Baby", "q": "In welk orgaan groeit de baby?", "a": "De baarmoeder", "d": ["De maag", "De blaas", "De eierstok"]},
-            {"s": "WO", "t": "Voortplanting", "n": "Baby", "q": "Wat beschermt de baby tegen schokken?", "a": "Het vruchtwater", "d": ["Het bloed", "De lucht", "Het vet"]},
-            {"s": "WO", "t": "Lichaam", "n": "Extra", "q": "Welk orgaan filtert afvalstoffen uit het bloed?", "a": "De nieren", "d": ["De maag", "De longen", "De hersenen"]},
-            {"s": "WO", "t": "Lichaam", "n": "Extra", "q": "Wat is de functie van de lever?", "a": "Giftige stoffen afbreken", "d": ["Lucht inademen", "Bloed rondpompen", "Denken"]},
-            {"s": "WO", "t": "Lichaam", "n": "Extra", "q": "Hoeveel liter bloed heeft een volwassene ongeveer?", "a": "5 à 6 liter", "d": ["1 liter", "10 liter", "20 liter"]},
-            {"s": "WO", "t": "Lichaam", "n": "Extra", "q": "Wat doen rode bloedcellen?", "a": "Zuurstof vervoeren", "d": ["Bacteriën doden", "Wonden dichten", "Afval opslaan"]},
-            {"s": "WO", "t": "Lichaam", "n": "Extra", "q": "Wat doen bloedplaatjes?", "a": "Het bloed laten stollen", "d": ["Zuurstof geven", "Energie maken", "Ziek worden"]},
-            {"s": "WO", "t": "Gezondheid", "n": "Extra", "q": "Waarom is slaap belangrijk?", "a": "Voor herstel van lichaam en hersenen", "d": ["Om honger te krijgen", "Om groter te worden", "Om te dromen"]},
-            {"s": "WO", "t": "Gezondheid", "n": "Extra", "q": "Wat is een verslaving?", "a": "Niet meer zonder een bepaalde stof kunnen", "d": ["Een hobby", "Een sport", "Een feestje"]},
-            {"s": "WO", "t": "Gezondheid", "n": "Extra", "q": "Welke stof in sigaretten is verslavend?", "a": "Nicotine", "d": ["Teer", "Koolstof", "Zuurstof"]},
-            {"s": "WO", "t": "Gezondheid", "n": "Extra", "q": "Wat is een gebalanceerd dieet?", "a": "Gevarieerd eten uit de Schijf van Vijf", "d": ["Alleen vlees", "Alleen suikers", "Niets eten"]}
-        ];
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA7MUx5TsNqqMxQua7ieWURRHXrxlMn_j4M96pmerRHmCoRe9D-TKQ-kkuNIeeWzBsoJt5aF4ZXTkt/pub?output=csv";
 
         let state = {
-            view: 'subjects',
+            view: 'loading',
             lessons: [],
             selectedSubject: '',
             status: 'idle',
             quizItems: [],
             totalQuestions: 0,
             selected: null,
-            scores: JSON.parse(localStorage.getItem('massine_scores_v17_lokaal') || '{}')
+            scores: JSON.parse(localStorage.getItem('massine_scores_v17') || '{}')
         };
 
-        function prepareData() {
-            const lessonsMap = {};
-            MIJN_DATA.forEach(item => {
-                const key = `${item.s}-${item.theme || item.t}-${item.name || item.n}`;
-                if (!lessonsMap[key]) lessonsMap[key] = { subject: item.s, theme: item.theme || item.t, name: item.name || item.n, items: [] };
-                lessonsMap[key].items.push({ word: item.q, correct: item.a, options: [item.a, ...item.d].sort(() => Math.random() - 0.5) });
-            });
-            state.lessons = Object.values(lessonsMap);
+        async function loadData() {
+            try {
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(CSV_URL)}&t=${Date.now()}`;
+                const res = await fetch(proxyUrl);
+                const json = await res.json();
+                const csvData = json.contents;
+
+                const lines = csvData.split(/\r?\n/).filter(l => l.trim() !== '');
+                const lessonsMap = {};
+
+                lines.slice(1).forEach(line => {
+                    const c = line.split(/,(?=(?:(?:[^'\"]*\"[^'\"]*\"){2})*[^'\"]*$)/).map(x => x.replace(/^\"|\"$/g, '').trim());
+                    if(c.length >= 7 && c[5] && c[6]) {
+                        const s = (c[0] || 'OVERIG').toUpperCase();
+                        const t = c[1] || 'Thema';
+                        const n = c[2] || 'Les';
+                        const key = `${s}-${t}-${n}`;
+                        if(!lessonsMap[key]) lessonsMap[key] = { subject: s, theme: t, name: n, items: [] };
+                        
+                        let dists = c[7] ? c[7].split('|').map(x => x.trim()) : [];
+                        lessonsMap[key].items.push({ 
+                            word: c[5], 
+                            correct: c[6], 
+                            options: [c[6], ...dists].sort(() => Math.random() - 0.5) 
+                        });
+                    }
+                });
+
+                state.lessons = Object.values(lessonsMap);
+                state.view = 'subjects';
+                render();
+            } catch (e) {
+                document.getElementById('app').innerHTML = `<div class="glass p-10 text-center font-black italic text-red-500 uppercase">FOUT BIJ LADEN - CHECK INTERNET</div>`;
+            }
         }
 
         function render() {
             const container = document.getElementById('app');
+            if (state.view === 'loading') {
+                container.innerHTML = `<div class="glass p-20 text-center font-black italic animate-pulse text-yellow-500 uppercase tracking-widest">Loading Mission...</div>`;
+                return;
+            }
+
             if (state.view === 'subjects') {
                 const subs = [...new Set(state.lessons.map(l => l.subject))];
                 container.innerHTML = `<div class="glass w-full max-w-md p-4">
-                    <h1 class="text-3xl text-yellow-400 mb-6 text-center font-black italic uppercase tracking-tighter">Massine's Challenge</h1>
+                    <h1 class="text-3xl text-yellow-400 mb-6 text-center font-black italic uppercase">Massine's Challenge</h1>
                     <div class="grid gap-4">
-                        <button onclick="state.view='boss'; render();" class="fn-button bg-orange-600 py-6 text-xl italic mb-2">🔥 BOSS LEVELS 🔥</button>
+                        <button onclick="startBossMode()" class="fn-button bg-orange-600 py-6 text-xl italic mb-2">🔥 BOSS LEVELS 🔥</button>
                         <div class="subject-grid">
                             ${subs.map(s => {
-                                let icon = s === 'WO' ? '🌍' : s === 'FRANS' ? '🇫🇷' : '🇳🇱';
-                                return `<button onclick="state.selectedSubject='${s}'; state.view='lessons'; render();" class="fn-button bg-white/10 py-8 text-xl italic border border-white/5 flex flex-col">
-                                    <span class="text-3xl mb-1">${icon}</span>
+                                let icon = s.includes('WO') ? '🌍' : s.includes('FRANS') ? '🇫🇷' : '🇳🇱';
+                                return `<button onclick="state.selectedSubject='${s}'; state.view='lessons'; render();" class="fn-button bg-white/10 py-10 text-xl italic border border-white/5 flex flex-col">
+                                    <span class="text-4xl mb-2">${icon}</span>
                                     <span>${s}</span>
                                 </button>`;
                             }).join('')}
@@ -138,8 +124,7 @@
                         ${themes.map(t => `<div class="theme-label">${t}</div>` + filtered.filter(l => l.theme === t).map(l => {
                             const key = `${l.subject}-${l.theme}-${l.name}`;
                             const lid = 'id' + Math.random().toString(36).substr(2, 5);
-                            const isDone = state.scores[key];
-                            return `<div class="swipe-container"><div class="swipe-actions"><button onclick="resetScore('${key}')" class="btn-reset italic">RESET</button></div><div id="${lid}" ontouchstart="handleTS(event)" ontouchmove="handleTM(event, '${lid}')" class="w-full h-full transition-transform duration-200"><button onclick="startQuiz('${l.subject}','${l.theme}','${l.name}')" class="fn-button bg-white/10 py-5 text-left pl-6 italic relative"><span>${l.name}</span>${isDone ? '<div class="lesson-progress-bar" style="width: 100%"></div>' : ''}</button></div></div>`;
+                            return `<div class="swipe-container"><div class="swipe-actions"><button onclick="resetScore('${key}')" class="btn-reset">RESET</button></div><div id="${lid}" ontouchstart="handleTS(event)" ontouchmove="handleTM(event, '${lid}')" class="w-full h-full transition-transform duration-200"><button onclick="startQuiz('${l.subject}','${l.theme}','${l.name}')" class="fn-button bg-white/10 py-5 text-left pl-6 italic relative"><span>${l.name}</span>${state.scores[key] ? '<div class="lesson-progress-bar" style="width: 100%"></div>' : ''}</button></div></div>`;
                         }).join('')).join('')}
                     </div>
                 </div>`;
@@ -148,17 +133,17 @@
                 const q = state.quizItems[0];
                 const progress = ((state.totalQuestions - state.quizItems.length) / state.totalQuestions) * 100;
                 container.innerHTML = `<div class="glass w-full max-w-4xl p-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <button onclick="state.view='lessons'; render();" class="text-red-500 font-black italic text-xs uppercase">STOP</button>
-                        <div class="flex-1 mx-4 bg-white/10 h-2 rounded-full overflow-hidden"><div class="bg-yellow-400 h-full transition-all" style="width:${progress}%"></div></div>
-                        <span class="text-yellow-400 font-black italic">${state.quizItems.length}</span>
+                    <div class="flex justify-between items-center mb-6">
+                        <button onclick="state.view='lessons'; render();" class="text-red-500 font-black italic uppercase text-xs">STOP</button>
+                        <div class="flex-1 mx-4 bg-white/10 h-2 rounded-full overflow-hidden"><div class="bg-yellow-400 h-full" style="width:${progress}%"></div></div>
+                        <span class="text-yellow-400 font-black italic text-xs">${state.quizItems.length} LEFT</span>
                     </div>
-                    <h2 class="text-2xl text-center my-10 font-black italic uppercase">${q.word}</h2>
+                    <h2 class="text-2xl text-center my-10 font-black italic uppercase leading-tight">${q.word}</h2>
                     <div class="grid gap-3">${q.options.map(opt => {
-                        let cl = "bg-white/10"; if(state.status !== 'idle'){ if(opt===q.correct) cl="btn-correct-full"; else if(opt===state.selected) cl="btn-wrong-hard"; else cl="btn-dimmed"; }
-                        return `<button onclick="handleAns('${opt}')" class="fn-button py-6 text-lg italic ${cl}">${opt}</button>`
+                        let cl = "bg-white/10"; if(state.status !== 'idle'){ if(opt===q.correct) cl="btn-correct-full"; else if(opt===state.selected) cl="btn-wrong-hard"; else cl="opacity-20"; }
+                        return `<button onclick="handleAnswer('${opt}')" class="fn-button py-6 text-lg italic ${cl}">${opt}</button>`
                     }).join('')}</div>
-                    ${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-8 bg-yellow-400 text-black py-4 fn-button italic font-black uppercase">Next →</button>` : ''}
+                    ${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-8 bg-yellow-400 text-black py-4 fn-button italic font-black uppercase tracking-widest">Next →</button>` : ''}
                 </div>`;
             }
         }
@@ -171,26 +156,40 @@
             state.view = 'quiz'; render();
         }
 
-        function handleAns(opt) {
+        function startBossMode() {
+            state.currentKey = 'BOSS';
+            let allItems = [];
+            state.lessons.forEach(l => allItems.push(...l.items));
+            state.quizItems = allItems.sort(() => Math.random() - 0.5).slice(0, 20);
+            state.totalQuestions = state.quizItems.length;
+            state.view = 'quiz'; render();
+        }
+
+        function handleAnswer(opt) {
             if (state.status !== 'idle') return;
             state.selected = opt;
             const q = state.quizItems[0];
-            if (opt === q.correct) { state.status = 'correct'; confetti({ particleCount: 50, spread: 60 }); } 
-            else { state.status = 'wrong'; state.quizItems.push({...q}); }
+            if (opt === q.correct) { 
+                state.status = 'correct'; 
+                confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } }); 
+            } else { 
+                state.status = 'wrong'; 
+                state.quizItems.push({...q}); 
+            }
             render();
         }
 
         function nextQ() {
             state.quizItems.shift(); state.status = 'idle'; state.selected = null;
             if (state.quizItems.length === 0) {
-                state.scores[state.currentKey] = true;
-                localStorage.setItem('massine_scores_v17_lokaal', JSON.stringify(state.scores));
-                state.view = 'lessons';
+                if(state.currentKey !== 'BOSS') state.scores[state.currentKey] = true;
+                localStorage.setItem('massine_scores_v17', JSON.stringify(state.scores));
+                state.view = state.currentKey === 'BOSS' ? 'subjects' : 'lessons';
             }
             render();
         }
 
-        function resetScore(key) { delete state.scores[key]; localStorage.setItem('massine_scores_v17_lokaal', JSON.stringify(state.scores)); render(); }
+        function resetScore(key) { delete state.scores[key]; localStorage.setItem('massine_scores_v17', JSON.stringify(state.scores)); render(); }
 
         let startX = 0;
         function handleTS(e) { startX = e.touches[0].clientX; }
@@ -202,8 +201,7 @@
         }
         function closeAllSwipes() { document.querySelectorAll('.swipe-container').forEach(el => el.classList.remove('swiped')); }
 
-        prepareData();
-        render();
+        loadData();
     </script>
 </body>
 </html>
