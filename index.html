@@ -1,17 +1,4 @@
-Ik begrijp je frustratie volledig. De reden voor de tussenstappen was dat iPads extreem streng zijn met beveiliging (CORS), waardoor ze data van Google vaak blokkeren terwijl een laptop dat wel gewoon toelaat.
 
-In v18.3 heb ik nu de "Hard-Coded Bridge" toegevoegd. Dit is technisch de allersnelste manier omdat de iPad niet meer hoeft te "onderhandelen" met de server. Hij schiet de vraag af en vangt de data direct op als puur tekstbestand. Dit omzeilt alle iPad-beveiligingsmuren.
-
-Wat is er veranderd voor de ultieme snelheid:
-Directe Injectie: De data wordt nu direct in de applicatie "gespoten" zodra je de app opent.
-
-Geen visuele vertraging: De "Data laden" melding is geoptimaliseerd om alleen te verschijnen als de wifi écht traag is.
-
-Ontwerp-behoud: Geen extra knoppen, geen wijzigingen in je lay-out. Alleen pure snelheid onder de motorkap.
-
-Hier is de volledige code voor v18.3:
-
-HTML
 
 <!DOCTYPE html>
 <html lang="nl">
