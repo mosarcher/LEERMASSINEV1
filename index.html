@@ -1,11 +1,9 @@
-
-
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V14.9</title>
+    <title>MASSINE'S CHALLENGE V15.0</title>
     <link rel="preconnect" href="https://script.google.com">
     <link rel="preconnect" href="https://raw.githubusercontent.com">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,9 +15,13 @@
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(10,5,26,0.1), rgba(10,5,26,0.6)); z-index: -1; }
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; flex-direction: column; width: 100%; max-height: 98%; border-radius: 1.5rem; padding: 5px; }
         .scroll-area { overflow-y: auto; flex-grow: 1; padding: 5px; -webkit-overflow-scrolling: touch; }
-        .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: none; touch-action: manipulation; }
+        .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: none; touch-action: manipulation; position: relative; overflow: hidden; }
         
-        /* FEEDBACK STYLES (STRICT) */
+        /* Progressiebalk op knop */
+        .progress-bg { position: absolute; top: 0; left: 0; height: 100%; background: rgba(255, 255, 255, 0.15); z-index: 0; transition: width 0.5s ease-out; pointer-events: none; }
+        .fn-button span { z-index: 1; position: relative; }
+
+        /* FEEDBACK STYLES */
         .btn-correct-full { background-color: #00ff00 !important; color: black !important; border: 4px solid white !important; transform: scale(1.05); z-index: 20; opacity: 1 !important; }
         .btn-correct-subtle { background-color: rgba(0, 255, 0, 0.3) !important; color: white !important; border: 1px solid #00ff00 !important; opacity: 0.8 !important; }
         .btn-wrong-hard { background-color: #ff0000 !important; color: white !important; border: 4px solid white !important; animation: hard-shake 0.4s ease-in-out; opacity: 1 !important; }
@@ -27,7 +29,6 @@
 
         @keyframes hard-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-12px); } 40% { transform: translateX(12px); } 60% { transform: translateX(-12px); } 80% { transform: translateX(12px); } }
 
-        /* SWIPE SYSTEM */
         .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; touch-action: pan-y; }
         .swipe-q-box { height: auto !important; min-height: 80px; margin-bottom: 20px; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; opacity: 0; transition: opacity 0.2s; }
@@ -52,7 +53,7 @@
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v14.9</div>
+    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v15.0</div>
 
     <script>
         const CONFIG = {
@@ -81,11 +82,20 @@
             } catch(e) {} 
         }
 
+        function calculateSubjectProgress(subject) {
+            const lessons = state.lessons.filter(l => l.subject === subject);
+            if (lessons.length === 0) return 0;
+            const completed = lessons.filter(l => {
+                const key = `${l.subject}-${l.theme}-${l.name}`;
+                return !state.checkpoints[key]; // Voltooid als er GEEN checkpoint is (na 10/10)
+            }).length;
+            return (completed / lessons.length) * 100;
+        }
+
         async function logErrorToSheet(q, givenAnswer) {
             try {
                 fetch(CONFIG.scriptUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
+                    method: 'POST', mode: 'no-cors',
                     body: JSON.stringify({
                         subject: state.currentLesson.subject,
                         theme: state.currentLesson.theme,
@@ -187,10 +197,14 @@
             if (state.view === 'start') {
                 container.innerHTML = `<div class="text-center"><h1 class="text-5xl mb-8 font-black italic">MASSINE'S CHALLENGE</h1><button onclick="navigate('subjects')" class="fn-button bg-yellow-400 text-black text-3xl px-10 py-6 mx-auto italic">START</button></div>`;
             } else if (state.view === 'subjects') {
+                const frProg = calculateSubjectProgress('FRANS');
+                const taProg = calculateSubjectProgress('TAAL');
+                const woProg = calculateSubjectProgress('WO');
+                
                 container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><h2 class="text-2xl text-yellow-400 mb-4 text-center italic font-black uppercase">Missions</h2><div class="scroll-area grid grid-cols-1 gap-3"><button onclick="navigate('boss_selection')" class="fn-button bg-orange-600 text-white text-2xl py-8 italic shadow-lg">🔥 BOSS LEVELS 🔥</button><div class="subject-grid">
-                    <button onclick="state.selectedSubject='FRANS'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><span class="subject-icon">🇫🇷</span> Frans</button>
-                    <button onclick="state.selectedSubject='TAAL'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><span class="subject-icon">🇳🇱</span> Taal</button>
-                    <button onclick="state.selectedSubject='WO'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><span class="subject-icon">🌍</span> WO</button>
+                    <button onclick="state.selectedSubject='FRANS'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><div class="progress-bg" style="width: ${frProg}%"></div><span class="subject-icon">🇫🇷</span><span>Frans</span></button>
+                    <button onclick="state.selectedSubject='TAAL'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><div class="progress-bg" style="width: ${taProg}%"></div><span class="subject-icon">🇳🇱</span><span>Taal</span></button>
+                    <button onclick="state.selectedSubject='WO'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><div class="progress-bg" style="width: ${woProg}%"></div><span class="subject-icon">🌍</span><span>WO</span></button>
                 </div></div></div>`;
             } else if (state.view === 'lessons') {
                 const filtered = state.lessons.filter(l => l.subject === state.selectedSubject);
@@ -206,7 +220,7 @@
                             return `<div class="swipe-container"><div class="swipe-actions"><button onclick="executeReset('${l.subject}','${l.theme}','${l.name}')" class="action-btn btn-reset">RESET</button></div>
                                 ${cp ? `<div class="resume-pill">CONT.</div>` : ''}
                                 <button id="${id}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${id}')" onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="fn-button bg-white/10 border-l-[6px] border-white/30 text-lg py-5 italic text-left pl-6 relative">
-                                    ${l.name}
+                                    <span>${l.name}</span>
                                     <span class="progress-tag ${done > 0 ? 'progress-active' : ''}">${done}/${total}</span>
                                 </button></div>`}).join('')}</div>`).join('')}</div></div>`;
             } else if (state.view === 'quiz') {
