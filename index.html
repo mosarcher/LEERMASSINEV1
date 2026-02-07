@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V16.5</title>
+    <title>MASSINE'S CHALLENGE V16.6</title>
     <link rel="preconnect" href="https://script.google.com">
     <link rel="preconnect" href="https://raw.githubusercontent.com">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,18 +16,14 @@
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; flex-direction: column; width: 100%; max-height: 98%; border-radius: 1.5rem; padding: 5px; }
         .scroll-area { overflow-y: auto; flex-grow: 1; padding: 5px; -webkit-overflow-scrolling: touch; }
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: none; touch-action: manipulation; position: relative; overflow: hidden; }
-        
         .progress-bg { position: absolute; top: 0; left: 0; height: 100%; background: rgba(34, 197, 94, 0.2); z-index: 0; transition: width 0.5s ease-out; pointer-events: none; }
         .lesson-progress-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: #22c55e; z-index: 5; transition: width 0.5s ease-out; }
         .fn-button span { z-index: 1; position: relative; }
-
         .btn-correct-full { background-color: #00ff00 !important; color: black !important; border: 4px solid white !important; transform: scale(1.05); z-index: 20; opacity: 1 !important; }
         .btn-correct-subtle { background-color: rgba(0, 255, 0, 0.2) !important; color: white !important; border: 1px solid #00ff00 !important; opacity: 0.8 !important; }
         .btn-wrong-hard { background-color: #ff0000 !important; color: white !important; border: 4px solid white !important; animation: hard-shake 0.4s ease-in-out; opacity: 1 !important; }
         .btn-dimmed { opacity: 0.05 !important; }
-
         @keyframes hard-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-12px); } 40% { transform: translateX(12px); } 60% { transform: translateX(-12px); } 80% { transform: translateX(12px); } }
-
         .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; touch-action: pan-y; }
         .swipe-q-box { height: auto !important; min-height: 80px; margin-bottom: 20px; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; opacity: 0; transition: opacity 0.2s; }
@@ -35,17 +31,13 @@
         .action-btn { height: 100%; padding: 0 15px; font-weight: 900; font-size: 0.7rem; color: white; border: none; text-transform: uppercase; }
         .btn-reset { background: #3b82f6; }
         .btn-delete { background: #ef4444; }
-        
         .swiped .fn-button, .swiped .quiz-q-inner, .swiped .theme-inner { transform: translateX(-100px); }
         .resume-pill { position: absolute; right: 10px; top: 8px; background: #eab308; color: black; font-size: 0.5rem; padding: 2px 5px; border-radius: 4px; font-weight: 900; z-index: 10; }
-        
         .stats-tag { position: absolute; bottom: 6px; right: 12px; font-size: 0.6rem; font-weight: 900; display: flex; gap: 8px; opacity: 0.8; }
         .subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .subject-icon { font-size: 1.2em; margin-right: 8px; font-style: normal; }
         .back-btn { width: auto !important; padding: 0 15px !important; height: 35px !important; font-size: 0.75rem !important; flex-shrink: 0; }
         .quiz-q-text { font-weight: 900; font-style: italic; text-transform: uppercase; }
-        
-        /* Theme Header Swipe Styles */
         .theme-swipe-box { position: relative; width: 100%; overflow: hidden; margin-bottom: 0.6rem; touch-action: pan-y; }
         .theme-inner { transition: transform 0.2s; display: block; }
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; }
@@ -55,7 +47,7 @@
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v16.5</div>
+    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v16.6</div>
 
     <script>
         const CONFIG = { scriptUrl: 'https://script.google.com/macros/s/AKfycbwG44NuJL67bxpBis12eetkybW0DKG4AAN3jq0lz7XB2oZMrgdv9NY2kaK4KdvWlfsk/exec' };
@@ -85,8 +77,7 @@
             osc.connect(gain); gain.connect(audioCtx.destination);
             if (type === 'correct') { 
                 osc.frequency.setValueAtTime(600, audioCtx.currentTime); 
-                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1); 
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime); 
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); 
             } else { 
                 osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, audioCtx.currentTime); 
                 osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.2); gain.gain.setValueAtTime(0.2, audioCtx.currentTime); 
@@ -105,7 +96,7 @@
         };
 
         function fetchCloudData() {
-            state.isLoading = true;
+            state.isLoading = true; render();
             const script = document.createElement('script');
             script.src = CONFIG.scriptUrl + (CONFIG.scriptUrl.includes('?') ? '&' : '?') + `prefix=handleCloudData&t=${Date.now()}`;
             document.body.appendChild(script);
@@ -122,11 +113,21 @@
             if (state.status !== 'idle') return; 
             state.selected = opt; const q = state.quizItems[0]; const isCorrect = (opt === q.correct);
             state.status = isCorrect ? 'correct' : 'wrong'; playSound(state.status); 
+            
             const key = `${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`;
             if (!state.stats[key]) state.stats[key] = { correct: 0, wrong: 0 };
-            if (isCorrect) { if (!q.alreadyFailed) { state.firstTryCorrect++; state.stats[key].correct++; } } 
-            else { q.alreadyFailed = true; state.stats[key].wrong++; }
-            localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats)); render(); 
+            
+            if (isCorrect) { 
+                if (!q.alreadyFailed) {
+                    state.firstTryCorrect++;
+                    state.stats[key].correct++;
+                }
+            } else { 
+                q.alreadyFailed = true; 
+                state.stats[key].wrong++;
+            }
+            localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats));
+            render(); 
         }
 
         function nextQuestion() { 
@@ -149,8 +150,11 @@
         function startLesson(s,t,n) { 
             initAudio(); const lesson = state.lessons.find(l => l.subject===s && l.theme===t && l.name===n); if (!lesson) return; 
             const key = `${s}-${t}-${n}`; 
-            if (state.checkpoints[key]) { const cp = state.checkpoints[key]; state.quizItems = cp.items; state.totalQuestions = cp.total; state.firstTryCorrect = cp.correct; } 
-            else { state.quizItems = [...lesson.items].sort(() => Math.random() - 0.5); state.totalQuestions = state.quizItems.length; state.firstTryCorrect = 0; if(!state.stats[key]) state.stats[key] = { correct: 0, wrong: 0 }; } 
+            if (state.checkpoints[key]) { 
+                const cp = state.checkpoints[key]; state.quizItems = cp.items; state.totalQuestions = cp.total; state.firstTryCorrect = cp.correct; 
+            } else { 
+                state.quizItems = [...lesson.items].sort(() => Math.random() - 0.5); state.totalQuestions = state.quizItems.length; state.firstTryCorrect = 0; 
+            } 
             state.currentLesson = { subject:s, theme:t, name:n }; state.status = 'idle'; state.selected = null; navigate('quiz'); 
         }
 
