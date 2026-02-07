@@ -24,24 +24,24 @@ window.MY_DATA = [
         "word": "14",
         "correct": "quatorze",
         "options": [
-          "quatre",
-          "quatorze"
+          "quatorze",
+          "quatre"
         ]
       },
       {
         "word": "15",
         "correct": "quinze",
         "options": [
-          "cinq",
-          "quinze"
+          "quinze",
+          "cinq"
         ]
       },
       {
         "word": "16",
         "correct": "seize",
         "options": [
-          "seize",
-          "six"
+          "six",
+          "seize"
         ]
       }
     ]
@@ -63,16 +63,16 @@ window.MY_DATA = [
         "word": "40",
         "correct": "quarante",
         "options": [
-          "quarante",
-          "quatre"
+          "quatre",
+          "quarante"
         ]
       },
       {
         "word": "50",
         "correct": "cinquante",
         "options": [
-          "cinquante",
-          "cinq"
+          "cinq",
+          "cinquante"
         ]
       },
       {
@@ -94,32 +94,32 @@ window.MY_DATA = [
         "word": "de vader",
         "correct": "le père",
         "options": [
-          "la mère",
-          "le père"
+          "le père",
+          "la mère"
         ]
       },
       {
         "word": "de moeder",
         "correct": "la mère",
         "options": [
-          "la mère",
-          "le père"
+          "le père",
+          "la mère"
         ]
       },
       {
         "word": "de broer",
         "correct": "le frère",
         "options": [
-          "le père",
-          "le frère"
+          "le frère",
+          "le père"
         ]
       },
       {
         "word": "de zus",
         "correct": "la soeur",
         "options": [
-          "la soeur",
-          "le frère"
+          "le frère",
+          "la soeur"
         ]
       }
     ]
@@ -133,8 +133,8 @@ window.MY_DATA = [
         "word": "jij bent",
         "correct": "tu es",
         "options": [
-          "tu es",
-          "je suis"
+          "je suis",
+          "tu es"
         ]
       },
       {
@@ -156,24 +156,24 @@ window.MY_DATA = [
         "word": "het mes",
         "correct": "le couteau",
         "options": [
-          "le pain",
-          "le couteau"
+          "le couteau",
+          "le pain"
         ]
       },
       {
         "word": "de vork",
         "correct": "la fourchette",
         "options": [
-          "le verre",
-          "la fourchette"
+          "la fourchette",
+          "le verre"
         ]
       },
       {
         "word": "de lepel",
         "correct": "la cuillère",
         "options": [
-          "la cuillère",
-          "le pain"
+          "le pain",
+          "la cuillère"
         ]
       },
       {
