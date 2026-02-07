@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE LOKAAL</title>
+    <title>MASSINE'S CHALLENGE V17.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -11,56 +11,38 @@
         body { font-family: 'Inter', sans-serif; background: #0a051a; color: white; margin: 0; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
         #bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-size: cover; background-position: center; background-image: url('https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/massinewall.png'); }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(10,5,26,0.1), rgba(10,5,26,0.6)); z-index: -1; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; flex-direction: column; width: 100%; max-height: 98%; border-radius: 1.5rem; padding: 15px; }
-        .scroll-area { overflow-y: auto; flex-grow: 1; -webkit-overflow-scrolling: touch; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; flex-direction: column; width: 100%; max-height: 98%; border-radius: 1.5rem; padding: 10px; }
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; border: none; touch-action: manipulation; }
-        .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; margin-bottom: 0.5rem; }
-        .progress-bar { height: 6px; background: #eab308; transition: width 0.3s ease; border-radius: 3px; }
-        .btn-correct { background-color: #22c55e !important; color: white !important; }
-        .btn-wrong { background-color: #ef4444 !important; color: white !important; }
+        .scroll-area { overflow-y: auto; flex-grow: 1; -webkit-overflow-scrolling: touch; }
     </style>
 </head>
-<body id="mainBody">
+<body>
     <div id="bg-container"></div>
     <div class="overlay"></div>
-    <div id="app" class="h-full w-full flex items-center justify-center p-4"></div>
+    <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
 
     <script>
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA7MUx5TsNqqMxQua7ieWURRHXrxlMn_j4M96pmerRHmCoRe9D-TKQ-kkuNIeeWzBsoJt5aF4ZXTkt/pub?output=csv";
+        
         let state = {
-            view: 'init',
-            lessons: JSON.parse(localStorage.getItem('massine_data') || '[]'),
-            sheetUrl: localStorage.getItem('massine_url') || '',
+            view: 'loading',
+            lessons: [],
             selectedSubject: '',
-            quizItems: [],
-            status: 'idle',
-            scores: JSON.parse(localStorage.getItem('massine_scores') || '{}'),
-            loading: false
+            scores: JSON.parse(localStorage.getItem('massine_scores') || '{}')
         };
 
-        async function importData(providedUrl = null) {
-            const url = providedUrl || document.getElementById('urlInput').value;
-            if (!url) return alert("Plak eerst de URL!");
-            
-            state.loading = true;
-            render();
-
+        async function initApp() {
             try {
-                // Op iPad werkt de directe fetch op de Google URL vaak het best als 'no-cors' niet nodig is
-                const res = await fetch(url + "&t=" + Date.now());
-                const csvData = await res.text();
-                
-                if (csvData.includes("<!DOCTYPE") || !csvData.includes(",")) {
-                    throw new Error("Ongeldige CSV data");
-                }
-
-                const lines = csvData.split(/\r?\n/).filter(l => l.trim() !== '');
+                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(CSV_URL)}&t=${Date.now()}`);
+                const json = await res.json();
+                const lines = json.contents.split(/\r?\n/).filter(l => l.trim() !== '');
                 const lessonsMap = {};
 
                 lines.slice(1).forEach(line => {
                     const c = line.split(/,(?=(?:(?:[^'\"]*\"[^'\"]*\"){2})*[^'\"]*$)/).map(x => x.replace(/^\"|\"$/g, '').trim());
-                    if(c.length >= 7 && c[5] && c[6]) {
-                        const s = (c[0] || 'FRANS').toUpperCase();
-                        const t = c[1] || 'Thema';
+                    if(c.length >= 7 && c[5]) {
+                        const s = (c[0] || 'OVERIG').toUpperCase().trim();
+                        const t = c[1] || 'Algemeen';
                         const n = c[2] || 'Les';
                         const key = `${s}-${t}-${n}`;
                         if(!lessonsMap[key]) lessonsMap[key] = { subject: s, theme: t, name: n, items: [] };
@@ -69,57 +51,34 @@
                 });
 
                 state.lessons = Object.values(lessonsMap);
-                state.sheetUrl = url;
-                localStorage.setItem('massine_data', JSON.stringify(state.lessons));
-                localStorage.setItem('massine_url', url);
-                state.loading = false;
                 state.view = 'subjects';
                 render();
             } catch (e) {
-                // Als direct laden mislukt, probeer één keer de proxy
-                try {
-                    const proxyRes = await fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(url));
-                    const json = await proxyRes.json();
-                    const csvData = json.contents;
-                    // ... zelfde verwerking als hierboven ...
-                    // (Om de code kort te houden voor dit bericht heb ik dit gecombineerd)
-                    location.reload(); // Herlaad om de staat te resetten bij grote fouten
-                } catch (e2) {
-                    state.loading = false;
-                    alert("Fout bij laden. Zorg dat je Google Sheet op 'Openbaar' staat (Gepubliceerd op internet).");
-                    render();
-                }
+                document.getElementById('app').innerHTML = `<div class="glass p-10 text-center uppercase font-black italic">Netwerk Fout. Herlaad de pagina.</div>`;
             }
         }
 
         function render() {
             const container = document.getElementById('app');
-            if (state.loading) {
-                container.innerHTML = `<div class="glass text-center py-20 font-black italic animate-pulse text-yellow-500 uppercase">Gegevens ophalen...</div>`;
+            if (state.view === 'loading') {
+                container.innerHTML = `<div class="glass p-10 text-center animate-pulse font-black italic">LOADING DATA...</div>`;
                 return;
             }
-            if (state.lessons.length === 0 || state.view === 'init') {
-                container.innerHTML = `<div class="glass text-center p-8">
-                    <h1 class="text-2xl font-black italic mb-6 uppercase text-yellow-400">Setup Mission</h1>
-                    <input id="urlInput" type="text" value="${state.sheetUrl}" placeholder="Plak je Google CSV Link..." class="w-full p-4 mb-4 bg-white/10 border border-white/20 rounded-xl text-white outline-none">
-                    <button onclick="importData()" class="fn-button bg-yellow-400 text-black py-4 italic uppercase">Importeer Nu</button>
-                </div>`;
-                return;
-            }
-            // ... (Rest van de render functies: subjects, lessons, quiz blijven gelijk aan de vorige stabiele versie) ...
+
             if (state.view === 'subjects') {
                 const subs = [...new Set(state.lessons.map(l => l.subject))];
                 container.innerHTML = `<div class="glass w-full max-w-md">
                     <h2 class="text-2xl text-yellow-400 mb-6 text-center font-black italic uppercase">Missions</h2>
-                    <div class="grid gap-4 scroll-area">
-                        ${subs.map(s => `<button onclick="state.selectedSubject='${s}'; state.view='lessons'; render();" class="fn-button bg-white/10 py-6 text-xl italic">${s}</button>`).join('')}
+                    <div class="grid gap-4">
+                        ${subs.map(s => `<button onclick="state.selectedSubject='${s}'; state.view='lessons'; render();" class="fn-button bg-white/10 py-8 text-xl italic">${s}</button>`).join('')}
                     </div>
-                    <button onclick="importData(state.sheetUrl)" class="mt-6 text-[10px] opacity-30 uppercase italic underline text-center w-full">↻ Sync Nieuwe Vragen</button>
+                    <button onclick="localStorage.clear(); location.reload();" class="mt-8 text-[10px] opacity-20 uppercase italic text-center">Hard Reset App</button>
                 </div>`;
             }
-            // (Voeg hier de overige views 'lessons' en 'quiz' toe uit de vorige stabiele code)
+            // ... (Hier komen de andere views uit v17.1)
         }
-        render();
+
+        initApp();
     </script>
 </body>
 </html>
