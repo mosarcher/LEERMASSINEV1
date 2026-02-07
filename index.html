@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V15.5</title>
+    <title>MASSINE'S CHALLENGE V15.6</title>
     <link rel="preconnect" href="https://script.google.com">
     <link rel="preconnect" href="https://raw.githubusercontent.com">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -50,7 +49,7 @@
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v15.5</div>
+    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v15.6</div>
 
     <script>
         const CONFIG = { scriptUrl: 'https://script.google.com/macros/s/AKfycbwG44NuJL67bxpBis12eetkybW0DKG4AAN3jq0lz7XB2oZMrgdv9NY2kaK4KdvWlfsk/exec' };
@@ -91,7 +90,14 @@
 
         window.addEventListener('load', () => { render(); fetchCloudData(); });
         async function fetchCloudData() { try { const res = await fetch(CONFIG.scriptUrl + (CONFIG.scriptUrl.includes('?') ? '&' : '?') + `t=${Date.now()}`); const d = await res.json(); if (d.lessons) { state.lessons = d.lessons; localStorage.setItem('study_data_v7', JSON.stringify(d.lessons)); if (state.view !== 'quiz') render(); } } catch(e) {} }
-        function calculateSubjectProgress(subject) { const lessons = state.lessons.filter(l => l.subject === subject); if (lessons.length === 0) return 0; const completed = lessons.filter(l => !state.checkpoints[`${l.subject}-${l.theme}-${l.name}`]).length; return (completed / lessons.length) * 100; }
+        
+        function calculateSubjectProgress(subject) { 
+            const lessons = state.lessons.filter(l => l.subject === subject); 
+            if (lessons.length === 0) return 0; 
+            const completed = lessons.filter(l => !state.checkpoints[`${l.subject}-${l.theme}-${l.name}`]).length; 
+            return (completed / lessons.length) * 100; 
+        }
+
         async function logErrorToSheet(q, givenAnswer) { try { fetch(CONFIG.scriptUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ subject: state.currentLesson.subject, theme: state.currentLesson.theme, lesson: state.currentLesson.name, question: q.word, correctAnswer: q.correct, givenAnswer: givenAnswer }) }); } catch (e) {} }
         
         function checkAnswer(opt) { 
@@ -108,12 +114,9 @@
 
         function nextQuestion() { 
             const q = state.quizItems.shift(); 
-            if (state.status === 'wrong') {
-                state.quizItems.push(q);
-            }
+            if (state.status === 'wrong') { state.quizItems.push(q); }
             state.status = 'idle';
             state.selected = null;
-            
             const key = `${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`;
             if (state.quizItems.length === 0) { 
                 delete state.checkpoints[key];
