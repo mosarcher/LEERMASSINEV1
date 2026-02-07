@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V17.6</title>
+    <title>MASSINE'S CHALLENGE V17.8</title>
     <link rel="preconnect" href="https://script.google.com">
     <link rel="preconnect" href="https://raw.githubusercontent.com">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,18 +16,25 @@
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; flex-direction: column; width: 100%; max-height: 98%; border-radius: 1.5rem; padding: 5px; }
         .scroll-area { overflow-y: auto; flex-grow: 1; padding: 5px; -webkit-overflow-scrolling: touch; }
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: none; touch-action: manipulation; position: relative; overflow: hidden; }
+        
+        /* MODAL STYLES */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: rgba(20, 10, 40, 0.9); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 2rem; padding: 2rem; width: 100%; max-width: 400px; text-align: center; }
+
         .btn-correct-full { background-color: #00ff00 !important; color: black !important; border: 4px solid white !important; transform: scale(1.05); z-index: 20; }
         .btn-wrong-hard { background-color: #ff0000 !important; color: white !important; border: 4px solid white !important; animation: hard-shake 0.4s ease-in-out; }
         .btn-dimmed { opacity: 0.05 !important; }
+        
         @keyframes hard-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-12px); } 40% { transform: translateX(12px); } 60% { transform: translateX(-12px); } 80% { transform: translateX(12px); } }
+        
+        /* SWIPE SYSTEM */
         .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; touch-action: pan-y; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 50; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
         .swiped .swipe-actions { opacity: 1; pointer-events: auto; }
         .action-btn { height: 100%; padding: 0 15px; font-weight: 900; font-size: 0.7rem; color: white; border: none; text-transform: uppercase; cursor: pointer; }
         .btn-reset { background: #3b82f6; }
         .swiped .fn-button, .swiped .lesson-inner, .swiped .theme-inner { transform: translateX(-100px); }
+        
         .stats-tag { position: absolute; bottom: 6px; right: 12px; font-size: 0.6rem; font-weight: 900; display: flex; gap: 8px; opacity: 0.8; }
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; }
         .lesson-inner { transition: transform 0.2s; width: 100%; height: 100%; }
@@ -53,6 +60,7 @@
 
     <script>
         const CONFIG = { scriptUrl: 'https://script.google.com/macros/s/AKfycbwG44NuJL67bxpBis12eetkybW0DKG4AAN3jq0lz7XB2oZMrgdv9NY2kaK4KdvWlfsk/exec' };
+        
         let state = { 
             view: 'start', 
             lessons: JSON.parse(localStorage.getItem('study_data_v7') || '[]'), 
@@ -61,8 +69,9 @@
             selectedSubject: '', status: 'idle', selected: null 
         };
 
+        // iPad Tunnel Sync
         window.handleCloudData = function(d) { 
-            if (d.lessons) { 
+            if (d && d.lessons) { 
                 state.lessons = d.lessons; 
                 localStorage.setItem('study_data_v7', JSON.stringify(d.lessons)); 
                 render(); 
@@ -75,12 +84,6 @@
             document.body.appendChild(script); 
         }
 
-        function navigate(v) { 
-            state.view = v; 
-            if (v === 'subjects') fetchCloudData();
-            render(); 
-        }
-
         function checkAnswer(opt) {
             if (state.status !== 'idle') return;
             state.selected = opt; const q = state.quizItems[0]; const isCorrect = (opt === q.correct);
@@ -88,7 +91,12 @@
             const key = `${state.currentLesson.subject.toUpperCase()}-${state.currentLesson.theme}-${state.currentLesson.name}`;
             if (!state.stats[key]) state.stats[key] = { correct: 0, wrong: 0 };
             if (isCorrect) { state.stats[key].correct++; } 
-            else { state.stats[key].wrong++; const wordId = `${state.currentLesson.subject.toUpperCase()}|${q.word}`; state.wrongCounts[wordId] = (state.wrongCounts[wordId] || 0) + 1; localStorage.setItem('wrong_counts_v1', JSON.stringify(state.wrongCounts)); }
+            else { 
+                state.stats[key].wrong++; 
+                const wordId = `${state.currentLesson.subject.toUpperCase()}|${q.word}`; 
+                state.wrongCounts[wordId] = (state.wrongCounts[wordId] || 0) + 1; 
+                localStorage.setItem('wrong_counts_v1', JSON.stringify(state.wrongCounts)); 
+            }
             localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats)); render();
         }
 
@@ -105,6 +113,12 @@
             state.quizItems = [...lesson.items].sort(() => Math.random() - 0.5);
             state.totalQuestions = state.quizItems.length; state.status = 'idle'; state.selected = null;
             navigate('quiz');
+        }
+
+        function navigate(v) { 
+            state.view = v; 
+            if (v === 'subjects') fetchCloudData();
+            render(); 
         }
 
         function executeResetSingle(s,t,n) {
@@ -159,7 +173,7 @@
                 const filtered = state.lessons.filter(l => l.subject.toUpperCase() === sub);
                 const themes = [...new Set(filtered.map(l => l.theme))];
                 container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><div class="flex items-center justify-between mb-4 px-2"><button onclick="navigate('subjects')" class="bg-yellow-400 text-black fn-button px-4 py-2 italic font-black">← BACK</button><h2 class="text-xl italic uppercase font-black">${sub}</h2><div style="width:80px"></div></div><div class="scroll-area">
-                    ${themes.length === 0 ? '<div class="text-center py-10 opacity-50 italic">Data laden... Een moment.</div>' : themes.map(t => {
+                    ${themes.length === 0 ? '<div class="text-center py-10"><p class="opacity-50 italic mb-6 text-white">Geen data gevonden...</p><button onclick="fetchCloudData()" class="fn-button bg-blue-600 p-6 italic mx-auto text-white">IPAD NOOD-SYNC</button></div>' : themes.map(t => {
                         const tid = `t-${Math.random().toString(36).substr(2, 5)}`;
                         return `<div class="theme-swipe-box"><div class="swipe-actions"><button onclick="executeResetTheme('${sub}','${t}')" class="action-btn btn-reset">RESET</button></div><div id="${tid}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${tid}')" class="theme-inner"><h3 class="theme-label mb-2">${t}</h3></div></div>` + filtered.filter(l => l.theme === t).map(l => {
                             const cpKey = `${sub}-${l.theme}-${l.name}`; const st = state.stats[cpKey] || { correct: 0, wrong: 0 };
@@ -169,8 +183,22 @@
             } else if (state.view === 'quiz') {
                 const q = state.quizItems[0];
                 container.innerHTML = `<div class="glass p-3 w-full max-w-4xl"><div class="flex justify-between items-center mb-3"><button onclick="navigate('lessons')" class="text-red-600 bg-black/40 px-2 py-1 rounded font-black text-[10px] italic uppercase">STOP</button><span class="text-xl text-yellow-400 font-black">${state.totalQuestions - state.quizItems.length + 1}/${state.totalQuestions}</span></div><div class="flex flex-col items-center"><h2 class="text-3xl text-center mb-8 font-black italic uppercase text-white">${q.word}</h2><div class="w-full flex flex-col gap-2">${q.options.map(opt => { let cl = "bg-white/10 text-white"; if (state.status !== 'idle') { if (opt === q.correct) cl = "bg-green-500 text-black"; else if (opt === state.selected) cl = "bg-red-600 text-white"; else cl = "opacity-10"; } return `<button onclick="checkAnswer('${opt}')" class="fn-button p-4 text-lg italic font-black h-[60px] ${cl}">${opt}</button>`}).join('')}</div>${state.status !== 'idle' ? `<button onclick="nextQuestion()" class="mt-4 h-12 w-full bg-yellow-400 text-black fn-button italic font-black">NEXT →</button>` : ''}</div></div>`;
+            } else if (state.view === 'boss_selection') {
+                container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><div class="flex items-center mb-4"><button onclick="navigate('subjects')" class="bg-yellow-400 text-black fn-button px-4 py-2 italic font-black">← BACK</button><h2 class="flex-1 text-center font-black italic uppercase">BOSS LEVELS</h2></div><div class="scroll-area">
+                    ${['FRANS', 'TAAL', 'WO'].map(sub => `<button onclick="startBossLevel('${sub}')" class="fn-button bg-red-600/40 py-6 mb-4 italic text-xl uppercase">START ${sub} BOSS</button>`).join('')}
+                </div></div>`;
             }
         }
+
+        function startBossLevel(subject) {
+            const allWords = state.lessons.filter(l => l.subject.toUpperCase() === subject.toUpperCase()).flatMap(l => l.items);
+            const items = allWords.filter(item => (state.wrongCounts[`${subject.toUpperCase()}|${item.word}`] || 0) >= 2);
+            if (items.length === 0) return openModal("LEEG", "Nog geen 2+ fouten voor dit vak!", () => {});
+            state.currentLesson = { subject: subject.toUpperCase(), theme: 'BOSS', name: 'BOSS CHALLENGE' };
+            state.quizItems = [...items].sort(() => Math.random() - 0.5);
+            state.totalQuestions = state.quizItems.length; state.status = 'idle'; state.selected = null; navigate('quiz');
+        }
+
         render();
     </script>
 </body>
