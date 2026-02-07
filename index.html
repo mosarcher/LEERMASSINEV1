@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V17.13</title>
+    <title>MASSINE'S CHALLENGE V17.15</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -76,6 +76,7 @@
                 const key = `${item.s}-${item.t}-${item.n}`;
                 if (!lessonsMap[key]) lessonsMap[key] = { subject: item.s, theme: item.t, name: item.n, items: [] };
                 lessonsMap[key].items.push({ 
+                    subject: item.s, theme: item.t, lesson: item.n,
                     word: item.q, correct: item.a, 
                     options: [item.a, ...item.d].filter(x => x !== "").sort(() => Math.random() - 0.5) 
                 });
@@ -93,11 +94,13 @@
             }
             else if (state.view === 'subjects') {
                 const subs = [...new Set(state.lessons.map(l => l.subject))];
-                const bossText = state.wrongAnswers.length > 0 ? `🔥 BOSS LEVEL (${state.wrongAnswers.length}) 🔥` : "🔥 BOSS LEVEL (LEEG) 🔥";
+                const totalWrongs = state.wrongAnswers.length;
                 container.innerHTML = `<div class="glass w-full max-w-md p-4">
                     <h1 class="text-3xl text-yellow-400 mb-6 text-center font-black italic uppercase">Missions</h1>
                     <div class="grid gap-4">
-                        <button onclick="startBossMode()" class="fn-button bg-orange-600 py-6 text-xl italic mb-2">${bossText}</button>
+                        <button onclick="state.view='boss_menu'; render();" class="fn-button bg-orange-600 py-6 text-xl italic mb-2">
+                            🔥 BOSS LEVELS (${totalWrongs}) 🔥
+                        </button>
                         <div class="subject-grid">
                             ${subs.map(s => {
                                 let icon = s.includes('WO') ? '🌍' : s.includes('FRANS') ? '🇫🇷' : s.includes('TAAL') ? '🇳🇱' : '📚';
@@ -109,7 +112,35 @@
                         </div>
                     </div>
                 </div>`;
-            } 
+            }
+            else if (state.view === 'boss_menu') {
+                const wr = state.wrongAnswers;
+                const bossSubs = [...new Set(wr.map(item => item.subject))];
+                container.innerHTML = `<div class="glass w-full max-w-md p-3">
+                    <div class="flex justify-between mb-4 px-2">
+                        <button onclick="state.view='subjects'; render();" class="bg-yellow-400 text-black px-4 py-2 font-black italic uppercase text-xs">← BACK</button>
+                        <h2 class="text-xl font-black italic uppercase text-orange-500">BOSS SELECTION</h2>
+                    </div>
+                    <div class="scroll-area">
+                        ${wr.length === 0 ? '<p class="text-center italic mt-10">Geen fouten om te herhalen! Top!</p>' : ''}
+                        ${bossSubs.map(s => {
+                            const subWrongs = wr.filter(item => item.subject === s);
+                            const bossThemes = [...new Set(subWrongs.map(item => item.theme))];
+                            return `<div class="theme-label bg-orange-600">${s} (${subWrongs.length})</div>` + 
+                            bossThemes.map(t => {
+                                const themeWrongs = subWrongs.filter(item => item.theme === t);
+                                const bossLessons = [...new Set(themeWrongs.map(item => item.lesson))];
+                                return bossLessons.map(n => {
+                                    const lessonWrongs = themeWrongs.filter(item => item.lesson === n);
+                                    return `<button onclick="startBossQuiz('${s}','${t}','${n}')" class="fn-button bg-white/5 py-4 mb-2 text-left pl-6 italic border border-orange-900/30">
+                                        <span>${n} (${lessonWrongs.length})</span>
+                                    </button>`;
+                                }).join('');
+                            }).join('');
+                        }).join('')}
+                    </div>
+                </div>`;
+            }
             else if (state.view === 'lessons') {
                 const filtered = state.lessons.filter(l => l.subject === state.selectedSubject);
                 const themes = [...new Set(filtered.map(l => l.theme))];
@@ -138,23 +169,30 @@
             }
             else if (state.view === 'quiz') {
                 const q = state.quizItems[0];
-                container.innerHTML = `<div class="glass w-full max-w-4xl p-4">
-                    <div class="flex justify-between items-center mb-6">
-                        <button onclick="state.view='lessons'; render();" class="text-red-500 font-black italic uppercase text-xs">STOP</button>
+                container.innerHTML = `<div class="glass w-full max-w-4xl max-h-[95dvh] relative overflow-hidden flex flex-col p-4">
+                    <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                        <button onclick="state.view='${state.currentKey.startsWith('BOSS') ? 'boss_menu' : 'lessons'}'; render();" class="text-red-500 font-black italic uppercase text-xs">STOP</button>
                         <div class="text-yellow-400 font-black italic uppercase">Score: ${state.correctInRound} / ${state.totalInRound}</div>
                         <span class="text-white font-black italic text-xs uppercase">${state.quizItems.length} LEFT</span>
                     </div>
-                    <h2 class="text-2xl text-center my-10 font-black italic uppercase leading-tight">${q.word}</h2>
-                    <div class="grid gap-3">${q.options.map(opt => {
-                        let cl = "bg-white/10"; 
-                        if(state.status !== 'idle'){ 
-                            if(opt === q.correct) cl = "btn-correct-final"; 
-                            else if(opt === state.selected) cl = "btn-wrong-final"; 
-                            else cl = "btn-dimmed"; 
-                        }
-                        return `<button onclick="handleAnswer('${opt}')" class="fn-button py-6 text-lg italic ${cl}">${opt}</button>`
-                    }).join('')}</div>
-                    ${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-8 bg-yellow-400 text-black py-4 fn-button italic font-black uppercase tracking-widest">Next →</button>` : ''}
+                    <div class="scroll-area flex-grow pb-24">
+                        <h2 class="text-2xl text-center my-8 font-black italic uppercase leading-tight">${q.word}</h2>
+                        <div class="grid gap-2">
+                            ${q.options.map(opt => {
+                                let cl = "bg-white/10"; 
+                                if(state.status !== 'idle'){ 
+                                    if(opt === q.correct) cl = "btn-correct-final"; 
+                                    else if(opt === state.selected) cl = "btn-wrong-final"; 
+                                    else cl = "btn-dimmed"; 
+                                }
+                                return `<button onclick="handleAnswer('${opt}')" class="fn-button py-4 text-base italic ${cl}">${opt}</button>`
+                            }).join('')}
+                        </div>
+                    </div>
+                    ${state.status !== 'idle' ? `
+                    <div class="absolute bottom-4 left-0 w-full px-4 z-50">
+                        <button onclick="nextQ()" class="bg-yellow-400 text-black py-5 fn-button italic font-black uppercase tracking-widest w-full">Next →</button>
+                    </div>` : ''}
                 </div>`;
             }
         }
@@ -168,10 +206,12 @@
             state.view = 'quiz'; render();
         }
 
-        function startBossMode() {
-            if (state.wrongAnswers.length === 0) return alert("Je hebt nog geen fouten gemaakt! Goed bezig.");
-            state.currentKey = 'BOSS';
-            state.quizItems = [...state.wrongAnswers].map(i => ({...i, failCount: 0})).sort(() => Math.random() - 0.5);
+        function startBossQuiz(s, t, n) {
+            state.currentKey = `BOSS-${s}-${t}-${n}`;
+            state.quizItems = state.wrongAnswers
+                .filter(item => item.subject === s && item.theme === t && item.lesson === n)
+                .map(i => ({...i, failCount: 0}))
+                .sort(() => Math.random() - 0.5);
             state.totalInRound = state.quizItems.length;
             state.correctInRound = 0;
             state.view = 'quiz'; render();
@@ -185,23 +225,20 @@
                 state.status = 'correct'; state.correctInRound++;
                 playSound(880, 'sine', 0.1); confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } }); 
                 
-                // Bij goed in Boss Mode -> verwijder uit de lijst
-                if(state.currentKey === 'BOSS') {
+                if(state.currentKey.startsWith('BOSS')) {
                     state.wrongAnswers = state.wrongAnswers.filter(item => item.word !== q.word);
                     localStorage.setItem('massine_wrongs_v17', JSON.stringify(state.wrongAnswers));
                 }
             } else { 
                 state.status = 'wrong'; playSound(220, 'square', 0.2);
                 
-                // Voeg toe aan foutenlijst als het er nog niet in stond
                 const alreadyIn = state.wrongAnswers.some(item => item.word === q.word);
                 if (!alreadyIn) {
                     state.wrongAnswers.push({...q});
                     localStorage.setItem('massine_wrongs_v17', JSON.stringify(state.wrongAnswers));
                 }
                 
-                // Herhaal vraag achteraan (alleen in normale les)
-                if(state.currentKey !== 'BOSS') {
+                if(!state.currentKey.startsWith('BOSS')) {
                     q.failCount = (q.failCount || 0) + 1;
                     if (q.failCount < 2) state.quizItems.push({...q});
                 }
@@ -212,9 +249,9 @@
         function nextQ() {
             state.quizItems.shift(); state.status = 'idle'; state.selected = null;
             if (state.quizItems.length === 0) {
-                if(state.currentKey !== 'BOSS') state.scores[state.currentKey] = true;
+                if(!state.currentKey.startsWith('BOSS')) state.scores[state.currentKey] = true;
                 localStorage.setItem('massine_scores_v17_lokaal', JSON.stringify(state.scores));
-                state.view = state.currentKey === 'BOSS' ? 'subjects' : 'lessons';
+                state.view = state.currentKey.startsWith('BOSS') ? 'boss_menu' : 'lessons';
             }
             render();
         }
@@ -234,11 +271,6 @@
             else if (diff < -50) container.classList.remove('swiped');
         }
         function closeAllSwipes() { document.querySelectorAll('.swipe-container').forEach(el => el.classList.remove('swiped')); }
-
-        function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }
 
         prepareData();
         render();
