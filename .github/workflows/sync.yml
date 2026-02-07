@@ -1,8 +1,8 @@
 name: Sync Google Data
 on:
   schedule:
-    - cron: '0 * * * *' # Elke uur automatisch
-  workflow_dispatch:      # Handmatige knop
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Haal de volledige geschiedenis op om push-conflicten te voorkomen
+          fetch-depth: 0
 
       - name: Download Data
         run: curl -L "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA7MUx5TsNqqMxQua7ieWURRHXrxlMn_j4M96pmerRHmCoRe9D-TKQ-kkuNIeeWzBsoJt5aF4ZXTkt/pub?output=csv" -o data.csv
@@ -27,25 +27,17 @@ jobs:
           const lessons = {};
 
           lines.slice(1).forEach(line => {
-            // Split op komma, negeer komma's binnen aanhalingstekens
             const c = line.split(/,(?=(?:(?:[^'\"]*\"[^'\"]*\"){2})*[^'\"]*$)/).map(x => x.replace(/^\"|\"$/g, '').trim());
-            
-            // Kolommen: 0:Vak, 1:Thema, 2:Les, 5:Vraag, 6:Antwoord, 7:Foute antwoorden
             if(c.length >= 7 && c[5] && c[6]) {
               const subject = (c[0] || 'ALGEMEEN').toUpperCase();
               const theme = c[1] || 'Thema';
               const name = c[2] || 'Les';
               const key = subject + '-' + theme + '-' + name;
-              
               if(!lessons[key]) {
                 lessons[key] = { subject, theme, name, items: [] };
               }
-              
               const correct = c[6];
-              // Haal foute antwoorden op uit kolom H (index 7), gescheiden door |
               let distractors = c[7] ? c[7].split('|').map(x => x.trim()).filter(x => x !== '') : [];
-              
-              // We slaan alle beschikbare opties op, de app kiest er later 4
               lessons[key].items.push({ 
                 word: c[5], 
                 correct: correct, 
@@ -53,7 +45,6 @@ jobs:
               });
             }
           });
-
           fs.writeFileSync('data.js', 'window.MY_DATA = ' + JSON.stringify(Object.values(lessons), null, 2) + ';');
           "
 
