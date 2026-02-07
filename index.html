@@ -17,14 +17,12 @@
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; margin-bottom: 0.5rem; }
         .lesson-progress-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: #22c55e; z-index: 5; transition: width 0.5s ease-out; }
         
-        /* Swipe Actions */
         .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; touch-action: pan-y; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 50; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
         .swiped .swipe-actions { opacity: 1; pointer-events: auto; }
         .btn-reset { background: #3b82f6; height: 100%; padding: 0 20px; font-weight: 900; font-size: 0.7rem; color: white; text-transform: uppercase; border: none; }
         .swiped .fn-button { transform: translateX(-80px); }
 
-        /* Quiz Feedback - Duidelijke Kleuren */
         .btn-correct-final { background-color: #22c55e !important; color: black !important; font-weight: 900; border: 3px solid white !important; }
         .btn-wrong-final { background-color: #ef4444 !important; color: white !important; animation: shake 0.3s; border: 3px solid white !important; }
         .btn-dimmed { opacity: 0.1 !important; pointer-events: none; }
@@ -39,7 +37,6 @@
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
 
     <script>
-        // De URL van je Google Sheet (Gepubliceerd als CSV)
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA7MUx5TsNqqMxQua7ieWURRHXrxlMn_j4M96pmerRHmCoRe9D-TKQ-kkuNIeeWzBsoJt5aF4ZXTkt/pub?output=csv";
 
         let state = {
@@ -56,7 +53,6 @@
 
         async function loadData() {
             try {
-                // Gebruik de proxy om de data op te halen
                 const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(CSV_URL)}&t=${Date.now()}`);
                 const json = await res.json();
                 const csvData = json.contents;
@@ -86,7 +82,7 @@
                 state.view = 'subjects';
                 render();
             } catch (e) {
-                document.getElementById('app').innerHTML = `<div class="glass p-10 text-center font-black italic text-red-500 uppercase">SYNC ERROR - CHECK GOOGLE SHEET LINK</div>`;
+                document.getElementById('app').innerHTML = `<div class="glass p-10 text-center font-black italic text-red-500 uppercase">SYNC ERROR - CHECK CONNECTION</div>`;
             }
         }
 
@@ -134,11 +130,10 @@
             }
             else if (state.view === 'quiz') {
                 const q = state.quizItems[0];
-                const totalQ = state.totalInRound;
                 container.innerHTML = `<div class="glass w-full max-w-4xl p-4">
                     <div class="flex justify-between items-center mb-6">
                         <button onclick="state.view='lessons'; render();" class="text-red-500 font-black italic uppercase text-xs">STOP</button>
-                        <div class="text-yellow-400 font-black italic">SCORE: ${state.correctInRound} / ${totalQ}</div>
+                        <div class="text-yellow-400 font-black italic">QUIZ MODE</div>
                         <span class="text-white font-black italic text-xs">${state.quizItems.length} OVER</span>
                     </div>
                     <h2 class="text-2xl text-center my-10 font-black italic uppercase leading-tight">${q.word}</h2>
@@ -151,7 +146,7 @@
                         }
                         return `<button onclick="handleAnswer('${opt}')" class="fn-button py-6 text-lg italic ${cl}">${opt}</button>`
                     }).join('')}</div>
-                    ${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-8 bg-yellow-400 text-black py-4 fn-button italic font-black uppercase tracking-widest">VOLGENDE →</button>` : ''}
+                    ${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-8 bg-yellow-400 text-black py-4 fn-button italic font-black uppercase tracking-widest">Next →</button>` : ''}
                 </div>`;
             }
         }
@@ -160,8 +155,6 @@
             const lesson = state.lessons.find(l => l.subject === s && l.theme === t && l.name === n);
             state.currentKey = `${s}-${t}-${n}`;
             state.quizItems = [...lesson.items].sort(() => Math.random() - 0.5);
-            state.totalInRound = state.quizItems.length;
-            state.correctInRound = 0;
             state.view = 'quiz'; render();
         }
 
@@ -170,8 +163,6 @@
             let allItems = [];
             state.lessons.forEach(l => allItems.push(...l.items));
             state.quizItems = allItems.sort(() => Math.random() - 0.5).slice(0, 20);
-            state.totalInRound = state.quizItems.length;
-            state.correctInRound = 0;
             state.view = 'quiz'; render();
         }
 
@@ -181,11 +172,10 @@
             const q = state.quizItems[0];
             if (opt === q.correct) { 
                 state.status = 'correct'; 
-                state.correctInRound++;
                 confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } }); 
             } else { 
                 state.status = 'wrong'; 
-                state.quizItems.push({...q}); // Vraag komt achteraan terug (Boss Mode principe)
+                state.quizItems.push({...q}); 
             }
             render();
         }
