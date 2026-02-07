@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V16.3</title>
+    <title>MASSINE'S CHALLENGE V16.4</title>
     <link rel="preconnect" href="https://script.google.com">
     <link rel="preconnect" href="https://raw.githubusercontent.com">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -46,7 +46,7 @@
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v16.3</div>
+    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v16.4</div>
 
     <script>
         const CONFIG = { scriptUrl: 'https://script.google.com/macros/s/AKfycbwG44NuJL67bxpBis12eetkybW0DKG4AAN3jq0lz7XB2oZMrgdv9NY2kaK4KdvWlfsk/exec' };
@@ -90,12 +90,13 @@
             if (d.lessons && d.lessons.length > 0) {
                 state.lessons = d.lessons;
                 localStorage.setItem('study_data_v7', JSON.stringify(d.lessons));
-                state.isLoading = false; render();
+                if(state.view === 'subjects' || state.view === 'lessons') render();
             }
+            state.isLoading = false;
         };
 
         function fetchCloudData() {
-            state.isLoading = true; render();
+            state.isLoading = true;
             const script = document.createElement('script');
             script.src = CONFIG.scriptUrl + (CONFIG.scriptUrl.includes('?') ? '&' : '?') + `prefix=handleCloudData&t=${Date.now()}`;
             document.body.appendChild(script);
@@ -174,7 +175,7 @@
                     <h2 class="text-xl italic uppercase font-black">${state.selectedSubject}</h2>
                     <button onclick="executeResetSubject('${state.selectedSubject}')" class="fn-button reset-all-btn italic">RESET ALL</button>
                 </div><div class="scroll-area">
-                    ${themes.length === 0 ? '<div class="text-center opacity-50 italic py-10">Laden... Druk op BACK en probeer opnieuw als dit blijft staan.</div>' : themes.map(t => `<div class="mb-4 text-center"><h3 class="theme-label">${t}</h3>
+                    ${themes.map(t => `<div class="mb-4 text-center"><h3 class="theme-label">${t}</h3>
                         ${filtered.filter(l => l.theme === t).map(l => {
                             const cpKey = `${l.subject}-${l.theme}-${l.name}`; const cp = state.checkpoints[cpKey]; const st = state.stats[cpKey] || { correct: 0, wrong: 0 };
                             const done = cp ? (cp.total - cp.items.length) : (st.correct + st.wrong > 0 ? l.items.length : 0); const total = cp ? cp.total : l.items.length; const id = `btn-${Math.random().toString(36).substr(2, 5)}`;
@@ -213,6 +214,7 @@
                             <button id="${bid}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${bid}')" onclick="startThemeBoss('${state.selectedBossSubject}','${t}')" class="fn-button bg-red-600/20 border-l-[10px] border-red-600 text-xl py-8 italic">${t}</button></div>`}).join('')}</div></div>`;
             }
         }
+        render(); // Force initial render
     </script>
 </body>
 </html>
