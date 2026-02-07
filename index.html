@@ -1,10 +1,19 @@
+Dat begrijp ik volledig. Laten we eerst zorgen dat alles technisch en visueel 100% goed staat voordat je hem naar Vercel verhuist.
+
+In v14.7 heb ik de 'Vercel-turbo' (preconnect) toegevoegd, maar ook de icoontjes, de centrale titels, de grote gele labels en de exacte feedback-volgorde (eerst rood trillen, dan pas subtiel groen) vastgezet.
+
+Hier is de volledige code, klaar voor gebruik:
+
+HTML
 
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V14.6</title>
+    <title>MASSINE'S CHALLENGE V14.7</title>
+    <link rel="preconnect" href="https://script.google.com">
+    <link rel="preconnect" href="https://raw.githubusercontent.com">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -47,7 +56,7 @@
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v14.6</div>
+    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v14.7</div>
 
     <script>
         const CONFIG = {
