@@ -15,6 +15,9 @@
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; border: none; touch-action: manipulation; }
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; margin-bottom: 0.5rem; }
         .scroll-area { overflow-y: auto; flex-grow: 1; -webkit-overflow-scrolling: touch; }
+        .progress-container { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 15px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #eab308, #fbbf24); transition: width 0.4s ease; }
+        .score-check { color: #4ade80; font-weight: bold; float: right; }
     </style>
 </head>
 <body class="flex justify-center items-start pt-24 px-2">
@@ -23,83 +26,47 @@
     <div id="app" class="w-full flex justify-center"></div>
 
     <script>
-        // JE GOOGLE SHEET LINK
-        const MIJN_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA7MUx5TsNqqMxQua7ieWURRHXrxlMn_j4M96pmerRHmCoRe9D-TKQ-kkuNIeeWzBsoJt5aF4ZXTkt/pub?output=csv";
-        
-        // We gebruiken een proxy om de blokkade van de iPad te omzeilen
-        const PROXY_URL = "https://api.allorigins.win/get?url=" + encodeURIComponent(MIJN_SHEET_URL);
+        // JE EIGEN DATA - HIER KUN JE ALLES HANDMATIG INVULLEN
+        const MIJN_LESSEN = [
+            {
+                subject: "FRANS",
+                theme: "Unité 1",
+                name: "Les 1: Woorden",
+                items: [
+                    { word: "Bonjour", correct: "Goeiedag", options: ["Goeiedag", "Hoi", "Doei", "Bedankt"] },
+                    { word: "Merci", correct: "Bedankt", options: ["Bedankt", "Alstublieft", "Ja", "Nee"] }
+                ]
+            }
+            // Voeg hier meer lessen toe op dezelfde manier
+        ];
 
         let state = { 
             view: 'start', 
-            lessons: [], 
+            lessons: MIJN_LESSEN, 
             selectedSubject: '', 
             status: 'idle',
             quizItems: [],
+            totalQuestions: 0,
             selected: null,
-            loading: true
+            scores: JSON.parse(localStorage.getItem('massine_scores') || '{}')
         };
-
-        async function fetchData() {
-            try {
-                const response = await fetch(PROXY_URL);
-                const json = await response.json();
-                const csvData = json.contents;
-                
-                const lines = csvData.split(/\r?\n/).filter(line => line.trim() !== '');
-                const lessonsMap = {};
-
-                lines.slice(1).forEach(line => {
-                    const c = line.split(/,(?=(?:(?:[^'\"]*\"[^'\"]*\"){2})*[^'\"]*$)/).map(x => x.replace(/^\"|\"$/g, '').trim());
-                    if(c.length >= 7 && c[5] && c[6]) {
-                        const subject = (c[0] || 'ALGEMEEN').toUpperCase();
-                        const theme = c[1] || 'Thema';
-                        const name = c[2] || 'Les';
-                        const key = subject + '-' + theme + '-' + name;
-                        
-                        if(!lessonsMap[key]) {
-                            lessonsMap[key] = { subject, theme, name, items: [] };
-                        }
-                        
-                        const correct = c[6];
-                        let distractors = c[7] ? c[7].split('|').map(x => x.trim()).filter(x => x !== '') : [];
-                        
-                        lessonsMap[key].items.push({ 
-                            word: c[5], 
-                            correct: correct, 
-                            distractors: distractors 
-                        });
-                    }
-                });
-
-                state.lessons = Object.values(lessonsMap);
-                state.loading = false;
-                render();
-            } catch (error) {
-                console.error("Fout:", error);
-                document.getElementById('app').innerHTML = `<div class="glass text-center font-black italic uppercase">Connectie mislukt. Controleer internet.</div>`;
-            }
-        }
 
         function render() {
             const container = document.getElementById('app');
             
-            if (state.loading) {
-                container.innerHTML = `<div class="glass text-center py-20 font-black italic animate-pulse tracking-widest uppercase text-yellow-500">Connecting...</div>`;
-                return;
-            }
-
             if (state.view === 'start') {
                 container.innerHTML = `<div class="glass text-center">
                     <h1 class="text-4xl font-black italic mb-8 text-yellow-400 uppercase tracking-tighter">Massine's Challenge</h1>
-                    <button onclick="state.view='subjects'; render();" class="fn-button bg-yellow-400 text-black w-full py-8 text-2xl mb-4 italic hover:scale-105">START MISSION</button>
-                    <p class="text-[10px] opacity-30 italic uppercase tracking-widest text-white tracking-widest">Proxy Mode Active</p>
+                    <button onclick="state.view='subjects'; render();" class="fn-button bg-yellow-400 text-black w-full py-8 text-2xl mb-4 italic hover:scale-105 uppercase">Start Mission</button>
+                    <button onclick="resetScores()" class="text-[10px] text-red-400 opacity-50 italic uppercase tracking-widest underline mt-4">Reset Progress</button>
                 </div>`;
             } 
             else if (state.view === 'subjects') {
                 const subs = [...new Set(state.lessons.map(l => l.subject))];
                 container.innerHTML = `<div class="glass">
+                    <button onclick="state.view='start'; render();" class="text-yellow-400 mb-4 font-black italic text-[10px] underline uppercase">← HOME</button>
                     <h1 class="text-2xl font-black italic text-center mb-6 text-yellow-400 uppercase tracking-tighter">Mission Control</h1>
-                    <div class="grid gap-3">
+                    <div class="grid gap-3 scroll-area">
                         ${subs.map(s => `<button onclick="state.selectedSubject='${s}'; state.view='lessons'; render();" class="fn-button bg-white/10 py-6 text-xl italic border border-white/10 hover:bg-white/20">${s}</button>`).join('')}
                     </div>
                 </div>`;
@@ -110,30 +77,34 @@
                 container.innerHTML = `<div class="glass">
                     <button onclick="state.view='subjects'; render();" class="text-yellow-400 mb-4 font-black italic text-[10px] underline uppercase">← BACK</button>
                     <div class="scroll-area">
-                        ${themes.map(t => `<div class="theme-label mt-4">${t}</div>` + filtered.filter(l => l.theme === t).map(l => `<button onclick="startLesson('${l.name}')" class="fn-button bg-white/10 py-5 mb-2 italic w-full text-left pl-6 hover:bg-white/20">${l.name}</button>`).join('')).join('')}
+                        ${themes.map(t => `<div class="theme-label mt-4">${t}</div>` + filtered.filter(l => l.theme === t).map(l => {
+                            const key = `${l.subject}-${l.theme}-${l.name}`;
+                            return `<button onclick="startLesson('${l.name}')" class="fn-button bg-white/10 py-5 mb-2 italic w-full text-left pl-6 hover:bg-white/20 relative">
+                                ${l.name} ${state.scores[key] ? '<span class="score-check">✓</span>' : ''}
+                            </button>`;
+                        }).join('')).join('')}
                     </div>
                 </div>`;
             } 
             else if (state.view === 'quiz') {
                 const q = state.quizItems[0];
+                const progress = ((state.totalQuestions - state.quizItems.length) / state.totalQuestions) * 100;
                 container.innerHTML = `<div class="glass w-full max-w-4xl">
-                    <div class="flex justify-between items-center mb-8 px-2">
+                    <div class="flex justify-between items-center mb-2 px-2">
                         <button onclick="if(confirm('STOP MISSION?')){state.view='lessons'; render();}" class="bg-red-600/80 text-white font-black italic text-[10px] px-3 py-1 uppercase" style="clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);">STOP</button>
-                        <div class="flex gap-2 items-center">
-                             <button onclick="skipQ()" class="text-white/20 text-[10px] font-black italic uppercase underline">Skip →</button>
-                             <span class="text-white/40 font-black italic text-sm tracking-widest uppercase">${state.quizItems.length} LEFT</span>
-                        </div>
+                        <span class="text-white/40 font-black italic text-sm tracking-widest uppercase">${state.quizItems.length} LEFT</span>
                     </div>
-                    <h2 class="text-4xl text-center mb-10 font-black italic uppercase tracking-tighter">${q.word}</h2>
+                    <div class="progress-container"><div class="progress-bar" style="width: ${progress}%"></div></div>
+                    <h2 class="text-4xl text-center my-10 font-black italic uppercase tracking-tighter">${q.word}</h2>
                     <div class="grid gap-3">
-                        ${q.currentOptions.map(opt => `
+                        ${q.options.map(opt => `
                             <button onclick="checkAnswer('${opt}', '${q.correct}')" 
                                     class="fn-button py-6 text-lg italic ${state.status !== 'idle' ? (opt === q.correct ? 'bg-green-500 text-black' : (opt === state.selected ? 'bg-red-600' : 'opacity-20')) : 'bg-white/10 border border-white/5'}">
                                 ${opt}
                             </button>
                         `).join('')}
                     </div>
-                    ${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-6 bg-yellow-400 text-black fn-button py-4 italic font-black text-xl animate-bounce uppercase">NEXT →</button>` : ''}
+                    ${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-6 bg-yellow-400 text-black fn-button py-4 italic font-black text-xl animate-bounce uppercase">CONTINUE →</button>` : ''}
                 </div>`;
             }
         }
@@ -141,48 +112,45 @@
         function startLesson(name) {
             const lesson = state.lessons.find(l => l.name === name && l.subject === state.selectedSubject);
             if (!lesson) return;
-            state.quizItems = lesson.items.map(item => {
-                let options = [item.correct, ...item.distractors].sort(() => Math.random() - 0.5).slice(0, 4);
-                return { ...item, currentOptions: options };
-            }).sort(() => Math.random() - 0.5);
-            state.status = 'idle';
-            state.view = 'quiz';
-            render();
+            state.currentLessonKey = `${lesson.subject}-${lesson.theme}-${lesson.name}`;
+            state.quizItems = lesson.items.map(item => ({
+                ...item,
+                options: [...item.options].sort(() => Math.random() - 0.5)
+            })).sort(() => Math.random() - 0.5);
+            state.totalQuestions = state.quizItems.length;
+            state.status = 'idle'; state.view = 'quiz'; render();
         }
 
         function checkAnswer(opt, correct) {
             if (state.status !== 'idle') return;
             state.selected = opt;
-            if (opt === correct) {
-                state.status = 'correct';
-            } else {
-                state.status = 'wrong';
+            if (opt === correct) { state.status = 'correct'; } 
+            else { 
+                state.status = 'wrong'; 
                 // Boss Mode: foute vraag komt terug
-                const currentQuestion = {...state.quizItems[0]};
-                state.quizItems.push(currentQuestion);
+                state.quizItems.push({...state.quizItems[0]}); 
             }
             render();
         }
 
-        function skipQ() {
-            const skipped = state.quizItems.shift();
-            state.quizItems.push(skipped);
-            state.status = 'idle';
-            render();
-        }
-
         function nextQ() {
-            state.quizItems.shift();
-            state.status = 'idle';
-            state.selected = null;
+            state.quizItems.shift(); state.status = 'idle'; state.selected = null;
             if (state.quizItems.length === 0) {
                 confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                state.scores[state.currentLessonKey] = true;
+                localStorage.setItem('massine_scores', JSON.stringify(state.scores));
                 state.view = 'lessons';
             }
             render();
         }
 
-        fetchData();
+        function resetScores() {
+            if(confirm('ALLE SCORES WISSEN?')) {
+                state.scores = {}; localStorage.removeItem('massine_scores'); render();
+            }
+        }
+
+        render();
     </script>
 </body>
 </html>
