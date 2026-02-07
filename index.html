@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V20.2</title>
+    <title>MASSINE'S CHALLENGE V20.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -11,9 +11,10 @@
         body { font-family: 'Inter', sans-serif; background: #0a051a; color: white; margin: 0; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
         #bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-size: cover; background-position: center; background-image: url('https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/massinewall.png'); }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(10,5,26,0.1), rgba(10,5,26,0.6)); z-index: -1; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.5rem; padding: 15px; width: 100%; max-width: 500px; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.5rem; padding: 15px; width: 100%; max-width: 500px; display: flex; flex-direction: column; max-height: 90vh; }
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; border: none; touch-action: manipulation; }
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; margin-bottom: 0.5rem; }
+        .scroll-area { overflow-y: auto; flex-grow: 1; -webkit-overflow-scrolling: touch; }
     </style>
 </head>
 <body id="mainBody">
@@ -22,78 +23,56 @@
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbynkKvFzmpG9-wG-8EXqmlS7vQpfxEmeKDECSX4mBxgkEEuH6jxFV9IP9bnGY4PRHYZ/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_7qmQFCQ5_YzYHPXBfQpu8g5LuesVnTeu5TMmPeeTl1Ock2lUWD-lGZKhrEASGqyC/exec';
         
-        let state = { 
-            view: 'start', 
-            lessons: [], 
-            selectedSubject: '', 
-            status: 'idle',
-            loading: false
-        };
+        let state = { view: 'start', lessons: [], selectedSubject: '', status: 'idle', loading: false };
 
-        // DE ENIGE METHODE DIE IPAD NOOIT BLOKKEERT: JSONP
+        // JSONP HANDLER VOOR IPAD
         window.handleData = function(data) {
-            state.lessons = data.lessons;
-            state.loading = false;
-            state.view = 'subjects';
-            render();
+            if (data && data.lessons) {
+                state.lessons = data.lessons;
+                state.loading = false;
+                state.view = 'subjects';
+                render();
+            }
         };
 
         function startSync() {
             state.loading = true;
             render();
-            const script = document.createElement('script');
-            // We plakken de prefix 'handleData' aan de URL, zodat Google het verpakt
-            script.src = `${SCRIPT_URL}?prefix=handleData&v=${Date.now()}`;
-            script.onerror = () => alert("iPad blokkeert nog steeds. Controleer of je Google Script 'Toegang voor Iedereen' heeft.");
-            document.head.appendChild(script);
+            const s = document.createElement('script');
+            s.src = SCRIPT_URL + '?prefix=handleData&v=' + Date.now();
+            s.onerror = () => { alert("Verbindingsfout op iPad."); state.loading = false; render(); };
+            document.head.appendChild(s);
         }
 
         function render() {
             const container = document.getElementById('app');
             if (state.loading) {
-                container.innerHTML = `<div class="text-center font-black italic text-2xl animate-pulse">DATA OPHALEN...</div>`;
+                container.innerHTML = `<div class="text-2xl font-black italic animate-pulse text-yellow-400 uppercase">Laden...</div>`;
                 return;
             }
 
             if (state.view === 'start') {
-                container.innerHTML = `
-                <div class="text-center">
-                    <h1 class="text-5xl mb-8 font-black italic">MASSINE'S CHALLENGE</h1>
-                    <button onclick="startSync()" class="fn-button bg-yellow-400 text-black text-3xl px-12 py-6 mx-auto italic border-4 border-black">START</button>
-                </div>`;
+                container.innerHTML = `<div class="text-center"><h1 class="text-5xl mb-8 font-black italic">MASSINE'S CHALLENGE</h1><button onclick="startSync()" class="fn-button bg-yellow-400 text-black text-3xl px-12 py-6 mx-auto italic border-4 border-black">START</button></div>`;
             } else if (state.view === 'subjects') {
                 const subs = [...new Set(state.lessons.map(l => l.subject))];
-                container.innerHTML = `<div class="glass">
-                    <h2 class="theme-label mb-6">SELECT SUBJECT</h2>
-                    <div class="grid grid-cols-1 gap-3">
-                        ${subs.map(s => `<button onclick="state.selectedSubject='${s}'; state.view='lessons'; render();" class="fn-button bg-white/10 py-6 text-xl italic">${s}</button>`).join('')}
-                    </div>
-                </div>`;
+                container.innerHTML = `<div class="glass"><h2 class="theme-label mb-6">KIES JE VAK</h2><div class="grid grid-cols-1 gap-3">
+                    ${subs.map(s => `<button onclick="state.selectedSubject='${s}'; state.view='lessons'; render();" class="fn-button bg-white/10 py-6 text-xl italic">${s}</button>`).join('')}
+                    ${subs.length === 0 ? '<p class="text-center italic opacity-50 text-sm">Geen lessen gevonden in je Sheets...</p>' : ''}
+                </div></div>`;
             } else if (state.view === 'lessons') {
                 const filtered = state.lessons.filter(l => l.subject === state.selectedSubject);
                 const themes = [...new Set(filtered.map(l => l.theme))];
-                container.innerHTML = `<div class="glass">
-                    <button onclick="state.view='subjects'; render();" class="bg-yellow-400 text-black px-4 py-1 mb-4 font-black italic text-xs w-20">← BACK</button>
-                    <div class="overflow-y-auto max-h-[60vh]">
-                        ${themes.map(t => `
-                            <div class="theme-label">${t}</div>
-                            ${filtered.filter(l => l.theme === t).map(l => `
-                                <button onclick="startLesson('${l.name}')" class="fn-button bg-white/10 py-5 mb-2 italic w-full text-left pl-6">${l.name}</button>
-                            `).join('')}
-                        `).join('')}
-                    </div>
-                </div>`;
+                container.innerHTML = `<div class="glass"><button onclick="state.view='subjects'; render();" class="bg-yellow-400 text-black px-4 py-1 mb-4 font-black italic text-xs w-20">← TERUG</button>
+                    <div class="scroll-area">
+                        ${themes.map(t => `<div class="theme-label">${t}</div>` + filtered.filter(l => l.theme === t).map(l => `<button onclick="startLesson('${l.name}')" class="fn-button bg-white/10 py-5 mb-2 italic w-full text-left pl-6">${l.name}</button>`).join('')).join('')}
+                    </div></div>`;
             } else if (state.view === 'quiz') {
                 const q = state.quizItems[0];
-                container.innerHTML = `<div class="glass max-w-4xl">
-                    <h2 class="text-3xl text-center mb-10 font-black italic uppercase">${q.word}</h2>
-                    <div class="grid gap-3">
-                        ${q.options.map(opt => `<button onclick="checkAnswer('${opt}', '${q.correct}')" class="fn-button py-6 text-lg italic ${state.status !== 'idle' ? (opt === q.correct ? 'bg-green-500 text-black' : (opt === state.selected ? 'bg-red-600' : 'opacity-10')) : 'bg-white/10'}">${opt}</button>`).join('')}
-                    </div>
-                    ${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-6 bg-yellow-400 text-black fn-button py-4 italic font-black w-full">VOLGENDE →</button>` : ''}
-                </div>`;
+                container.innerHTML = `<div class="glass max-w-4xl"><h2 class="text-3xl text-center mb-10 font-black italic uppercase">${q.word}</h2><div class="grid gap-3">
+                    ${q.options.map(opt => `<button onclick="checkAnswer('${opt}', '${q.correct}')" class="fn-button py-6 text-lg italic ${state.status !== 'idle' ? (opt === q.correct ? 'bg-green-500 text-black' : (opt === state.selected ? 'bg-red-600' : 'opacity-10')) : 'bg-white/10'}">${opt}</button>`).join('')}
+                </div>${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-6 bg-yellow-400 text-black fn-button py-4 italic font-black w-full">VOLGENDE →</button>` : ''}</div>`;
             }
         }
 
@@ -103,16 +82,8 @@
             state.status = 'idle'; state.view = 'quiz'; render();
         }
 
-        function checkAnswer(o, c) {
-            if (state.status !== 'idle') return;
-            state.selected = o; state.status = (o === c) ? 'correct' : 'wrong'; render();
-        }
-
-        function nextQ() {
-            state.quizItems.shift(); state.status = 'idle';
-            if (state.quizItems.length === 0) { confetti(); state.view = 'lessons'; }
-            render();
-        }
+        function checkAnswer(o, c) { if (state.status !== 'idle') return; state.selected = o; state.status = (o === c) ? 'correct' : 'wrong'; render(); }
+        function nextQ() { state.quizItems.shift(); state.status = 'idle'; if (state.quizItems.length === 0) { confetti(); state.view = 'lessons'; } render(); }
 
         render();
     </script>
