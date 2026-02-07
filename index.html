@@ -17,16 +17,17 @@
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; margin-bottom: 0.5rem; }
         .lesson-progress-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: #22c55e; z-index: 5; transition: width 0.5s ease-out; }
         
-        /* Swipe Actions */
         .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; touch-action: pan-y; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 50; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
         .swiped .swipe-actions { opacity: 1; pointer-events: auto; }
         .btn-reset { background: #3b82f6; height: 100%; padding: 0 20px; font-weight: 900; font-size: 0.7rem; color: white; text-transform: uppercase; border: none; }
         .swiped .fn-button { transform: translateX(-80px); }
 
-        /* Quiz States */
-        .btn-correct-full { background-color: #00ff00 !important; color: black !important; border: 4px solid white !important; transform: scale(1.02); }
-        .btn-wrong-hard { background-color: #ff0000 !important; color: white !important; border: 4px solid white !important; animation: shake 0.3s; }
+        /* Verbeterde Quiz Feedback Kleuren */
+        .btn-correct-show { background-color: #22c55e !important; color: black !important; font-weight: 900; }
+        .btn-wrong-show { background-color: #ef4444 !important; color: white !important; animation: shake 0.3s; }
+        .btn-dim { opacity: 0.2 !important; }
+
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
         
         .subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -74,7 +75,7 @@
                         lessonsMap[key].items.push({ 
                             word: c[5], 
                             correct: c[6], 
-                            options: [c[6], ...dists].sort(() => Math.random() - 0.5) 
+                            options: [c[6], ...dists].filter(x => x !== "").sort(() => Math.random() - 0.5) 
                         });
                     }
                 });
@@ -83,21 +84,21 @@
                 state.view = 'subjects';
                 render();
             } catch (e) {
-                document.getElementById('app').innerHTML = `<div class="glass p-10 text-center font-black italic text-red-500 uppercase">FOUT BIJ LADEN - CHECK INTERNET</div>`;
+                document.getElementById('app').innerHTML = `<div class="glass p-10 text-center font-black italic text-red-500 uppercase">SYNC ERROR</div>`;
             }
         }
 
         function render() {
             const container = document.getElementById('app');
             if (state.view === 'loading') {
-                container.innerHTML = `<div class="glass p-20 text-center font-black italic animate-pulse text-yellow-500 uppercase tracking-widest">Loading Mission...</div>`;
+                container.innerHTML = `<div class="glass p-20 text-center font-black italic animate-pulse text-yellow-500 uppercase tracking-widest">LOADING...</div>`;
                 return;
             }
 
             if (state.view === 'subjects') {
                 const subs = [...new Set(state.lessons.map(l => l.subject))];
                 container.innerHTML = `<div class="glass w-full max-w-md p-4">
-                    <h1 class="text-3xl text-yellow-400 mb-6 text-center font-black italic uppercase">Massine's Challenge</h1>
+                    <h1 class="text-3xl text-yellow-400 mb-6 text-center font-black italic uppercase">Missions</h1>
                     <div class="grid gap-4">
                         <button onclick="startBossMode()" class="fn-button bg-orange-600 py-6 text-xl italic mb-2">🔥 BOSS LEVELS 🔥</button>
                         <div class="subject-grid">
@@ -140,10 +141,15 @@
                     </div>
                     <h2 class="text-2xl text-center my-10 font-black italic uppercase leading-tight">${q.word}</h2>
                     <div class="grid gap-3">${q.options.map(opt => {
-                        let cl = "bg-white/10"; if(state.status !== 'idle'){ if(opt===q.correct) cl="btn-correct-full"; else if(opt===state.selected) cl="btn-wrong-hard"; else cl="opacity-20"; }
+                        let cl = "bg-white/10"; 
+                        if(state.status !== 'idle'){ 
+                            if(opt === q.correct) cl = "btn-correct-show"; 
+                            else if(opt === state.selected) cl = "btn-wrong-show"; 
+                            else cl = "btn-dim"; 
+                        }
                         return `<button onclick="handleAnswer('${opt}')" class="fn-button py-6 text-lg italic ${cl}">${opt}</button>`
                     }).join('')}</div>
-                    ${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-8 bg-yellow-400 text-black py-4 fn-button italic font-black uppercase tracking-widest">Next →</button>` : ''}
+                    ${state.status !== 'idle' ? `<button id="nextBtn" onclick="nextQ()" class="mt-8 bg-yellow-400 text-black py-4 fn-button italic font-black uppercase tracking-widest">VOLGENDE →</button>` : ''}
                 </div>`;
             }
         }
@@ -177,6 +183,8 @@
                 state.quizItems.push({...q}); 
             }
             render();
+            // Automatisch focus op de "Volgende" knop voor iPad gemak
+            setTimeout(() => { document.getElementById('nextBtn')?.focus(); }, 100);
         }
 
         function nextQ() {
