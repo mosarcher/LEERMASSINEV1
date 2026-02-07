@@ -12,7 +12,7 @@
         body { font-family: 'Inter', sans-serif; background: #0a051a; color: white; margin: 0; height: 100dvh; overflow: hidden; }
         #bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-size: cover; background-position: center; background-image: url('https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/massinewall.png'); }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(10,5,26,0.1), rgba(10,5,26,0.6)); z-index: -1; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.5rem; padding: 15px; width: 100%; max-width: 500px; display: flex; flex-direction: column; max-height: 80vh; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.5rem; padding: 20px; width: 100%; max-width: 500px; display: flex; flex-direction: column; max-height: 80vh; }
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; border: none; touch-action: manipulation; }
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; margin-bottom: 0.5rem; }
         .scroll-area { overflow-y: auto; flex-grow: 1; -webkit-overflow-scrolling: touch; }
@@ -25,7 +25,7 @@
 
     <script>
         let state = { 
-            view: 'subjects', 
+            view: 'start', 
             lessons: window.MY_DATA || [], 
             selectedSubject: '', 
             status: 'idle',
@@ -36,20 +36,23 @@
         function render() {
             const container = document.getElementById('app');
             
-            if (state.lessons.length === 0) {
-                container.innerHTML = `<div class="glass text-center font-bold italic py-10 uppercase tracking-widest">Loading Mission Data...</div>`;
-                return;
-            }
-
-            if (state.view === 'subjects') {
+            if (state.view === 'start') {
+                container.innerHTML = `<div class="glass text-center">
+                    <h1 class="text-4xl font-black italic mb-8 text-yellow-400 uppercase tracking-tighter">Massine's Challenge</h1>
+                    <button onclick="state.view='subjects'; render();" class="fn-button bg-yellow-400 text-black w-full py-8 text-2xl mb-4 italic">START MISSION</button>
+                    <p class="text-[10px] opacity-30 italic uppercase">Auto-sync v22.2</p>
+                </div>`;
+            } 
+            else if (state.view === 'subjects') {
                 const subs = [...new Set(state.lessons.map(l => l.subject))];
                 container.innerHTML = `<div class="glass">
-                    <h1 class="text-3xl font-black italic text-center mb-6 text-yellow-400 uppercase tracking-tighter">Mission Control</h1>
+                    <h1 class="text-2xl font-black italic text-center mb-6 text-yellow-400 uppercase tracking-tighter">Mission Control</h1>
                     <div class="grid gap-3">
                         ${subs.map(s => `<button onclick="state.selectedSubject='${s}'; state.view='lessons'; render();" class="fn-button bg-white/10 py-6 text-xl italic border border-white/10 hover:bg-white/20">${s}</button>`).join('')}
                     </div>
                 </div>`;
-            } else if (state.view === 'lessons') {
+            } 
+            else if (state.view === 'lessons') {
                 const filtered = state.lessons.filter(l => l.subject === state.selectedSubject);
                 const themes = [...new Set(filtered.map(l => l.theme))];
                 container.innerHTML = `<div class="glass">
@@ -58,12 +61,13 @@
                         ${themes.map(t => `<div class="theme-label mt-4">${t}</div>` + filtered.filter(l => l.theme === t).map(l => `<button onclick="startLesson('${l.name}')" class="fn-button bg-white/10 py-5 mb-2 italic w-full text-left pl-6 hover:bg-white/20">${l.name}</button>`).join('')).join('')}
                     </div>
                 </div>`;
-            } else if (state.view === 'quiz') {
+            } 
+            else if (state.view === 'quiz') {
                 const q = state.quizItems[0];
                 container.innerHTML = `<div class="glass w-full max-w-4xl">
                     <div class="flex justify-between items-center mb-8 px-2">
                         <button onclick="if(confirm('STOP MISSION?')){state.view='lessons'; render();}" class="bg-red-600/80 text-white font-black italic text-[10px] px-3 py-1 uppercase" style="clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);">STOP</button>
-                        <span class="text-white/40 font-black italic text-sm tracking-widest">${state.quizItems.length} LEFT</span>
+                        <span class="text-white/40 font-black italic text-sm tracking-widest uppercase">${state.quizItems.length} LEFT</span>
                     </div>
                     <h2 class="text-4xl text-center mb-10 font-black italic uppercase tracking-tighter">${q.word}</h2>
                     <div class="grid gap-3">
@@ -82,14 +86,10 @@
         function startLesson(name) {
             const lesson = state.lessons.find(l => l.name === name && l.subject === state.selectedSubject);
             if (!lesson) return;
-            
             state.quizItems = lesson.items.map(item => {
-                const options = [item.correct, ...item.distractors]
-                    .sort(() => Math.random() - 0.5)
-                    .slice(0, 4);
+                const options = [item.correct, ...item.distractors].sort(() => Math.random() - 0.5).slice(0, 4);
                 return { ...item, currentOptions: options };
             }).sort(() => Math.random() - 0.5);
-            
             state.status = 'idle';
             state.view = 'quiz';
             render();
@@ -113,7 +113,13 @@
             render();
         }
 
-        render();
+        if (window.MY_DATA) {
+            state.lessons = window.MY_DATA;
+            render();
+        } else {
+            document.getElementById('app').innerHTML = `<div class="glass text-center py-20 font-black italic animate-pulse">SYNCING DATA...</div>`;
+            setTimeout(() => { location.reload(); }, 3000);
+        }
     </script>
 </body>
 </html>
