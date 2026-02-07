@@ -23,8 +23,11 @@
     <div id="app" class="w-full flex justify-center"></div>
 
     <script>
-        // VERVANG DEZE LINK DOOR JOUW GOOGLE SHEETS CSV LINK
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA7MUx5TsNqqMxQua7ieWURRHXrxlMn_j4M96pmerRHmCoRe9D-TKQ-kkuNIeeWzBsoJt5aF4ZXTkt/pub?output=csv";
+        // JE GOOGLE SHEET LINK
+        const MIJN_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA7MUx5TsNqqMxQua7ieWURRHXrxlMn_j4M96pmerRHmCoRe9D-TKQ-kkuNIeeWzBsoJt5aF4ZXTkt/pub?output=csv";
+        
+        // We gebruiken een proxy om de blokkade van de iPad te omzeilen
+        const PROXY_URL = "https://api.allorigins.win/get?url=" + encodeURIComponent(MIJN_SHEET_URL);
 
         let state = { 
             view: 'start', 
@@ -36,11 +39,12 @@
             loading: true
         };
 
-        // Functie om data direct uit Google Sheets te laden
         async function fetchData() {
             try {
-                const response = await fetch(CSV_URL);
-                const csvData = await response.text();
+                const response = await fetch(PROXY_URL);
+                const json = await response.json();
+                const csvData = json.contents;
+                
                 const lines = csvData.split(/\r?\n/).filter(line => line.trim() !== '');
                 const lessonsMap = {};
 
@@ -71,8 +75,8 @@
                 state.loading = false;
                 render();
             } catch (error) {
-                console.error("Fout bij laden data:", error);
-                document.getElementById('app').innerHTML = `<div class="glass text-center font-black italic">ERROR LOADING SHEET. CHECK LINK.</div>`;
+                console.error("Fout:", error);
+                document.getElementById('app').innerHTML = `<div class="glass text-center font-black italic uppercase">Connectie mislukt. Controleer internet.</div>`;
             }
         }
 
@@ -80,15 +84,15 @@
             const container = document.getElementById('app');
             
             if (state.loading) {
-                container.innerHTML = `<div class="glass text-center py-20 font-black italic animate-pulse tracking-widest uppercase text-yellow-500">Connecting to HQ...</div>`;
+                container.innerHTML = `<div class="glass text-center py-20 font-black italic animate-pulse tracking-widest uppercase text-yellow-500">Connecting...</div>`;
                 return;
             }
 
             if (state.view === 'start') {
                 container.innerHTML = `<div class="glass text-center">
                     <h1 class="text-4xl font-black italic mb-8 text-yellow-400 uppercase tracking-tighter">Massine's Challenge</h1>
-                    <button onclick="state.view='subjects'; render();" class="fn-button bg-yellow-400 text-black w-full py-8 text-2xl mb-4 italic">START MISSION</button>
-                    <p class="text-[10px] opacity-30 italic uppercase tracking-widest">Live Sync: Active</p>
+                    <button onclick="state.view='subjects'; render();" class="fn-button bg-yellow-400 text-black w-full py-8 text-2xl mb-4 italic hover:scale-105">START MISSION</button>
+                    <p class="text-[10px] opacity-30 italic uppercase tracking-widest text-white tracking-widest">Proxy Mode Active</p>
                 </div>`;
             } 
             else if (state.view === 'subjects') {
@@ -153,7 +157,7 @@
                 state.status = 'correct';
             } else {
                 state.status = 'wrong';
-                // Boss Mode: Foute vraag terug onderop
+                // Boss Mode: foute vraag komt terug
                 const currentQuestion = {...state.quizItems[0]};
                 state.quizItems.push(currentQuestion);
             }
@@ -178,7 +182,6 @@
             render();
         }
 
-        // Start het ophalen van de data zodra de pagina laadt
         fetchData();
     </script>
 </body>
