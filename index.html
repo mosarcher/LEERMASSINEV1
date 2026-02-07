@@ -12,13 +12,15 @@
         body { font-family: 'Inter', sans-serif; background: #0a051a; color: white; margin: 0; height: 100dvh; overflow: hidden; }
         #bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-size: cover; background-position: center; background-image: url('https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/massinewall.png'); }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(10,5,26,0.1), rgba(10,5,26,0.6)); z-index: -1; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.5rem; padding: 15px; width: 100%; max-width: 500px; display: flex; flex-direction: column; max-height: 90vh; }
+        /* We plaatsen de content aan de bovenkant met padding-top */
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.5rem; padding: 15px; width: 100%; max-width: 500px; display: flex; flex-direction: column; max-height: 85vh; }
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; border: none; touch-action: manipulation; }
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; margin-bottom: 0.5rem; }
         .scroll-area { overflow-y: auto; flex-grow: 1; -webkit-overflow-scrolling: touch; }
+        .clip-path-poly { clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%); }
     </style>
 </head>
-<body class="flex items-center justify-center p-2">
+<body class="flex justify-center items-start pt-24 px-2">
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="w-full flex justify-center"></div>
@@ -44,7 +46,7 @@
             if (state.view === 'subjects') {
                 const subs = [...new Set(state.lessons.map(l => l.subject))];
                 container.innerHTML = `<div class="glass">
-                    <h1 class="text-3xl font-black italic text-center mb-6 text-yellow-400 uppercase">Mission Control</h1>
+                    <h1 class="text-3xl font-black italic text-center mb-6 text-yellow-400 uppercase tracking-tighter">Mission Selection</h1>
                     <div class="grid gap-3">
                         ${subs.map(s => `<button onclick="state.selectedSubject='${s}'; state.view='lessons'; render();" class="fn-button bg-white/10 py-6 text-xl italic border border-white/10 hover:bg-white/20">${s}</button>`).join('')}
                     </div>
@@ -53,7 +55,7 @@
                 const filtered = state.lessons.filter(l => l.subject === state.selectedSubject);
                 const themes = [...new Set(filtered.map(l => l.theme))];
                 container.innerHTML = `<div class="glass">
-                    <button onclick="state.view='subjects'; render();" class="text-yellow-400 mb-4 font-black italic text-[10px] underline uppercase">← TERUG NAAR VAKKEN</button>
+                    <button onclick="state.view='subjects'; render();" class="text-yellow-400 mb-4 font-black italic text-[10px] underline uppercase">← VAKKEN SELECTIE</button>
                     <div class="scroll-area">
                         ${themes.map(t => `<div class="theme-label mt-4">${t}</div>` + filtered.filter(l => l.theme === t).map(l => `<button onclick="startLesson('${l.name}')" class="fn-button bg-white/10 py-5 mb-2 italic w-full text-left pl-6 hover:bg-white/20">${l.name}</button>`).join('')).join('')}
                     </div>
@@ -62,7 +64,7 @@
                 const q = state.quizItems[0];
                 container.innerHTML = `<div class="glass w-full max-w-4xl">
                     <div class="flex justify-between items-center mb-8 px-2">
-                        <button onclick="if(confirm('Wil je de les stoppen?')){state.view='lessons'; render();}" class="bg-red-600/80 text-white font-black italic text-[10px] px-3 py-1 clip-path-poly uppercase">STOP MISSION</button>
+                        <button onclick="if(confirm('Wil je stoppen?')){state.view='lessons'; render();}" class="bg-red-600/80 text-white font-black italic text-[10px] px-3 py-1 clip-path-poly uppercase">STOP MISSION</button>
                         <span class="text-white/40 font-black italic text-sm tracking-widest">${state.quizItems.length} LEFT</span>
                     </div>
                     <h2 class="text-4xl text-center mb-10 font-black italic uppercase tracking-tighter">${q.word}</h2>
@@ -74,7 +76,7 @@
                             </button>
                         `).join('')}
                     </div>
-                    ${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-6 bg-yellow-400 text-black fn-button py-4 italic font-black text-xl animate-bounce">CONTINUE →</button>` : ''}
+                    ${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-6 bg-yellow-400 text-black fn-button py-4 italic font-black text-xl animate-bounce uppercase">CONTINUE →</button>` : ''}
                 </div>`;
             }
         }
@@ -113,8 +115,5 @@
 
         render();
     </script>
-    <style>
-        .clip-path-poly { clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%); }
-    </style>
 </body>
 </html>
