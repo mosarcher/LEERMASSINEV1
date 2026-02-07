@@ -1,0 +1,53 @@
+name: Sync Google Data
+on:
+  schedule:
+    - cron: '0 * * * *' # Automatisch elk uur
+  workflow_dispatch:      # Hiermee kun je zelf op de knop drukken om te syncen
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Download Data
+        run: curl -L "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA7MUx5TsNqqMxQua7ieWURRHXrxlMn_j4M96pmerRHmCoRe9D-TKQ-kkuNIeeWzBsoJt5aF4ZXTkt/pub?output=csv" -o data.csv
+
+      - name: Convert to JS
+        run: |
+          node -e "
+          const fs = require('fs');
+          const data = fs.readFileSync('data.csv', 'utf8');
+          const lines = data.split('\n').filter(line => line.trim() !== '');
+          const lessons = {};
+          
+          lines.slice(1).forEach(line => {
+            const c = line.match(/(\"[^\"]*\"|[^\,]*)(?=\,|$)/g).map(s => s.replace(/\"/g, '').trim());
+            
+            if(c[5] && c[6]) {
+              const subject = c[0].toUpperCase() || 'ALGEMEEN';
+              const theme = c[1] || 'Thema';
+              const name = c[2] || 'Les';
+              const key = subject + theme + name;
+              
+              if(!lessons[key]) {
+                lessons[key] = { subject: subject, theme: theme, name: name, items: [] };
+              }
+              
+              const correct = c[6];
+              const distractors = c[7] ? c[7].split('|') : [];
+              const options = [correct, ...distractors].sort(() => Math.random() - 0.5).slice(0, 4);
+              
+              lessons[key].items.push({ word: c[5], correct: correct, options: options });
+            }
+          });
+          fs.writeFileSync('data.js', 'window.MY_DATA = ' + JSON.stringify(Object.values(lessons)) + ';');
+          "
+      - name: Push update
+        run: |
+          git config --global user.name 'Data Robot'
+          git config --global user.email 'robot@github.com'
+          git add data.js
+          git commit -m "Lessen bijgewerkt via Google Sheet" || exit 0
+          git push
