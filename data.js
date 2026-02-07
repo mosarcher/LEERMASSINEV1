@@ -7,41 +7,36 @@ window.MY_DATA = [
       {
         "word": "dix",
         "correct": "douze",
-        "options": [
-          "seize",
-          "douze"
+        "distractors": [
+          "seize"
         ]
       },
       {
         "word": "trois",
         "correct": "trente",
-        "options": [
-          "trente",
+        "distractors": [
           "seize"
         ]
       },
       {
         "word": "quatre",
         "correct": "quarante",
-        "options": [
-          "quarante",
+        "distractors": [
           "quinze"
         ]
       },
       {
         "word": "cinq",
         "correct": "cinquante",
-        "options": [
-          "seize",
-          "cinquante"
+        "distractors": [
+          "seize"
         ]
       },
       {
         "word": "six",
         "correct": "soixante",
-        "options": [
-          "sept",
-          "soixante"
+        "distractors": [
+          "sept"
         ]
       }
     ]
@@ -54,33 +49,29 @@ window.MY_DATA = [
       {
         "word": "treize",
         "correct": "trois",
-        "options": [
-          "quarante",
-          "trois"
+        "distractors": [
+          "quarante"
         ]
       },
       {
         "word": "quatre",
         "correct": "quatorze",
-        "options": [
-          "quatorze",
+        "distractors": [
           "cinquante"
         ]
       },
       {
         "word": "cinq",
         "correct": "quinze",
-        "options": [
-          "quinze",
+        "distractors": [
           "quarante"
         ]
       },
       {
         "word": "seize",
         "correct": "six",
-        "options": [
-          "soixante-dix",
-          "six"
+        "distractors": [
+          "soixante-dix"
         ]
       }
     ]
@@ -93,32 +84,28 @@ window.MY_DATA = [
       {
         "word": "la mère",
         "correct": "le frère",
-        "options": [
-          "le frère",
+        "distractors": [
           "la soeur"
         ]
       },
       {
         "word": "le père",
         "correct": "la tante",
-        "options": [
-          "le frère",
-          "la tante"
+        "distractors": [
+          "le frère"
         ]
       },
       {
         "word": "le père",
         "correct": "la soeur",
-        "options": [
-          "la soeur",
+        "distractors": [
           "le cousin"
         ]
       },
       {
         "word": "le frère",
         "correct": "la mère",
-        "options": [
-          "la mère",
+        "distractors": [
           "la tante"
         ]
       }
@@ -132,17 +119,15 @@ window.MY_DATA = [
       {
         "word": "je suis",
         "correct": "il est",
-        "options": [
-          "nous sommes",
-          "il est"
+        "distractors": [
+          "nous sommes"
         ]
       },
       {
         "word": "elle est",
         "correct": "tu es",
-        "options": [
-          "je suis",
-          "tu es"
+        "distractors": [
+          "je suis"
         ]
       }
     ]
@@ -155,32 +140,28 @@ window.MY_DATA = [
       {
         "word": "le pain",
         "correct": "le bol",
-        "options": [
-          "le chat",
-          "le bol"
+        "distractors": [
+          "le chat"
         ]
       },
       {
         "word": "le verre",
         "correct": "le prix",
-        "options": [
-          "le prix",
+        "distractors": [
           "la mère"
         ]
       },
       {
         "word": "le pain",
         "correct": "le café",
-        "options": [
-          "le fils",
-          "le café"
+        "distractors": [
+          "le fils"
         ]
       },
       {
         "word": "le bol",
         "correct": "le lit",
-        "options": [
-          "le lit",
+        "distractors": [
           "la porte"
         ]
       }
@@ -194,24 +175,21 @@ window.MY_DATA = [
       {
         "word": "le sucre",
         "correct": "le pain",
-        "options": [
-          "le pain",
+        "distractors": [
           "le jus"
         ]
       },
       {
         "word": "le fruit",
         "correct": "le bonbon",
-        "options": [
-          "le bonbon",
+        "distractors": [
           "le sel"
         ]
       },
       {
         "word": "la poire",
         "correct": "la banane",
-        "options": [
-          "la banane",
+        "distractors": [
           "la fraise"
         ]
       }
