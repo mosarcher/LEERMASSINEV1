@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V17</title>
+    <title>MASSINE'S CHALLENGE V17 - ORIGINAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -17,19 +17,19 @@
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; margin-bottom: 0.5rem; }
         .lesson-progress-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: #22c55e; z-index: 5; transition: width 0.5s ease-out; }
         
+        /* Swipe Actions */
         .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; touch-action: pan-y; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 50; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
         .swiped .swipe-actions { opacity: 1; pointer-events: auto; }
         .btn-reset { background: #3b82f6; height: 100%; padding: 0 20px; font-weight: 900; font-size: 0.7rem; color: white; text-transform: uppercase; border: none; }
         .swiped .fn-button { transform: translateX(-80px); }
 
-        /* Verbeterde Quiz Feedback Kleuren */
-        .btn-correct-show { background-color: #22c55e !important; color: black !important; font-weight: 900; }
-        .btn-wrong-show { background-color: #ef4444 !important; color: white !important; animation: shake 0.3s; }
-        .btn-dim { opacity: 0.2 !important; }
+        /* Quiz Feedback - Duidelijke Kleuren */
+        .btn-correct-final { background-color: #22c55e !important; color: black !important; font-weight: 900; border: 3px solid white !important; }
+        .btn-wrong-final { background-color: #ef4444 !important; color: white !important; animation: shake 0.3s; border: 3px solid white !important; }
+        .btn-dimmed { opacity: 0.1 !important; pointer-events: none; }
 
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
-        
         .subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     </style>
 </head>
@@ -39,6 +39,7 @@
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
 
     <script>
+        // De URL van je Google Sheet (Gepubliceerd als CSV)
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA7MUx5TsNqqMxQua7ieWURRHXrxlMn_j4M96pmerRHmCoRe9D-TKQ-kkuNIeeWzBsoJt5aF4ZXTkt/pub?output=csv";
 
         let state = {
@@ -47,15 +48,16 @@
             selectedSubject: '',
             status: 'idle',
             quizItems: [],
-            totalQuestions: 0,
+            totalInRound: 0,
+            correctInRound: 0,
             selected: null,
             scores: JSON.parse(localStorage.getItem('massine_scores_v17') || '{}')
         };
 
         async function loadData() {
             try {
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(CSV_URL)}&t=${Date.now()}`;
-                const res = await fetch(proxyUrl);
+                // Gebruik de proxy om de data op te halen
+                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(CSV_URL)}&t=${Date.now()}`);
                 const json = await res.json();
                 const csvData = json.contents;
 
@@ -84,21 +86,21 @@
                 state.view = 'subjects';
                 render();
             } catch (e) {
-                document.getElementById('app').innerHTML = `<div class="glass p-10 text-center font-black italic text-red-500 uppercase">SYNC ERROR</div>`;
+                document.getElementById('app').innerHTML = `<div class="glass p-10 text-center font-black italic text-red-500 uppercase">SYNC ERROR - CHECK GOOGLE SHEET LINK</div>`;
             }
         }
 
         function render() {
             const container = document.getElementById('app');
             if (state.view === 'loading') {
-                container.innerHTML = `<div class="glass p-20 text-center font-black italic animate-pulse text-yellow-500 uppercase tracking-widest">LOADING...</div>`;
+                container.innerHTML = `<div class="glass p-20 text-center font-black italic animate-pulse text-yellow-500 uppercase tracking-widest">LOADING MISSION...</div>`;
                 return;
             }
 
             if (state.view === 'subjects') {
                 const subs = [...new Set(state.lessons.map(l => l.subject))];
                 container.innerHTML = `<div class="glass w-full max-w-md p-4">
-                    <h1 class="text-3xl text-yellow-400 mb-6 text-center font-black italic uppercase">Missions</h1>
+                    <h1 class="text-3xl text-yellow-400 mb-6 text-center font-black italic uppercase">Massine's Challenge</h1>
                     <div class="grid gap-4">
                         <button onclick="startBossMode()" class="fn-button bg-orange-600 py-6 text-xl italic mb-2">🔥 BOSS LEVELS 🔥</button>
                         <div class="subject-grid">
@@ -132,24 +134,24 @@
             }
             else if (state.view === 'quiz') {
                 const q = state.quizItems[0];
-                const progress = ((state.totalQuestions - state.quizItems.length) / state.totalQuestions) * 100;
+                const totalQ = state.totalInRound;
                 container.innerHTML = `<div class="glass w-full max-w-4xl p-4">
                     <div class="flex justify-between items-center mb-6">
                         <button onclick="state.view='lessons'; render();" class="text-red-500 font-black italic uppercase text-xs">STOP</button>
-                        <div class="flex-1 mx-4 bg-white/10 h-2 rounded-full overflow-hidden"><div class="bg-yellow-400 h-full" style="width:${progress}%"></div></div>
-                        <span class="text-yellow-400 font-black italic text-xs">${state.quizItems.length} LEFT</span>
+                        <div class="text-yellow-400 font-black italic">SCORE: ${state.correctInRound} / ${totalQ}</div>
+                        <span class="text-white font-black italic text-xs">${state.quizItems.length} OVER</span>
                     </div>
                     <h2 class="text-2xl text-center my-10 font-black italic uppercase leading-tight">${q.word}</h2>
                     <div class="grid gap-3">${q.options.map(opt => {
                         let cl = "bg-white/10"; 
                         if(state.status !== 'idle'){ 
-                            if(opt === q.correct) cl = "btn-correct-show"; 
-                            else if(opt === state.selected) cl = "btn-wrong-show"; 
-                            else cl = "btn-dim"; 
+                            if(opt === q.correct) cl = "btn-correct-final"; 
+                            else if(opt === state.selected) cl = "btn-wrong-final"; 
+                            else cl = "btn-dimmed"; 
                         }
                         return `<button onclick="handleAnswer('${opt}')" class="fn-button py-6 text-lg italic ${cl}">${opt}</button>`
                     }).join('')}</div>
-                    ${state.status !== 'idle' ? `<button id="nextBtn" onclick="nextQ()" class="mt-8 bg-yellow-400 text-black py-4 fn-button italic font-black uppercase tracking-widest">VOLGENDE →</button>` : ''}
+                    ${state.status !== 'idle' ? `<button onclick="nextQ()" class="mt-8 bg-yellow-400 text-black py-4 fn-button italic font-black uppercase tracking-widest">VOLGENDE →</button>` : ''}
                 </div>`;
             }
         }
@@ -158,7 +160,8 @@
             const lesson = state.lessons.find(l => l.subject === s && l.theme === t && l.name === n);
             state.currentKey = `${s}-${t}-${n}`;
             state.quizItems = [...lesson.items].sort(() => Math.random() - 0.5);
-            state.totalQuestions = state.quizItems.length;
+            state.totalInRound = state.quizItems.length;
+            state.correctInRound = 0;
             state.view = 'quiz'; render();
         }
 
@@ -167,7 +170,8 @@
             let allItems = [];
             state.lessons.forEach(l => allItems.push(...l.items));
             state.quizItems = allItems.sort(() => Math.random() - 0.5).slice(0, 20);
-            state.totalQuestions = state.quizItems.length;
+            state.totalInRound = state.quizItems.length;
+            state.correctInRound = 0;
             state.view = 'quiz'; render();
         }
 
@@ -177,14 +181,13 @@
             const q = state.quizItems[0];
             if (opt === q.correct) { 
                 state.status = 'correct'; 
+                state.correctInRound++;
                 confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } }); 
             } else { 
                 state.status = 'wrong'; 
-                state.quizItems.push({...q}); 
+                state.quizItems.push({...q}); // Vraag komt achteraan terug (Boss Mode principe)
             }
             render();
-            // Automatisch focus op de "Volgende" knop voor iPad gemak
-            setTimeout(() => { document.getElementById('nextBtn')?.focus(); }, 100);
         }
 
         function nextQ() {
