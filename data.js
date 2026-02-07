@@ -5,43 +5,43 @@ window.MY_DATA = [
     "name": "Getallen 10-30",
     "items": [
       {
-        "word": "11",
-        "correct": "onze",
+        "word": "dix",
+        "correct": "douze",
         "options": [
-          "dix",
-          "onze"
+          "seize",
+          "douze"
         ]
       },
       {
-        "word": "13",
-        "correct": "treize",
+        "word": "trois",
+        "correct": "trente",
         "options": [
-          "treize",
-          "trois"
-        ]
-      },
-      {
-        "word": "14",
-        "correct": "quatorze",
-        "options": [
-          "quatorze",
-          "quatre"
-        ]
-      },
-      {
-        "word": "15",
-        "correct": "quinze",
-        "options": [
-          "quinze",
-          "cinq"
-        ]
-      },
-      {
-        "word": "16",
-        "correct": "seize",
-        "options": [
-          "six",
+          "trente",
           "seize"
+        ]
+      },
+      {
+        "word": "quatre",
+        "correct": "quarante",
+        "options": [
+          "quarante",
+          "quinze"
+        ]
+      },
+      {
+        "word": "cinq",
+        "correct": "cinquante",
+        "options": [
+          "seize",
+          "cinquante"
+        ]
+      },
+      {
+        "word": "six",
+        "correct": "soixante",
+        "options": [
+          "sept",
+          "soixante"
         ]
       }
     ]
@@ -52,35 +52,35 @@ window.MY_DATA = [
     "name": "Getallen 30-60",
     "items": [
       {
-        "word": "30",
-        "correct": "trente",
+        "word": "treize",
+        "correct": "trois",
         "options": [
-          "trente",
-          "treize"
-        ]
-      },
-      {
-        "word": "40",
-        "correct": "quarante",
-        "options": [
-          "quatre",
+          "trois",
           "quarante"
         ]
       },
       {
-        "word": "50",
-        "correct": "cinquante",
+        "word": "quatre",
+        "correct": "quatorze",
         "options": [
-          "cinq",
+          "quatorze",
           "cinquante"
         ]
       },
       {
-        "word": "60",
-        "correct": "soixante",
+        "word": "cinq",
+        "correct": "quinze",
         "options": [
-          "soixante",
-          "seize"
+          "quinze",
+          "quarante"
+        ]
+      },
+      {
+        "word": "seize",
+        "correct": "six",
+        "options": [
+          "soixante-dix",
+          "six"
         ]
       }
     ]
@@ -91,35 +91,35 @@ window.MY_DATA = [
     "name": "Mijn familie",
     "items": [
       {
-        "word": "de vader",
-        "correct": "le père",
-        "options": [
-          "le père",
-          "la mère"
-        ]
-      },
-      {
-        "word": "de moeder",
-        "correct": "la mère",
-        "options": [
-          "le père",
-          "la mère"
-        ]
-      },
-      {
-        "word": "de broer",
+        "word": "la mère",
         "correct": "le frère",
         "options": [
-          "le frère",
-          "le père"
+          "la soeur",
+          "le frère"
         ]
       },
       {
-        "word": "de zus",
-        "correct": "la soeur",
+        "word": "le père",
+        "correct": "la tante",
         "options": [
           "le frère",
-          "la soeur"
+          "la tante"
+        ]
+      },
+      {
+        "word": "le père",
+        "correct": "la soeur",
+        "options": [
+          "la soeur",
+          "le cousin"
+        ]
+      },
+      {
+        "word": "le frère",
+        "correct": "la mère",
+        "options": [
+          "la mère",
+          "la tante"
         ]
       }
     ]
@@ -130,19 +130,19 @@ window.MY_DATA = [
     "name": "Être (zijn)",
     "items": [
       {
-        "word": "jij bent",
-        "correct": "tu es",
+        "word": "je suis",
+        "correct": "il est",
         "options": [
-          "je suis",
-          "tu es"
+          "nous sommes",
+          "il est"
         ]
       },
       {
-        "word": "hij is",
-        "correct": "il est",
+        "word": "elle est",
+        "correct": "tu es",
         "options": [
-          "il est",
-          "elle est"
+          "tu es",
+          "je suis"
         ]
       }
     ]
@@ -153,35 +153,35 @@ window.MY_DATA = [
     "name": "In de keuken",
     "items": [
       {
-        "word": "het mes",
-        "correct": "le couteau",
-        "options": [
-          "le couteau",
-          "le pain"
-        ]
-      },
-      {
-        "word": "de vork",
-        "correct": "la fourchette",
-        "options": [
-          "la fourchette",
-          "le verre"
-        ]
-      },
-      {
-        "word": "de lepel",
-        "correct": "la cuillère",
-        "options": [
-          "le pain",
-          "la cuillère"
-        ]
-      },
-      {
-        "word": "het glas",
-        "correct": "le verre",
+        "word": "le pain",
+        "correct": "le bol",
         "options": [
           "le bol",
-          "le verre"
+          "le chat"
+        ]
+      },
+      {
+        "word": "le verre",
+        "correct": "le prix",
+        "options": [
+          "la mère",
+          "le prix"
+        ]
+      },
+      {
+        "word": "le pain",
+        "correct": "le café",
+        "options": [
+          "le fils",
+          "le café"
+        ]
+      },
+      {
+        "word": "le bol",
+        "correct": "le lit",
+        "options": [
+          "le lit",
+          "la porte"
         ]
       }
     ]
@@ -192,27 +192,27 @@ window.MY_DATA = [
     "name": "De winkel",
     "items": [
       {
-        "word": "de melk",
-        "correct": "le lait",
-        "options": [
-          "le sucre",
-          "le lait"
-        ]
-      },
-      {
-        "word": "het brood",
+        "word": "le sucre",
         "correct": "le pain",
         "options": [
-          "le fruit",
+          "le jus",
           "le pain"
         ]
       },
       {
-        "word": "de appel",
-        "correct": "la pomme",
+        "word": "le fruit",
+        "correct": "le bonbon",
         "options": [
-          "la pomme",
-          "la poire"
+          "le sel",
+          "le bonbon"
+        ]
+      },
+      {
+        "word": "la poire",
+        "correct": "la banane",
+        "options": [
+          "la fraise",
+          "la banane"
         ]
       }
     ]
