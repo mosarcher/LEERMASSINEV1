@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V16.4</title>
+    <title>MASSINE'S CHALLENGE V16.5</title>
     <link rel="preconnect" href="https://script.google.com">
     <link rel="preconnect" href="https://raw.githubusercontent.com">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,14 +16,18 @@
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; flex-direction: column; width: 100%; max-height: 98%; border-radius: 1.5rem; padding: 5px; }
         .scroll-area { overflow-y: auto; flex-grow: 1; padding: 5px; -webkit-overflow-scrolling: touch; }
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: none; touch-action: manipulation; position: relative; overflow: hidden; }
+        
         .progress-bg { position: absolute; top: 0; left: 0; height: 100%; background: rgba(34, 197, 94, 0.2); z-index: 0; transition: width 0.5s ease-out; pointer-events: none; }
         .lesson-progress-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: #22c55e; z-index: 5; transition: width 0.5s ease-out; }
         .fn-button span { z-index: 1; position: relative; }
+
         .btn-correct-full { background-color: #00ff00 !important; color: black !important; border: 4px solid white !important; transform: scale(1.05); z-index: 20; opacity: 1 !important; }
         .btn-correct-subtle { background-color: rgba(0, 255, 0, 0.2) !important; color: white !important; border: 1px solid #00ff00 !important; opacity: 0.8 !important; }
         .btn-wrong-hard { background-color: #ff0000 !important; color: white !important; border: 4px solid white !important; animation: hard-shake 0.4s ease-in-out; opacity: 1 !important; }
         .btn-dimmed { opacity: 0.05 !important; }
+
         @keyframes hard-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-12px); } 40% { transform: translateX(12px); } 60% { transform: translateX(-12px); } 80% { transform: translateX(12px); } }
+
         .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; touch-action: pan-y; }
         .swipe-q-box { height: auto !important; min-height: 80px; margin-bottom: 20px; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; opacity: 0; transition: opacity 0.2s; }
@@ -31,22 +35,27 @@
         .action-btn { height: 100%; padding: 0 15px; font-weight: 900; font-size: 0.7rem; color: white; border: none; text-transform: uppercase; }
         .btn-reset { background: #3b82f6; }
         .btn-delete { background: #ef4444; }
-        .swiped .fn-button, .swiped .quiz-q-inner { transform: translateX(-150px); }
+        
+        .swiped .fn-button, .swiped .quiz-q-inner, .swiped .theme-inner { transform: translateX(-100px); }
         .resume-pill { position: absolute; right: 10px; top: 8px; background: #eab308; color: black; font-size: 0.5rem; padding: 2px 5px; border-radius: 4px; font-weight: 900; z-index: 10; }
+        
         .stats-tag { position: absolute; bottom: 6px; right: 12px; font-size: 0.6rem; font-weight: 900; display: flex; gap: 8px; opacity: 0.8; }
         .subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .subject-icon { font-size: 1.2em; margin-right: 8px; font-style: normal; }
         .back-btn { width: auto !important; padding: 0 15px !important; height: 35px !important; font-size: 0.75rem !important; flex-shrink: 0; }
-        .reset-all-btn { width: auto !important; padding: 0 10px !important; height: 35px !important; font-size: 0.65rem !important; flex-shrink: 0; background: #3b82f6 !important; }
         .quiz-q-text { font-weight: 900; font-style: italic; text-transform: uppercase; }
-        .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; margin-bottom: 0.6rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); }
+        
+        /* Theme Header Swipe Styles */
+        .theme-swipe-box { position: relative; width: 100%; overflow: hidden; margin-bottom: 0.6rem; touch-action: pan-y; }
+        .theme-inner { transition: transform 0.2s; display: block; }
+        .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; }
     </style>
 </head>
 <body id="mainBody" onclick="closeAllSwipes()">
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v16.4</div>
+    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v16.5</div>
 
     <script>
         const CONFIG = { scriptUrl: 'https://script.google.com/macros/s/AKfycbwG44NuJL67bxpBis12eetkybW0DKG4AAN3jq0lz7XB2oZMrgdv9NY2kaK4KdvWlfsk/exec' };
@@ -147,10 +156,26 @@
 
         let startX = 0;
         function handleTouchStart(e) { startX = e.touches[0].clientX; }
-        function handleTouchMove(e, id) { const diff = startX - e.touches[0].clientX; const el = document.getElementById(id).parentElement; if (diff > 50) { closeAllSwipes(); el.classList.add('swiped'); } else if (diff < -50) el.classList.remove('swiped'); }
-        function closeAllSwipes() { document.querySelectorAll('.swipe-container, .swipe-q-box').forEach(el => el.classList.remove('swiped')); }
-        function executeReset(s,t,n) { const key = `${s}-${t}-${n}`; delete state.checkpoints[key]; state.stats[key] = { correct: 0, wrong: 0 }; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats)); render(); }
-        function executeResetSubject(subject) { if(!confirm(`Reset voortgang voor ${subject}?`)) return; Object.keys(state.checkpoints).forEach(key => { if(key.startsWith(subject + '-')) { delete state.checkpoints[key]; state.stats[key] = { correct: 0, wrong: 0 }; } }); localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats)); render(); }
+        function handleTouchMove(e, id) { 
+            const diff = startX - e.touches[0].clientX; 
+            const el = document.getElementById(id).parentElement; 
+            if (diff > 50) { closeAllSwipes(); el.classList.add('swiped'); } 
+            else if (diff < -50) el.classList.remove('swiped'); 
+        }
+        function closeAllSwipes() { document.querySelectorAll('.swipe-container, .swipe-q-box, .theme-swipe-box').forEach(el => el.classList.remove('swiped')); }
+        
+        function executeResetTheme(subject, theme) {
+            const lessons = state.lessons.filter(l => l.subject === subject && l.theme === theme);
+            lessons.forEach(l => {
+                const key = `${l.subject}-${l.theme}-${l.name}`;
+                delete state.checkpoints[key];
+                state.stats[key] = { correct: 0, wrong: 0 };
+            });
+            localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints));
+            localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats));
+            closeAllSwipes(); render();
+        }
+
         function deleteQuestionFromApp() { const q = state.quizItems[0]; state.lessons.forEach(l => { l.items = l.items.filter(i => i.word !== q.word); }); localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); state.quizItems.shift(); state.totalQuestions--; if(state.quizItems.length === 0) navigate('lessons'); else { state.status='idle'; render(); } }
         function startThemeBoss(subject, theme) { initAudio(); const items = state.lessons.filter(l => l.subject === subject && l.theme === theme).flatMap(l => l.items); state.currentLesson = { name: theme, subject, theme }; state.quizItems = [...items].sort(() => Math.random() - 0.5); state.totalQuestions = state.quizItems.length; state.firstTryCorrect = 0; state.status = 'idle'; state.selected = null; navigate('quiz'); }
 
@@ -169,21 +194,28 @@
                     </div>
                 </div></div>`;
             } else if (state.view === 'lessons') {
-                const filtered = state.lessons.filter(l => l.subject === state.selectedSubject); const themes = [...new Set(filtered.map(l => l.theme))];
+                const filtered = state.lessons.filter(l => l.subject === state.selectedSubject); 
+                const themes = [...new Set(filtered.map(l => l.theme))];
                 container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><div class="flex items-center justify-between mb-4 px-2">
                     <button onclick="navigate('subjects')" class="bg-yellow-400 text-black fn-button back-btn italic">← BACK</button>
                     <h2 class="text-xl italic uppercase font-black">${state.selectedSubject}</h2>
-                    <button onclick="executeResetSubject('${state.selectedSubject}')" class="fn-button reset-all-btn italic">RESET ALL</button>
+                    <div style="width:80px"></div>
                 </div><div class="scroll-area">
-                    ${themes.map(t => `<div class="mb-4 text-center"><h3 class="theme-label">${t}</h3>
+                    ${themes.map(t => {
+                        const tid = `theme-${Math.random().toString(36).substr(2, 5)}`;
+                        return `<div class="theme-swipe-box">
+                            <div class="swipe-actions"><button onclick="executeResetTheme('${state.selectedSubject}','${t}')" class="action-btn btn-reset">RESET</button></div>
+                            <div id="${tid}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${tid}')" class="theme-inner">
+                                <h3 class="theme-label">${t}</h3>
+                            </div>
+                        </div>
                         ${filtered.filter(l => l.theme === t).map(l => {
                             const cpKey = `${l.subject}-${l.theme}-${l.name}`; const cp = state.checkpoints[cpKey]; const st = state.stats[cpKey] || { correct: 0, wrong: 0 };
                             const done = cp ? (cp.total - cp.items.length) : (st.correct + st.wrong > 0 ? l.items.length : 0); const total = cp ? cp.total : l.items.length; const id = `btn-${Math.random().toString(36).substr(2, 5)}`;
-                            return `<div class="swipe-container"><div class="swipe-actions"><button onclick="executeReset('${l.subject}','${l.theme}','${l.name}')" class="action-btn btn-reset">RESET</button></div>
-                                ${cp ? `<div class="resume-pill">CONT.</div>` : ''}
-                                <button id="${id}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${id}')" onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="fn-button bg-white/10 border-l-[6px] border-white/30 text-lg py-5 italic text-left pl-6 relative">
+                            return `<div class="swipe-container">
+                                <button onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="fn-button bg-white/10 border-l-[6px] border-white/30 text-lg py-5 italic text-left pl-6 relative">
                                     <span>${l.name}</span><div class="stats-tag"><span>✅ ${st.correct}</span><span>❌ ${st.wrong}</span></div><div class="lesson-progress-bar" style="width: ${(done/total)*100}%"></div>
-                                </button></div>`}).join('')}</div>`).join('')}</div></div>`;
+                                </button></div>`}).join('')}`}).join('')}</div></div>`;
             } else if (state.view === 'quiz') {
                 const q = state.quizItems[0];
                 container.innerHTML = `<div class="glass p-3 w-full max-w-4xl sm:h-auto"><div class="flex justify-between items-center mb-3"><button onclick="navigate('lessons')" class="text-red-600 bg-black/40 px-2 py-1 rounded font-black text-[10px] uppercase italic">STOP</button>
@@ -210,11 +242,13 @@
                 container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><div class="flex items-center mb-4 relative"><button onclick="navigate('boss_selection');" class="bg-yellow-400 text-black fn-button back-btn italic z-10">← BACK</button><h2 class="text-header text-lg text-white absolute w-full text-center left-0 pointer-events-none uppercase italic font-black">${state.selectedBossSubject} BOSS</h2></div>
                     <div class="scroll-area">${themes.map(t => {
                         const bid = `boss-${Math.random().toString(36).substr(2, 5)}`;
-                        return `<div class="swipe-container"><div class="swipe-actions"><button onclick="executeReset('${state.selectedBossSubject}','${t}')" class="action-btn btn-reset">RESET</button></div>
-                            <button id="${bid}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${bid}')" onclick="startThemeBoss('${state.selectedBossSubject}','${t}')" class="fn-button bg-red-600/20 border-l-[10px] border-red-600 text-xl py-8 italic">${t}</button></div>`}).join('')}</div></div>`;
+                        return `<div class="theme-swipe-box"><div class="swipe-actions"><button onclick="executeResetTheme('${state.selectedBossSubject}','${t}')" class="action-btn btn-reset">RESET</button></div>
+                            <div id="${bid}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${bid}')" class="theme-inner">
+                                <button onclick="startThemeBoss('${state.selectedBossSubject}','${t}')" class="fn-button bg-red-600/20 border-l-[10px] border-red-600 text-xl py-8 italic">${t}</button>
+                            </div></div>`}).join('')}</div></div>`;
             }
         }
-        render(); // Force initial render
+        render(); 
     </script>
 </body>
 </html>
