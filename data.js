@@ -55,8 +55,8 @@ window.MY_DATA = [
         "word": "treize",
         "correct": "trois",
         "options": [
-          "trois",
-          "quarante"
+          "quarante",
+          "trois"
         ]
       },
       {
@@ -94,8 +94,8 @@ window.MY_DATA = [
         "word": "la mère",
         "correct": "le frère",
         "options": [
-          "la soeur",
-          "le frère"
+          "le frère",
+          "la soeur"
         ]
       },
       {
@@ -141,8 +141,8 @@ window.MY_DATA = [
         "word": "elle est",
         "correct": "tu es",
         "options": [
-          "tu es",
-          "je suis"
+          "je suis",
+          "tu es"
         ]
       }
     ]
@@ -156,16 +156,16 @@ window.MY_DATA = [
         "word": "le pain",
         "correct": "le bol",
         "options": [
-          "le bol",
-          "le chat"
+          "le chat",
+          "le bol"
         ]
       },
       {
         "word": "le verre",
         "correct": "le prix",
         "options": [
-          "la mère",
-          "le prix"
+          "le prix",
+          "la mère"
         ]
       },
       {
@@ -195,24 +195,24 @@ window.MY_DATA = [
         "word": "le sucre",
         "correct": "le pain",
         "options": [
-          "le jus",
-          "le pain"
+          "le pain",
+          "le jus"
         ]
       },
       {
         "word": "le fruit",
         "correct": "le bonbon",
         "options": [
-          "le sel",
-          "le bonbon"
+          "le bonbon",
+          "le sel"
         ]
       },
       {
         "word": "la poire",
         "correct": "la banane",
         "options": [
-          "la fraise",
-          "la banane"
+          "la banane",
+          "la fraise"
         ]
       }
     ]
