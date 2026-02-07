@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V15.9</title>
+    <title>MASSINE'S CHALLENGE V16.0</title>
     <link rel="preconnect" href="https://script.google.com">
     <link rel="preconnect" href="https://raw.githubusercontent.com">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -44,14 +44,14 @@
         .reset-all-btn { width: auto !important; padding: 0 10px !important; height: 35px !important; font-size: 0.65rem !important; flex-shrink: 0; background: #3b82f6 !important; }
         .quiz-q-text { font-weight: 900; font-style: italic; text-transform: uppercase; }
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; margin-bottom: 0.6rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); }
-        .loading-text { font-size: 0.8rem; opacity: 0.5; margin-top: 10px; font-style: italic; }
+        .loading-text { font-size: 0.8rem; opacity: 0.7; margin-top: 10px; font-style: italic; color: #eab308; }
     </style>
 </head>
 <body id="mainBody" onclick="closeAllSwipes()">
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v15.9</div>
+    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v16.0</div>
 
     <script>
         const CONFIG = { scriptUrl: 'https://script.google.com/macros/s/AKfycbwG44NuJL67bxpBis12eetkybW0DKG4AAN3jq0lz7XB2oZMrgdv9NY2kaK4KdvWlfsk/exec' };
@@ -85,18 +85,22 @@
             osc.start(); osc.stop(audioCtx.currentTime + 0.2);
         }
 
-        window.addEventListener('load', () => { render(); if(state.lessons.length === 0) fetchCloudData(); });
+        window.addEventListener('load', () => { render(); });
 
         async function fetchCloudData() { 
             state.isLoading = true; render();
+            const url = CONFIG.scriptUrl + (CONFIG.scriptUrl.includes('?') ? '&' : '?') + `t=${Date.now()}`;
             try { 
-                const res = await fetch(CONFIG.scriptUrl + (CONFIG.scriptUrl.includes('?') ? '&' : '?') + `t=${Date.now()}`); 
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const res = await fetch(url, { signal: controller.signal }); 
                 const d = await res.json(); 
+                clearTimeout(timeoutId);
                 if (d.lessons && d.lessons.length > 0) { 
                     state.lessons = d.lessons; 
                     localStorage.setItem('study_data_v7', JSON.stringify(d.lessons)); 
                 } 
-            } catch(e) { console.error("Data load error", e); }
+            } catch(e) { console.error("Sync error", e); }
             state.isLoading = false; render();
         }
 
@@ -133,7 +137,12 @@
             } 
         }
 
-        function handleStartApp() { initAudio(); if (state.lessons.length === 0) fetchCloudData(); navigate('subjects'); }
+        function handleStartApp() { 
+            initAudio(); 
+            fetchCloudData(); // Start fetch on click to bypass Safari blocks
+            navigate('subjects'); 
+        }
+
         function navigate(v) { const img = images[Math.floor(Math.random()*images.length)]; const bgUrl = `https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/${img}`; document.getElementById('bg-container').style.backgroundImage = `url('${bgUrl}')`; state.view = v; render(); }
         
         function startLesson(s,t,n) { 
@@ -151,16 +160,12 @@
         function handleTouchStart(e) { startX = e.touches[0].clientX; }
         function handleTouchMove(e, id) { const diff = startX - e.touches[0].clientX; const el = document.getElementById(id).parentElement; if (diff > 50) { closeAllSwipes(); el.classList.add('swiped'); } else if (diff < -50) el.classList.remove('swiped'); }
         function closeAllSwipes() { document.querySelectorAll('.swipe-container, .swipe-q-box').forEach(el => el.classList.remove('swiped')); }
-        
         function executeReset(s,t,n) { delete state.checkpoints[`${s}-${t}-${n}`]; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); render(); }
         
         function executeResetSubject(subject) {
-            if(!confirm(`Alle voortgang voor ${subject} wissen?`)) return;
-            Object.keys(state.checkpoints).forEach(key => {
-                if(key.startsWith(subject + '-')) delete state.checkpoints[key];
-            });
-            localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints));
-            render();
+            if(!confirm(`Reset alle voortgang voor ${subject}?`)) return;
+            Object.keys(state.checkpoints).forEach(key => { if(key.startsWith(subject + '-')) delete state.checkpoints[key]; });
+            localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); render();
         }
 
         function deleteQuestionFromApp() { const q = state.quizItems[0]; state.lessons.forEach(l => { l.items = l.items.filter(i => i.word !== q.word); }); localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); state.quizItems.shift(); state.totalQuestions--; if(state.quizItems.length === 0) navigate('lessons'); else { state.status='idle'; render(); } }
@@ -169,9 +174,12 @@
         function render() {
             const container = document.getElementById('app');
             if (state.view === 'start') {
-                container.innerHTML = `<div class="text-center"><h1 class="text-5xl mb-8 font-black italic">MASSINE'S CHALLENGE</h1><button onclick="handleStartApp()" class="fn-button bg-yellow-400 text-black text-3xl px-10 py-6 mx-auto italic">START</button>${state.isLoading ? '<div class="loading-text uppercase">Loading Missions...</div>' : ''}</div>`;
+                container.innerHTML = `<div class="text-center"><h1 class="text-5xl mb-8 font-black italic">MASSINE'S CHALLENGE</h1><button onclick="handleStartApp()" class="fn-button bg-yellow-400 text-black text-3xl px-10 py-6 mx-auto italic">START</button>${state.isLoading ? '<div class="loading-text uppercase">Syncing Missions...</div>' : ''}</div>`;
             } else if (state.view === 'subjects') {
-                if (state.lessons.length === 0 && !state.isLoading) { container.innerHTML = `<div class="glass p-6 text-center"><h2 class="text-xl mb-4">No missions found.</h2><button onclick="fetchCloudData()" class="fn-button bg-yellow-400 text-black p-4 italic">TRY RECONNECT</button></div>`; return; }
+                if (state.lessons.length === 0) {
+                    container.innerHTML = `<div class="glass p-6 text-center"><h2 class="text-xl mb-4 uppercase font-black">No Missions Found</h2><p class="mb-6 opacity-60 italic">Checking connection...</p><button onclick="fetchCloudData()" class="fn-button bg-blue-500 text-white p-4 italic mx-auto w-full max-w-xs">RECONNECT</button></div>`;
+                    return;
+                }
                 const frProg = calculateSubjectProgress('FRANS'); const taProg = calculateSubjectProgress('TAAL'); const woProg = calculateSubjectProgress('WO');
                 container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><h2 class="text-2xl text-yellow-400 mb-4 text-center italic font-black uppercase">Missions</h2><div class="scroll-area grid grid-cols-1 gap-3"><button onclick="navigate('boss_selection')" class="fn-button bg-orange-600 text-white text-2xl py-8 italic shadow-lg">🔥 BOSS LEVELS 🔥</button><div class="subject-grid">
                     <button onclick="state.selectedSubject='FRANS'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><div class="progress-bg" style="width: ${frProg}%"></div><span class="subject-icon">🇫🇷</span><span>Frans</span></button>
