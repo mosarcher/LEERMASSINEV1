@@ -1,24 +1,9 @@
-In v16.8 heb ik de quiz-logica aangepast zodat elke vraag slechts één keer langskomt per sessie. Zodra de stapel vragen op is, stopt de les direct.
-
-Wat is er aangepast:
-Eén ronde per les: Foute antwoorden worden niet meer achteraan de rij gezet. Je krijgt elke vraag precies één keer te zien.
-
-Statistieken: Aan het einde van de les zie je in de lijst exact hoeveel je er die ronde juist (✅) en fout (❌) had.
-
-Opnieuw proberen: Wil je de les opnieuw doen om je score te verbeteren? Gebruik dan de swipe-to-reset op de les.
-
-Behoud van ontwerp: De groene balken, geluiden, de "NEXT"-knop en de thema-resets zijn exact hetzelfde gebleven.
-
-Hier is de volledige code:
-
-HTML
-
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V16.8</title>
+    <title>MASSINE'S CHALLENGE V17.0</title>
     <link rel="preconnect" href="https://script.google.com">
     <link rel="preconnect" href="https://raw.githubusercontent.com">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -41,9 +26,9 @@ HTML
         @keyframes hard-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-12px); } 40% { transform: translateX(12px); } 60% { transform: translateX(-12px); } 80% { transform: translateX(12px); } }
         .swipe-container { position: relative; width: 100%; height: 60px; margin-bottom: 6px; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; touch-action: pan-y; }
         .swipe-q-box { height: auto !important; min-height: 80px; margin-bottom: 20px; }
-        .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; opacity: 0; transition: opacity 0.2s; }
-        .swiped .swipe-actions { opacity: 1; }
-        .action-btn { height: 100%; padding: 0 15px; font-weight: 900; font-size: 0.7rem; color: white; border: none; text-transform: uppercase; }
+        .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 50; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+        .swiped .swipe-actions { opacity: 1; pointer-events: auto; }
+        .action-btn { height: 100%; padding: 0 15px; font-weight: 900; font-size: 0.7rem; color: white; border: none; text-transform: uppercase; cursor: pointer; }
         .btn-reset { background: #3b82f6; }
         .btn-delete { background: #ef4444; }
         .swiped .fn-button, .swiped .quiz-q-inner, .swiped .theme-inner, .swiped .lesson-inner { transform: translateX(-100px); }
@@ -63,7 +48,7 @@ HTML
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v16.8</div>
+    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v17.0</div>
 
     <script>
         const CONFIG = { scriptUrl: 'https://script.google.com/macros/s/AKfycbwG44NuJL67bxpBis12eetkybW0DKG4AAN3jq0lz7XB2oZMrgdv9NY2kaK4KdvWlfsk/exec' };
@@ -79,40 +64,26 @@ HTML
 
         function fetchCloudData() { state.isLoading = true; render(); const script = document.createElement('script'); script.src = CONFIG.scriptUrl + (CONFIG.scriptUrl.includes('?') ? '&' : '?') + `prefix=handleCloudData&t=${Date.now()}`; document.body.appendChild(script); }
 
-        function calculateSubjectProgress(subject) { const lessons = state.lessons.filter(l => l.subject === subject); if (lessons.length === 0) return 0; const completed = lessons.filter(l => !state.checkpoints[`${l.subject}-${l.theme}-${l.name}`]).length; return (completed / lessons.length) * 100; }
-
         function checkAnswer(opt) { 
             if (state.status !== 'idle') return; 
-            state.selected = opt; 
-            const q = state.quizItems[0]; 
-            const isCorrect = (opt === q.correct);
-            state.status = isCorrect ? 'correct' : 'wrong'; 
-            playSound(state.status); 
-            
+            state.selected = opt; const q = state.quizItems[0]; const isCorrect = (opt === q.correct);
+            state.status = isCorrect ? 'correct' : 'wrong'; playSound(state.status); 
             const key = `${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`;
             if (!state.stats[key]) state.stats[key] = { correct: 0, wrong: 0 };
-            
             if (isCorrect) { state.stats[key].correct++; state.firstTryCorrect++; } 
             else { state.stats[key].wrong++; }
-            
-            localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats));
-            render(); 
+            localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats)); render(); 
         }
 
         function nextQuestion() { 
-            state.quizItems.shift(); 
-            state.status = 'idle'; state.selected = null; 
+            state.quizItems.shift(); state.status = 'idle'; state.selected = null; 
             const key = `${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`;
-            
             if (state.quizItems.length === 0) { 
-                delete state.checkpoints[key]; 
-                localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints));
-                confetti({ particleCount: 150, spread: 70 }); 
-                navigate('lessons'); 
+                delete state.checkpoints[key]; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints));
+                confetti({ particleCount: 150, spread: 70 }); navigate('lessons'); 
             } else { 
                 state.checkpoints[key] = { items: state.quizItems, total: state.totalQuestions, correct: state.firstTryCorrect };
-                localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); 
-                render(); 
+                localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); render(); 
             } 
         }
 
@@ -120,22 +91,15 @@ HTML
         function navigate(v) { const img = images[Math.floor(Math.random()*images.length)]; const bgUrl = `https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/${img}`; document.getElementById('bg-container').style.backgroundImage = `url('${bgUrl}')`; state.view = v; render(); }
         
         function startLesson(s,t,n) { 
-            initAudio(); 
-            const lesson = state.lessons.find(l => l.subject===s && l.theme===t && l.name===n); 
-            if (!lesson) return; 
+            initAudio(); const lesson = state.lessons.find(l => l.subject===s && l.theme===t && l.name===n); if (!lesson) return; 
             const key = `${s}-${t}-${n}`; 
             if (state.checkpoints[key]) { 
-                const cp = state.checkpoints[key]; 
-                state.quizItems = cp.items; state.totalQuestions = cp.total; state.firstTryCorrect = cp.correct; 
+                const cp = state.checkpoints[key]; state.quizItems = cp.items; state.totalQuestions = cp.total; state.firstTryCorrect = cp.correct; 
             } else { 
-                state.quizItems = [...lesson.items].sort(() => Math.random() - 0.5); 
-                state.totalQuestions = state.quizItems.length; 
-                state.firstTryCorrect = 0; 
-                state.stats[key] = { correct: 0, wrong: 0 };
+                state.quizItems = [...lesson.items].sort(() => Math.random() - 0.5); state.totalQuestions = state.quizItems.length; state.firstTryCorrect = 0; 
+                if(!state.stats[key]) state.stats[key] = { correct: 0, wrong: 0 };
             } 
-            state.currentLesson = { subject:s, theme:t, name:n }; 
-            state.status = 'idle'; state.selected = null; 
-            navigate('quiz'); 
+            state.currentLesson = { subject:s, theme:t, name:n }; state.status = 'idle'; state.selected = null; navigate('quiz'); 
         }
 
         let startX = 0;
@@ -143,8 +107,17 @@ HTML
         function handleTouchMove(e, id) { const diff = startX - e.touches[0].clientX; const el = document.getElementById(id).parentElement; if (diff > 50) { closeAllSwipes(); el.classList.add('swiped'); } else if (diff < -50) el.classList.remove('swiped'); }
         function closeAllSwipes() { document.querySelectorAll('.swipe-container, .swipe-q-box, .theme-swipe-box').forEach(el => el.classList.remove('swiped')); }
         
-        function executeResetTheme(subject, theme) { const lessons = state.lessons.filter(l => l.subject === subject && l.theme === theme); lessons.forEach(l => { const key = `${l.subject}-${l.theme}-${l.name}`; delete state.checkpoints[key]; state.stats[key] = { correct: 0, wrong: 0 }; }); localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats)); closeAllSwipes(); render(); }
-        function executeResetSingle(s,t,n) { const key = `${s}-${t}-${n}`; delete state.checkpoints[key]; state.stats[key] = { correct: 0, wrong: 0 }; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats)); closeAllSwipes(); render(); }
+        function executeResetTheme(subject, theme) { 
+            const lessons = state.lessons.filter(l => l.subject === subject && l.theme === theme); 
+            lessons.forEach(l => { const key = `${l.subject}-${l.theme}-${l.name}`; delete state.checkpoints[key]; state.stats[key] = { correct: 0, wrong: 0 }; }); 
+            localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats)); closeAllSwipes(); render(); 
+        }
+        
+        function executeResetSingle(s,t,n) { 
+            const key = `${s}-${t}-${n}`; delete state.checkpoints[key]; state.stats[key] = { correct: 0, wrong: 0 }; 
+            localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats)); closeAllSwipes(); render(); 
+        }
+
         function deleteQuestionFromApp() { const q = state.quizItems[0]; state.lessons.forEach(l => { l.items = l.items.filter(i => i.word !== q.word); }); localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); state.quizItems.shift(); state.totalQuestions--; if(state.quizItems.length === 0) navigate('lessons'); else { state.status='idle'; render(); } }
         function startThemeBoss(subject, theme) { initAudio(); const items = state.lessons.filter(l => l.subject === subject && l.theme === theme).flatMap(l => l.items); state.currentLesson = { name: theme, subject, theme }; state.quizItems = [...items].sort(() => Math.random() - 0.5); state.totalQuestions = state.quizItems.length; state.firstTryCorrect = 0; state.status = 'idle'; state.selected = null; navigate('quiz'); }
 
