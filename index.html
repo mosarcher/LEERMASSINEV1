@@ -1,3 +1,10 @@
+Ik begrijp het. Je wilt terug naar de stabiele basis waarbij alles lokaal in het bestand staat, zonder de afhankelijkheid van de "Robot" (YAML/data.js), maar mét de functies die we later hebben toegevoegd zoals de START-knop en de Boss Mode.
+
+Hier is de volledige code van de index.html. Je kunt de map .github en het bestand data.js op GitHub verwijderen of negeren, want alle data staat nu weer direct in dit bestand onder het kopje const LOKALE_DATA.
+
+De Volledige Code (Alles-in-één)
+HTML
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -6,7 +13,6 @@
     <title>MASSINE'S CHALLENGE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="data.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #0a051a; color: white; margin: 0; height: 100dvh; overflow: hidden; }
@@ -24,9 +30,30 @@
     <div id="app" class="w-full flex justify-center"></div>
 
     <script>
+        // HIER KUN JE JE LESSEN HANDMATIG AANPASSEN
+        const LOKALE_DATA = [
+            {
+                subject: "FRANS",
+                theme: "Unité 1",
+                name: "Vocabulaire",
+                items: [
+                    { word: "Bonjour", correct: "Goedendag", options: ["Goedendag", "Hoi", "Doei", "Gisteren"] },
+                    { word: "Merci", correct: "Bedankt", options: ["Bedankt", "Alstublieft", "Nee", "Ja"] }
+                ]
+            },
+            {
+                subject: "TAAL",
+                theme: "Thema 5",
+                name: "Spelling",
+                items: [
+                    { word: "Onmiddellijk", correct: "Direct", options: ["Direct", "Later", "Nooit", "Soms"] }
+                ]
+            }
+        ];
+
         let state = { 
             view: 'start', 
-            lessons: window.MY_DATA || [], 
+            lessons: LOKALE_DATA, 
             selectedSubject: '', 
             status: 'idle',
             quizItems: [],
@@ -40,7 +67,7 @@
                 container.innerHTML = `<div class="glass text-center">
                     <h1 class="text-4xl font-black italic mb-8 text-yellow-400 uppercase tracking-tighter">Massine's Challenge</h1>
                     <button onclick="state.view='subjects'; render();" class="fn-button bg-yellow-400 text-black w-full py-8 text-2xl mb-4 italic">START MISSION</button>
-                    <p class="text-[10px] opacity-30 italic uppercase">Auto-sync v22.2</p>
+                    <p class="text-[10px] opacity-30 italic uppercase">Offline Mode Active</p>
                 </div>`;
             } 
             else if (state.view === 'subjects') {
@@ -67,11 +94,14 @@
                 container.innerHTML = `<div class="glass w-full max-w-4xl">
                     <div class="flex justify-between items-center mb-8 px-2">
                         <button onclick="if(confirm('STOP MISSION?')){state.view='lessons'; render();}" class="bg-red-600/80 text-white font-black italic text-[10px] px-3 py-1 uppercase" style="clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);">STOP</button>
-                        <span class="text-white/40 font-black italic text-sm tracking-widest uppercase">${state.quizItems.length} LEFT</span>
+                        <div class="flex gap-2 items-center">
+                             <button onclick="skipQ()" class="text-white/20 text-[10px] font-black italic uppercase underline">Skip →</button>
+                             <span class="text-white/40 font-black italic text-sm tracking-widest uppercase">${state.quizItems.length} LEFT</span>
+                        </div>
                     </div>
                     <h2 class="text-4xl text-center mb-10 font-black italic uppercase tracking-tighter">${q.word}</h2>
                     <div class="grid gap-3">
-                        ${q.currentOptions.map(opt => `
+                        ${q.options.map(opt => `
                             <button onclick="checkAnswer('${opt}', '${q.correct}')" 
                                     class="fn-button py-6 text-lg italic ${state.status !== 'idle' ? (opt === q.correct ? 'bg-green-500 text-black' : (opt === state.selected ? 'bg-red-600' : 'opacity-20')) : 'bg-white/10 border border-white/5'}">
                                 ${opt}
@@ -86,10 +116,10 @@
         function startLesson(name) {
             const lesson = state.lessons.find(l => l.name === name && l.subject === state.selectedSubject);
             if (!lesson) return;
-            state.quizItems = lesson.items.map(item => {
-                const options = [item.correct, ...item.distractors].sort(() => Math.random() - 0.5).slice(0, 4);
-                return { ...item, currentOptions: options };
-            }).sort(() => Math.random() - 0.5);
+            state.quizItems = lesson.items.map(item => ({
+                ...item,
+                options: [...item.options].sort(() => Math.random() - 0.5)
+            })).sort(() => Math.random() - 0.5);
             state.status = 'idle';
             state.view = 'quiz';
             render();
@@ -98,7 +128,21 @@
         function checkAnswer(opt, correct) {
             if (state.status !== 'idle') return;
             state.selected = opt;
-            state.status = (opt === correct) ? 'correct' : 'wrong';
+            if (opt === correct) {
+                state.status = 'correct';
+            } else {
+                state.status = 'wrong';
+                // Boss Mode: Foute vraag terug onderop
+                const currentQuestion = {...state.quizItems[0]};
+                state.quizItems.push(currentQuestion);
+            }
+            render();
+        }
+
+        function skipQ() {
+            const skipped = state.quizItems.shift();
+            state.quizItems.push(skipped);
+            state.status = 'idle';
             render();
         }
 
@@ -113,13 +157,7 @@
             render();
         }
 
-        if (window.MY_DATA) {
-            state.lessons = window.MY_DATA;
-            render();
-        } else {
-            document.getElementById('app').innerHTML = `<div class="glass text-center py-20 font-black italic animate-pulse">SYNCING DATA...</div>`;
-            setTimeout(() => { location.reload(); }, 3000);
-        }
+        render();
     </script>
 </body>
 </html>
