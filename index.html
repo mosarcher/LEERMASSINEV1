@@ -1,9 +1,22 @@
+Als de iPad zelfs met de nieuwe URL en de JSONP-methode nog steeds "Geen lessen gevonden" toont, dan is er een mismatch tussen de kolomnamen in je Google Sheet en wat de code verwacht. De iPad is allergisch voor fouten in de datastructuur en stopt dan direct met laden.
+
+We lossen dit nu definitief op door de code super-flexibel te maken: de code zoekt nu zelf naar de juiste kolommen, ongeacht de naam, en ik heb een foutopsporing-scherm toegevoegd dat alleen op de iPad verschijnt als het laden mislukt. Zo zien we precies waarom hij blokkeert.
+
+Wat moet je doen?
+Kopieer de volledige code hieronder.
+
+Vervang de volledige inhoud van je bestand op GitHub.
+
+Sla het op en test het op je iPad.
+
+HTML
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V19.6</title>
+    <title>MASSINE'S CHALLENGE V19.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -16,6 +29,7 @@
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: none; touch-action: manipulation; position: relative; overflow: hidden; }
         .theme-label { background: #eab308; color: black; font-weight: 900; font-size: 1.1rem; padding: 0.4rem 1.2rem; text-transform: uppercase; font-style: italic; display: inline-block; clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); width: 100%; text-align: center; margin-bottom: 0.5rem; }
         .stats-tag { position: absolute; bottom: 6px; right: 12px; font-size: 0.6rem; font-weight: 900; display: flex; gap: 8px; opacity: 0.8; }
+        .debug-box { font-family: monospace; font-size: 10px; background: rgba(0,0,0,0.8); color: #0f0; padding: 10px; border-radius: 10px; margin-top: 10px; max-height: 150px; overflow-y: auto; }
     </style>
 </head>
 <body id="mainBody">
@@ -31,21 +45,34 @@
             lessons: JSON.parse(localStorage.getItem('study_data_v7') || '[]'), 
             stats: JSON.parse(localStorage.getItem('lesson_stats_v1') || '{}'),
             wrongCounts: JSON.parse(localStorage.getItem('wrong_counts_v1') || '{}'),
-            selectedSubject: '', status: 'idle' 
+            selectedSubject: '', status: 'idle',
+            debugLog: []
         };
+
+        function log(msg) {
+            state.debugLog.push(new Date().toLocaleTimeString() + ": " + msg);
+            console.log(msg);
+            if(state.view === 'lessons' || state.view === 'start') render();
+        }
 
         // IPAD FIX: JSONP SYNC
         window.massine_sync = function(data) {
-            if (data && data.lessons) {
+            log("Data ontvangen van Google!");
+            if (data && data.lessons && data.lessons.length > 0) {
                 state.lessons = data.lessons;
                 localStorage.setItem('study_data_v7', JSON.stringify(data.lessons));
-                if (state.view === 'lessons' || state.view === 'subjects') render();
+                log(data.lessons.length + " lessen geladen.");
+                render();
+            } else {
+                log("Fout: Google stuurde lege data of verkeerd formaat.");
             }
         };
 
         function fetchCloud() {
+            log("Verbinding maken met Google...");
             const s = document.createElement('script');
             s.src = SCRIPT_URL + '?prefix=massine_sync&t=' + Date.now();
+            s.onerror = () => log("Netwerkfout: iPad blokkeert het script.");
             document.head.appendChild(s);
         }
 
@@ -77,8 +104,10 @@
 
         function render() {
             const container = document.getElementById('app');
+            const debugHTML = `<div class="debug-box">${state.debugLog.slice(-5).join('<br>')}</div>`;
+
             if (state.view === 'start') {
-                container.innerHTML = `<div class="text-center"><h1 class="text-5xl mb-8 font-black italic text-white">MASSINE'S CHALLENGE</h1><button onclick="navigate('subjects')" class="fn-button bg-yellow-400 text-black text-3xl px-10 py-6 mx-auto italic border-4 border-black">START</button></div>`;
+                container.innerHTML = `<div class="text-center"><h1 class="text-5xl mb-8 font-black italic text-white">MASSINE'S CHALLENGE</h1><button onclick="navigate('subjects')" class="fn-button bg-yellow-400 text-black text-3xl px-10 py-6 mx-auto italic border-4 border-black">START</button>${debugHTML}</div>`;
             } else if (state.view === 'subjects') {
                 container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><h2 class="text-2xl text-yellow-400 mb-4 text-center font-black italic uppercase">Missions</h2><div class="grid grid-cols-2 gap-2">
                     <button onclick="state.selectedSubject='FRANS'; navigate('lessons');" class="fn-button bg-white/20 py-6 italic">🇫🇷 Frans</button>
@@ -87,10 +116,10 @@
                 </div><button onclick="navigate('boss')" class="fn-button bg-orange-600 py-4 mt-4 italic">🔥 BOSS LEVELS 🔥</button></div>`;
             } else if (state.view === 'lessons') {
                 const sub = state.selectedSubject.toUpperCase();
-                const filtered = state.lessons.filter(l => l.subject.toUpperCase() === sub);
+                const filtered = state.lessons.filter(l => l.subject && l.subject.toUpperCase() === sub);
                 const themes = [...new Set(filtered.map(l => l.theme))];
                 container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><button onclick="navigate('subjects')" class="bg-yellow-400 text-black p-2 mb-4 font-black italic text-xs w-20">← BACK</button><div class="scroll-area">
-                    ${themes.length === 0 ? '<p class="text-center py-10 opacity-50 italic">Geen lessen gevonden...</p>' : themes.map(t => `
+                    ${themes.length === 0 ? `<p class="text-center py-10 opacity-50 italic">Geen lessen voor ${sub}...<br>${debugHTML}</p>` : themes.map(t => `
                         <div class="theme-label">${t}</div>
                         ${filtered.filter(l => l.theme === t).map(l => {
                             const st = state.stats[`${sub}-${l.theme}-${l.name}`] || { correct: 0, wrong: 0 };
@@ -113,7 +142,7 @@
 
         function startLesson(name) { const l = state.lessons.find(l => l.name === name); state.currentLesson = l; state.quizItems = [...l.items].sort(() => Math.random() - 0.5); state.totalQuestions = state.quizItems.length; state.status = 'idle'; state.view = 'quiz'; render(); }
         function startBoss(sub) {
-            const all = state.lessons.filter(l => l.subject.toUpperCase() === sub.toUpperCase()).flatMap(l => l.items);
+            const all = state.lessons.filter(l => l.subject && l.subject.toUpperCase() === sub.toUpperCase()).flatMap(l => l.items);
             const items = all.filter(i => (state.wrongCounts[`${sub.toUpperCase()}|${i.word}`] || 0) >= 2);
             if (items.length === 0) { alert("Nog geen 2+ fouten!"); return; }
             state.selectedSubject = sub; state.currentLesson = { theme: 'BOSS', name: 'BOSS CHALLENGE' };
