@@ -22,47 +22,39 @@ jobs:
           const fs = require('fs');
           const csv = fs.readFileSync('data.csv', 'utf8');
           const lines = csv.split(/\r?\n/).filter(l => l.trim().length > 0);
-          
-          // Haal de koppen op en maak ze schoon
-          const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/['\"]/g, ''));
-          
-          // Zoek de index van elke kolom (zo maakt de volgorde niet uit)
-          const idx = {
-            subject: headers.findIndex(h => h.includes('subject') || h.includes('vak')),
-            theme: headers.findIndex(h => h.includes('theme') || h.includes('thema')),
-            lesson: headers.findIndex(h => h.includes('lesson') || h.includes('les')),
-            question: headers.findIndex(h => h.includes('vraag') || h.includes('question') || h.includes('woord')),
-            answer: headers.findIndex(h => h.includes('antwoord') || h.includes('answer') || h.includes('correct')),
-            fouten: headers.findIndex(h => h.includes('fout') || h.includes('distractor'))
-          };
-
           const lessons = {};
 
           lines.slice(1).forEach(line => {
+            // Split op komma, maar negeer komma's tussen aanhalingstekens
             const c = line.split(/,(?=(?:(?:[^'\"]*\"[^'\"]*\"){2})*[^'\"]*$)/).map(x => x.replace(/^\"|\"$/g, '').trim());
             
-            // Controleer of we minimaal een vraag en antwoord hebben
-            if(c[idx.question] && c[idx.answer]) {
-              const subject = (c[idx.subject] || 'ALGEMEEN').toUpperCase();
-              const theme = c[idx.theme] || 'Thema';
-              const name = c[idx.lesson] || 'Les';
+            // Kolommen: 0:Vak, 1:Thema, 2:Les, 5:Vraag, 6:Antwoord, 7:Foute antwoorden
+            if(c[5] && c[6]) {
+              const subject = (c[0] || 'ALGEMEEN').toUpperCase();
+              const theme = c[1] || 'Thema';
+              const name = c[2] || 'Les';
               const key = subject + '-' + theme + '-' + name;
               
               if(!lessons[key]) {
                 lessons[key] = { subject, theme, name, items: [] };
               }
               
-              const correct = c[idx.answer];
-              const distractors = c[idx.fouten] ? c[idx.fouten].split('|') : [];
-              const options = [correct, ...distractors].sort(() => Math.random() - 0.5).slice(0, 4);
+              const correct = c[6];
+              // Haal de foute antwoorden op (gescheiden door |)
+              let distractors = c[7] ? c[7].split('|').map(x => x.trim()).filter(x => x !== '') : [];
               
-              lessons[key].items.push({ word: c[idx.question], correct: correct, options: options });
+              // Zorg voor 4 opties (1 goede + 3 foute)
+              let options = [correct, ...distractors];
+              
+              lessons[key].items.push({ 
+                word: c[5], 
+                correct: correct, 
+                options: options.sort(() => Math.random() - 0.5).slice(0, 4) 
+              });
             }
           });
 
-          const finalData = Object.values(lessons);
-          fs.writeFileSync('data.js', 'window.MY_DATA = ' + JSON.stringify(finalData, null, 2) + ';');
-          console.log('Aantal lessen gevonden: ' + finalData.length);
+          fs.writeFileSync('data.js', 'window.MY_DATA = ' + JSON.stringify(Object.values(lessons), null, 2) + ';');
           "
 
       - name: Push update
