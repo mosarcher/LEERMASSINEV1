@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V19.3</title>
+    <title>MASSINE CHALLENGE V19.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -15,8 +15,8 @@
         .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.15); border-radius: 1.5rem; }
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: 0.2s; font-weight: 900; font-style: italic; text-transform: uppercase; border: none; touch-action: manipulation; }
         .fn-button:active { transform: scale(0.95); }
-        .prog-bar-container { width: 100%; height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; margin: 10px 0; }
-        .prog-bar-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); transition: width 0.4s ease; box-shadow: 0 0 15px rgba(34,197,94,0.5); }
+        .prog-bar-container { width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; }
+        .prog-bar-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); transition: width 0.5s ease; box-shadow: 0 0 10px #22c55e; }
         .btn-correct { background: #22c55e !important; color: #000 !important; box-shadow: 0 0 20px #22c55e; }
         .btn-wrong { background: #ef4444 !important; color: #fff !important; animation: shake 0.3s; box-shadow: 0 0 20px #ef4444; }
         @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
@@ -33,30 +33,19 @@
         let DATA = [];
         let state = {
             v: 'menu', sub: '', items: [], total: 0, ok: 0, status: 'idle', sel: null, curK: '',
-            done: JSON.parse(localStorage.getItem('m_d_v19') || '{}'),
+            progress: JSON.parse(localStorage.getItem('m_prog_v19') || '{}'),
             errs: JSON.parse(localStorage.getItem('m_e_v19') || '[]')
         };
 
-        function playSound(freq, type, dur) {
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(); osc.stop(audioCtx.currentTime + dur);
-            } catch(e) { console.log("Audio error", e); }
+        function save() {
+            localStorage.setItem('m_prog_v19', JSON.stringify(state.progress));
+            localStorage.setItem('m_e_v19', JSON.stringify(state.errs));
         }
 
         Papa.parse("vragen.csv", {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
+            download: true, header: true, skipEmptyLines: true,
             complete: function(res) {
-                DATA = res.data.filter(r => r.Vraag && r.Antwoord && r.Vraag !== "Vraag").map(r => ({
+                DATA = res.data.filter(r => r.Vraag && r.Antwoord).map(r => ({
                     s: String(r.Vak || "VAK").toUpperCase().trim(),
                     t: String(r.Thema || "Algemeen").trim(),
                     n: String(r.Lesnaam || "Les").trim(),
@@ -73,40 +62,39 @@
             if (state.v === 'menu') {
                 const subs = [...new Set(DATA.map(i => i.s))];
                 app.innerHTML = `<div class="glass w-full max-w-md p-6 text-center">
-                    <h1 class="text-4xl text-yellow-400 font-black italic mb-2 tracking-tighter uppercase">Massine</h1>
-                    <p class="text-[10px] font-bold text-white/40 mb-6 tracking-[0.3em] uppercase">Elite Training Mode</p>
+                    <h1 class="text-4xl text-yellow-400 font-black italic mb-2 uppercase tracking-tighter">Massine</h1>
                     <button onclick="state.v='boss';render()" class="fn-button w-full bg-red-600 py-6 mb-8 text-xl shadow-lg flex items-center justify-center gap-3">
                         <span>🔥 BOSS LEVEL</span>
                         <span class="bg-black/20 px-3 py-1 rounded-full text-sm font-mono">${state.errs.length}</span>
                     </button>
                     <div class="grid grid-cols-2 gap-4">${subs.map(sub => `
-                        <button onclick="state.sub='${sub}';state.v='list';render()" class="fn-button bg-white/10 py-12 text-xl border border-white/5 flex flex-col items-center gap-1">
-                            <span class="text-[10px] opacity-30 tracking-widest uppercase">Subject</span>
-                            <span>${sub}</span>
-                        </button>`).join('')}</div>
+                        <button onclick="state.sub='${sub}';state.v='list';render()" class="fn-button bg-white/10 py-12 text-xl border border-white/5">${sub}</button>`).join('')}</div>
                 </div>`;
             } else if (state.v === 'list') {
                 const subData = DATA.filter(i => i.s === state.sub);
                 const themes = [...new Set(subData.map(i => i.t))];
-                
                 app.innerHTML = `<div class="glass w-full max-w-md p-4 flex flex-col h-[90dvh]">
                     <div class="flex justify-between items-center mb-6 px-2">
-                        <button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 font-black italic uppercase text-[10px]">← MENU</button>
+                        <button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 font-black italic uppercase text-[10px]">← MISSIONS</button>
                         <span class="font-black italic text-yellow-400 uppercase tracking-widest text-sm">${state.sub}</span>
                     </div>
                     <div class="scroll-v px-2">${themes.map(t => {
                         const lessons = [...new Set(subData.filter(i => i.t === t).map(i => i.n))];
-                        return `<div class="mb-6">
-                            <div class="theme-label">${t}</div>
-                            <div class="grid gap-2 mt-2">${lessons.map(n => {
-                                const key = `${state.sub}-${t}-${n}`;
-                                const count = subData.filter(i => i.t === t && i.n === n).length;
+                        const themeQuestions = subData.filter(i => i.t === t);
+                        const themeDone = themeQuestions.filter(q => state.progress[q.q]).length;
+                        const themePerc = (themeDone / themeQuestions.length) * 100;
+                        return `<div class="mb-8">
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="theme-label uppercase">${t}</span>
+                                <span class="text-[10px] opacity-50 font-mono">${Math.round(themePerc)}%</span>
+                            </div>
+                            <div class="prog-bar-container mb-4"><div class="prog-bar-fill" style="width: ${themePerc}%"></div></div>
+                            <div class="grid gap-2">${lessons.map(n => {
+                                const lessonQuestions = subData.filter(i => i.t === t && i.n === n);
+                                const lessonDone = lessonQuestions.filter(q => state.progress[q.q]).length;
                                 return `<button onclick="startQ('${state.sub}','${t}','${n}')" class="fn-button w-full py-5 bg-white/10 text-left pl-6 italic flex justify-between items-center pr-4 border border-white/5">
-                                    <div class="flex flex-col">
-                                        <span class="text-sm">${n}</span>
-                                        <span class="text-[9px] opacity-40 uppercase font-mono">${count} VRAGEN</span>
-                                    </div>
-                                    <span>${state.done[key] ? '✅' : '🎯'}</span>
+                                    <span class="text-sm">${n}</span>
+                                    <span class="text-[10px] font-mono opacity-60">${lessonDone} / ${lessonQuestions.length}</span>
                                 </button>`;
                             }).join('')}</div>
                         </div>`;
@@ -115,8 +103,8 @@
             } else if (state.v === 'boss') {
                 const bSubs = [...new Set(state.errs.map(i => i.s))];
                 app.innerHTML = `<div class="glass w-full max-w-md p-4 flex flex-col h-[90dvh]">
-                    <button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 font-black italic mb-6 self-start uppercase text-[10px]">← BACK</button>
-                    <h2 class="text-red-500 font-black mb-4 italic uppercase px-2 text-center text-2xl">REVENGE MODE</h2>
+                    <button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 font-black italic mb-6 self-start uppercase text-[10px]">← MISSIONS</button>
+                    <h2 class="text-red-500 font-black mb-4 italic uppercase text-center text-2xl">REVENGE MODE</h2>
                     <div class="scroll-v">${state.errs.length ? bSubs.map(s => `
                         <div class="bg-white/5 p-2 mb-4 rounded-xl">
                             <div class="text-red-500 font-black p-2 italic mb-2 uppercase text-[10px] border-b border-white/10 tracking-widest">${s}</div>
@@ -125,21 +113,23 @@
                                     <span>${n}</span>
                                     <span class="text-xs font-mono bg-red-600 px-2 py-1 rounded-md">${state.errs.filter(x=>x.s===s&&x.n===n).length}</span>
                                 </button>`).join('')}
-                        </div>`).join('') : '<div class="text-center mt-20 opacity-30 italic font-black uppercase tracking-widest">Geen fouten! Top gedaan.</div>'}</div>
+                        </div>`).join('') : '<div class="text-center mt-20 opacity-30 italic font-black uppercase tracking-widest text-white">Geen fouten!</div>'}</div>
                 </div>`;
             } else if (state.v === 'quiz') {
                 const q = state.items[0];
                 const progress = ((state.total - state.items.length) / state.total) * 100;
-                app.innerHTML = `<div class="glass w-full max-w-2xl p-6 flex flex-col h-[95dvh]">
-                    <div class="flex justify-between font-black text-yellow-400 mb-2 uppercase text-[10px] tracking-widest">
-                        <button onclick="state.v='menu';render()" class="text-red-500">ABORT</button>
-                        <span>SCORE: ${state.ok}</span>
-                        <span>LEFT: ${state.items.length}</span>
+                app.innerHTML = `<div class="glass w-full max-w-2xl flex flex-col h-[95dvh] overflow-hidden">
+                    <div class="p-6 pb-2">
+                        <div class="flex justify-between font-black text-yellow-400 mb-2 uppercase text-[10px] tracking-widest">
+                            <button onclick="state.v='menu';render()" class="text-red-500 border border-red-500 px-2">STOP / MISSIONS</button>
+                            <span>LEFT: ${state.items.length}</span>
+                        </div>
+                        <div class="prog-bar-container"><div class="prog-bar-fill" style="width: ${progress}%"></div></div>
                     </div>
-                    <div class="prog-bar-container"><div class="prog-bar-fill" style="width: ${progress}%"></div></div>
-                    <div class="flex-grow flex flex-col justify-center">
-                        <h2 class="text-2xl font-black italic mb-10 uppercase text-center leading-tight px-4">${q.q}</h2>
-                        <div class="grid gap-4">${q.opts.map(o => {
+                    
+                    <div class="scroll-v p-6 flex flex-col">
+                        <h2 class="text-2xl font-black italic mb-10 uppercase text-center leading-tight">${q.q}</h2>
+                        <div class="grid gap-4 mb-8">${q.opts.map(o => {
                             let cl = "bg-white/5 border border-white/10";
                             if(state.status !== 'idle') {
                                 if(o === q.a) cl = "btn-correct";
@@ -149,22 +139,24 @@
                             return `<button onclick="check('${o}')" class="fn-button py-6 text-lg ${cl}">${o}</button>`;
                         }).join('')}</div>
                     </div>
-                    ${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-6 mt-8 text-xl animate-pulse">CONTINUE →</button>` : ''}
+
+                    ${state.status !== 'idle' ? `
+                    <div class="p-6 pt-2 bg-black/40 border-t border-white/10">
+                        <button onclick="next()" class="fn-button w-full bg-white text-black py-6 text-xl shadow-[0_0_30px_rgba(255,255,255,0.2)]">CONTINUE →</button>
+                    </div>` : ''}
                 </div>`;
             }
         }
 
         function startQ(s, t, n) {
-            state.items = DATA.filter(i => i.s === s && i.t === t && i.n === n).map(i => ({
-                ...i, opts: [i.a, ...i.d].sort(()=>Math.random()-0.5)
-            })).sort(()=>Math.random()-0.5);
+            initAudio();
+            state.items = DATA.filter(i => i.s === s && i.t === t && i.n === n).map(i => ({...i, opts: [i.a, ...i.d].sort(()=>Math.random()-0.5)})).sort(()=>Math.random()-0.5);
             state.total = state.items.length; state.ok = 0; state.v = 'quiz'; state.curK = `${s}-${t}-${n}`; render();
         }
 
         function startBossQ(s, n) {
-            state.items = state.errs.filter(i => i.s === s && i.n === n).map(i => ({
-                ...i, opts: [i.a, ...i.d].sort(()=>Math.random()-0.5)
-            })).sort(()=>Math.random()-0.5);
+            initAudio();
+            state.items = state.errs.filter(i => i.s === s && i.n === n).map(i => ({...i, opts: [i.a, ...i.d].sort(()=>Math.random()-0.5)})).sort(()=>Math.random()-0.5);
             state.total = state.items.length; state.ok = 0; state.v = 'quiz'; state.curK = `BOSS-${s}-${n}`; render();
         }
 
@@ -172,34 +164,45 @@
             if(state.status !== 'idle') return;
             state.sel = o; const q = state.items[0];
             if(o === q.a) {
-                state.status = 'correct'; state.ok++; playSound(660, 'sine', 0.15); 
-                confetti({particleCount:30, spread:50, origin:{y:0.8}});
+                state.status = 'correct'; state.ok++;
+                state.progress[q.q] = true;
+                playSound(660, 'sine', 0.15); confetti({particleCount:30, spread:50, origin:{y:0.8}});
                 if(state.curK.startsWith('BOSS')) {
                     state.errs = state.errs.filter(i => i.q !== q.q);
-                    localStorage.setItem('m_e_v19', JSON.stringify(state.errs));
                 }
             } else {
                 state.status = 'wrong'; playSound(150, 'sawtooth', 0.3);
-                if(!state.errs.some(i => i.q === q.q)) {
-                    state.errs.push(q); 
-                    localStorage.setItem('m_e_v19', JSON.stringify(state.errs));
-                }
+                if(!state.errs.some(i => i.q === q.q)) state.errs.push(q);
             }
-            render();
+            save(); render();
+            // Scroll direct naar beneden zodat de continue knop in beeld komt op kleine schermen
+            setTimeout(() => {
+                const scrollArea = document.querySelector('.scroll-v');
+                if(scrollArea) scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' });
+            }, 100);
         }
 
         function next() {
             state.items.shift(); state.status = 'idle'; state.sel = null;
             if(!state.items.length) {
-                if(!state.curK.startsWith('BOSS')) { 
-                    state.done[state.curK] = true; 
-                    localStorage.setItem('m_d_v19', JSON.stringify(state.done)); 
-                }
                 state.v = state.curK.startsWith('BOSS') ? 'boss' : 'list';
                 if(state.ok === state.total) confetti({particleCount:150, spread:100});
             }
             render();
         }
+
+        function playSound(f, t, d) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+                o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
+                g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
+                o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d);
+            } catch(e) {}
+        }
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
+
+        render();
     </script>
 </body>
 </html>
