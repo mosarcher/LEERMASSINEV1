@@ -1,3 +1,9 @@
+Hier is de volledige, verbeterde code voor v18.6 die je in je GitHub-bestand kunt plakken. Deze versie bevat de Two-Way Sync waarmee scores direct van de iPad naar je Google Sheet worden geschreven.
+
+Let op: Vergeet niet de URL van je Google Script te plakken op de regel waar JOUW_NIEUWE_WEBAPP_URL_HIER staat.
+
+HTML
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -31,7 +37,8 @@
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwG44NuJL67bxpBis12eetkybW0DKG4AAN3jq0lz7XB2oZMrgdv9NY2kaK4KdvWlfsk/exec';
+        // PLAK HIER JE GOOGLE WEB APP URL
+        const SCRIPT_URL = 'JOUW_NIEUWE_WEBAPP_URL_HIER';
         
         let state = { 
             view: 'start', 
@@ -41,15 +48,14 @@
             selectedSubject: '', status: 'idle' 
         };
 
-        // Data VERZENDEN naar Google Sheet
+        // Scores verzenden naar Google Sheet via Image-beacon (iPad bypass)
         async function sendStatsToCloud(subject, theme, lessonName, correct, wrong) {
             const url = `${SCRIPT_URL}?action=saveStats&subject=${encodeURIComponent(subject)}&theme=${encodeURIComponent(theme)}&lesson=${encodeURIComponent(lessonName)}&correct=${correct}&wrong=${wrong}`;
-            // Gebruik Image-beacon voor iPad bypass (omzeilt CORS volledig bij verzenden)
             const img = new Image();
             img.src = url;
         }
 
-        // Data HALEN uit Google Sheet
+        // Data ophalen via JSONP (Safari/iPad bypass)
         function fetchCloudData() {
             const callbackName = 'massine_cb_' + Date.now();
             window[callbackName] = function(d) {
@@ -84,7 +90,7 @@
             }
             localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats));
             
-            // Directe sync van score naar de cloud
+            // Verzend live naar Sheet
             sendStatsToCloud(sub, state.currentLesson.theme, state.currentLesson.name, state.stats[key].correct, state.stats[key].wrong);
             render();
         }
@@ -92,7 +98,7 @@
         function render() {
             const container = document.getElementById('app');
             if (state.view === 'start') {
-                container.innerHTML = `<div class="text-center"><h1 class="text-5xl mb-8 font-black italic">MASSINE'S CHALLENGE</h1><button onclick="navigate('subjects')" class="fn-button bg-yellow-400 text-black text-3xl px-10 py-6 mx-auto italic">START</button></div>`;
+                container.innerHTML = `<div class="text-center"><h1 class="text-5xl mb-8 font-black italic text-white">MASSINE'S CHALLENGE</h1><button onclick="navigate('subjects')" class="fn-button bg-yellow-400 text-black text-3xl px-10 py-6 mx-auto italic">START</button></div>`;
             } else if (state.view === 'subjects') {
                 container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><h2 class="text-2xl text-yellow-400 mb-4 text-center font-black italic uppercase">Missions</h2><div class="scroll-area grid grid-cols-1 gap-3">
                     <button onclick="navigate('boss_selection')" class="fn-button bg-orange-600 text-white text-2xl py-8 italic shadow-lg">🔥 BOSS LEVELS 🔥</button>
@@ -122,6 +128,10 @@
                         return `<button onclick="checkAnswer('${opt}')" class="fn-button p-4 text-lg italic font-black h-[60px] ${cl}">${opt}</button>`}).join('')}</div>
                     ${state.status !== 'idle' ? `<button onclick="state.quizItems.shift(); state.status='idle'; state.quizItems.length === 0 ? (confetti(), navigate('lessons')) : render()" class="mt-4 h-12 w-full bg-yellow-400 text-black fn-button italic font-black">NEXT →</button>` : ''}
                 </div></div>`;
+            } else if (state.view === 'boss_selection') {
+                container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><div class="flex items-center mb-4"><button onclick="navigate('subjects')" class="bg-yellow-400 text-black fn-button px-4 py-2 italic font-black">← BACK</button><h2 class="flex-1 text-center font-black italic uppercase">BOSS LEVELS</h2></div><div class="scroll-area">
+                    ${['FRANS', 'TAAL', 'WO'].map(sub => `<button onclick="startBossLevel('${sub}')" class="fn-button bg-red-600/40 py-6 mb-4 italic text-xl uppercase">START ${sub} BOSS</button>`).join('')}
+                </div></div>`;
             }
         }
 
@@ -130,6 +140,15 @@
         function startLesson(s,t,n) { const lesson = state.lessons.find(l => l.subject.toUpperCase() === s && l.theme === t && l.name === n); state.currentLesson = { theme: t, name: n }; state.quizItems = [...lesson.items].sort(() => Math.random() - 0.5); state.totalQuestions = state.quizItems.length; state.status = 'idle'; navigate('quiz'); }
         function executeReset(s,t,n) { const key = `${s}-${t}-${n}`; state.stats[key] = { correct: 0, wrong: 0 }; localStorage.setItem('lesson_stats_v1', JSON.stringify(state.stats)); sendStatsToCloud(s,t,n,0,0); render(); }
         
+        function startBossLevel(sub) {
+            const allWords = state.lessons.filter(l => l.subject.toUpperCase() === sub.toUpperCase()).flatMap(l => l.items);
+            const items = allWords.filter(item => (state.wrongCounts[`${sub.toUpperCase()}|${item.word}`] || 0) >= 2);
+            if (items.length === 0) { alert("Nog geen 2+ fouten!"); return; }
+            state.selectedSubject = sub; state.currentLesson = { theme: 'BOSS', name: 'BOSS CHALLENGE' };
+            state.quizItems = [...items].sort(() => Math.random() - 0.5);
+            state.totalQuestions = state.quizItems.length; state.status = 'idle'; state.selected = null; navigate('quiz');
+        }
+
         render();
         fetchCloudData();
     </script>
