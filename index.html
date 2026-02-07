@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE'S CHALLENGE V15.2</title>
+    <title>MASSINE'S CHALLENGE V15.3</title>
     <link rel="preconnect" href="https://script.google.com">
     <link rel="preconnect" href="https://raw.githubusercontent.com">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,12 +18,10 @@
         .scroll-area { overflow-y: auto; flex-grow: 1; padding: 5px; -webkit-overflow-scrolling: touch; }
         .fn-button { clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%); transition: all 0.2s; text-transform: uppercase; font-weight: 900; font-style: italic; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: none; touch-action: manipulation; position: relative; overflow: hidden; }
         
-        /* Progressiebalken - NU IN GROEN */
         .progress-bg { position: absolute; top: 0; left: 0; height: 100%; background: rgba(34, 197, 94, 0.2); z-index: 0; transition: width 0.5s ease-out; pointer-events: none; }
         .lesson-progress-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: #22c55e; z-index: 5; transition: width 0.5s ease-out; }
         .fn-button span { z-index: 1; position: relative; }
 
-        /* Feedback Styles */
         .btn-correct-full { background-color: #00ff00 !important; color: black !important; border: 4px solid white !important; transform: scale(1.05); z-index: 20; opacity: 1 !important; }
         .btn-correct-subtle { background-color: rgba(0, 255, 0, 0.2) !important; color: white !important; border: 1px solid #00ff00 !important; opacity: 0.8 !important; }
         .btn-wrong-hard { background-color: #ff0000 !important; color: white !important; border: 4px solid white !important; animation: hard-shake 0.4s ease-in-out; opacity: 1 !important; }
@@ -52,116 +50,37 @@
     <div id="bg-container"></div>
     <div class="overlay"></div>
     <div id="app" class="h-full w-full flex items-center justify-center p-2"></div>
-    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v15.2</div>
+    <div class="version-tag" style="position:fixed; bottom:5px; right:10px; font-size:10px; opacity:0.3;">v15.3</div>
 
     <script>
-        const CONFIG = {
-            scriptUrl: 'https://script.google.com/macros/s/AKfycbwG44NuJL67bxpBis12eetkybW0DKG4AAN3jq0lz7XB2oZMrgdv9NY2kaK4KdvWlfsk/exec'
-        };
-
+        const CONFIG = { scriptUrl: 'https://script.google.com/macros/s/AKfycbwG44NuJL67bxpBis12eetkybW0DKG4AAN3jq0lz7XB2oZMrgdv9NY2kaK4KdvWlfsk/exec' };
+        let audioCtx = null;
         const images = ["massinewall.png", "massinewall1.png", "massinewall2.png", "massinewall3.png", "massinewall4.png"];
-        let state = { 
-            view: 'start', 
-            lessons: JSON.parse(localStorage.getItem('study_data_v7') || '[]'),
-            checkpoints: JSON.parse(localStorage.getItem('checkpoints_v1') || '{}'),
-            selectedSubject: '', status: 'idle' 
-        };
+        let state = { view: 'start', lessons: JSON.parse(localStorage.getItem('study_data_v7') || '[]'), checkpoints: JSON.parse(localStorage.getItem('checkpoints_v1') || '{}'), selectedSubject: '', status: 'idle' };
+
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function playSound(type) { 
+            initAudio(); 
+            const osc = audioCtx.createOscillator(); 
+            const gain = audioCtx.createGain(); 
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            if (type === 'correct') { osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); } 
+            else { osc.frequency.setValueAtTime(120, audioCtx.currentTime); gain.gain.setValueAtTime(0.2, audioCtx.currentTime); }
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        }
 
         window.addEventListener('load', () => { render(); fetchCloudData(); });
-
-        async function fetchCloudData() { 
-            try { 
-                const res = await fetch(CONFIG.scriptUrl + (CONFIG.scriptUrl.includes('?') ? '&' : '?') + `t=${Date.now()}`); 
-                const d = await res.json(); 
-                if (d.lessons) { 
-                    state.lessons = d.lessons; 
-                    localStorage.setItem('study_data_v7', JSON.stringify(d.lessons)); 
-                    if (state.view !== 'quiz') render();
-                } 
-            } catch(e) {} 
-        }
-
-        function calculateSubjectProgress(subject) {
-            const lessons = state.lessons.filter(l => l.subject === subject);
-            if (lessons.length === 0) return 0;
-            const completed = lessons.filter(l => !state.checkpoints[`${l.subject}-${l.theme}-${l.name}`]).length;
-            return (completed / lessons.length) * 100;
-        }
-
-        async function logErrorToSheet(q, givenAnswer) {
-            try {
-                fetch(CONFIG.scriptUrl, {
-                    method: 'POST', mode: 'no-cors',
-                    body: JSON.stringify({
-                        subject: state.currentLesson.subject, theme: state.currentLesson.theme,
-                        lesson: state.currentLesson.name, question: q.word,
-                        correctAnswer: q.correct, givenAnswer: givenAnswer
-                    })
-                });
-            } catch (e) {}
-        }
-
-        function startLesson(s,t,n) {
-            const lesson = state.lessons.find(l => l.subject===s && l.theme===t && l.name===n);
-            if (!lesson) return;
-            const key = `${s}-${t}-${n}`;
-            if (state.checkpoints[key]) {
-                const cp = state.checkpoints[key];
-                state.quizItems = cp.items;
-                state.totalQuestions = cp.total;
-                state.firstTryCorrect = cp.correct;
-            } else {
-                state.quizItems = [...lesson.items].sort(() => Math.random() - 0.5);
-                state.totalQuestions = state.quizItems.length;
-                state.firstTryCorrect = 0;
-            }
-            state.currentLesson = { subject:s, theme:t, name:n };
-            state.status = 'idle';
-            navigate('quiz');
-        }
-
-        function checkAnswer(opt) { 
-            if (state.status !== 'idle') return; 
-            state.selected = opt; 
-            const q = state.quizItems[0]; 
-            const isCorrect = (opt === q.correct);
-            state.status = isCorrect ? 'correct' : 'wrong'; 
-            if (isCorrect) { if (!q.alreadyFailed) state.firstTryCorrect++; } 
-            else { q.alreadyFailed = true; logErrorToSheet(q, opt); }
-            render(); 
-        }
-
-        function nextQuestion() { 
-            const q = state.quizItems.shift(); 
-            if (state.status === 'wrong') state.quizItems.push(q); 
-            const key = `${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`;
-            if (state.quizItems.length === 0) { 
-                delete state.checkpoints[key];
-                localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints));
-                confetti({ particleCount: 150, spread: 70 }); navigate('lessons'); 
-            } else { 
-                state.status = 'idle'; 
-                state.checkpoints[key] = { items: state.quizItems, total: state.totalQuestions, correct: state.firstTryCorrect };
-                localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints));
-                render(); 
-            } 
-        }
-
-        function navigate(v) { 
-            const img = images[Math.floor(Math.random()*images.length)];
-            const bgUrl = `https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/${img}`;
-            document.getElementById('bg-container').style.backgroundImage = `url('${bgUrl}')`;
-            state.view = v; render(); 
-        }
-
+        async function fetchCloudData() { try { const res = await fetch(CONFIG.scriptUrl + (CONFIG.scriptUrl.includes('?') ? '&' : '?') + `t=${Date.now()}`); const d = await res.json(); if (d.lessons) { state.lessons = d.lessons; localStorage.setItem('study_data_v7', JSON.stringify(d.lessons)); if (state.view !== 'quiz') render(); } } catch(e) {} }
+        function calculateSubjectProgress(subject) { const lessons = state.lessons.filter(l => l.subject === subject); if (lessons.length === 0) return 0; const completed = lessons.filter(l => !state.checkpoints[`${l.subject}-${l.theme}-${l.name}`]).length; return (completed / lessons.length) * 100; }
+        async function logErrorToSheet(q, givenAnswer) { try { fetch(CONFIG.scriptUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ subject: state.currentLesson.subject, theme: state.currentLesson.theme, lesson: state.currentLesson.name, question: q.word, correctAnswer: q.correct, givenAnswer: givenAnswer }) }); } catch (e) {} }
+        function checkAnswer(opt) { if (state.status !== 'idle') return; state.selected = opt; const q = state.quizItems[0]; const isCorrect = (opt === q.correct); state.status = isCorrect ? 'correct' : 'wrong'; playSound(state.status); if (isCorrect) { if (!q.alreadyFailed) state.firstTryCorrect++; } else { q.alreadyFailed = true; logErrorToSheet(q, opt); } render(); }
+        function startLesson(s,t,n) { initAudio(); const lesson = state.lessons.find(l => l.subject===s && l.theme===t && l.name===n); if (!lesson) return; const key = `${s}-${t}-${n}`; if (state.checkpoints[key]) { const cp = state.checkpoints[key]; state.quizItems = cp.items; state.totalQuestions = cp.total; state.firstTryCorrect = cp.correct; } else { state.quizItems = [...lesson.items].sort(() => Math.random() - 0.5); state.totalQuestions = state.quizItems.length; state.firstTryCorrect = 0; } state.currentLesson = { subject:s, theme:t, name:n }; state.status = 'idle'; navigate('quiz'); }
+        function nextQuestion() { const q = state.quizItems.shift(); if (state.status === 'wrong') state.quizItems.push(q); const key = `${state.currentLesson.subject}-${state.currentLesson.theme}-${state.currentLesson.name}`; if (state.quizItems.length === 0) { delete state.checkpoints[key]; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); confetti({ particleCount: 150, spread: 70 }); navigate('lessons'); } else { state.status = 'idle'; state.checkpoints[key] = { items: state.quizItems, total: state.totalQuestions, correct: state.firstTryCorrect }; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); render(); } }
+        function navigate(v) { const img = images[Math.floor(Math.random()*images.length)]; const bgUrl = `https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/${img}`; document.getElementById('bg-container').style.backgroundImage = `url('${bgUrl}')`; state.view = v; render(); }
         let startX = 0;
         function handleTouchStart(e) { startX = e.touches[0].clientX; }
-        function handleTouchMove(e, id) {
-            const diff = startX - e.touches[0].clientX;
-            const el = document.getElementById(id).parentElement;
-            if (diff > 50) { closeAllSwipes(); el.classList.add('swiped'); }
-            else if (diff < -50) el.classList.remove('swiped');
-        }
+        function handleTouchMove(e, id) { const diff = startX - e.touches[0].clientX; const el = document.getElementById(id).parentElement; if (diff > 50) { closeAllSwipes(); el.classList.add('swiped'); } else if (diff < -50) el.classList.remove('swiped'); }
         function closeAllSwipes() { document.querySelectorAll('.swipe-container, .swipe-q-box').forEach(el => el.classList.remove('swiped')); }
         function executeReset(s,t,n) { delete state.checkpoints[`${s}-${t}-${n}`]; localStorage.setItem('checkpoints_v1', JSON.stringify(state.checkpoints)); render(); }
         function deleteQuestionFromApp() { const q = state.quizItems[0]; state.lessons.forEach(l => { l.items = l.items.filter(i => i.word !== q.word); }); localStorage.setItem('study_data_v7', JSON.stringify(state.lessons)); state.quizItems.shift(); state.totalQuestions--; if(state.quizItems.length === 0) navigate('lessons'); else { state.status='idle'; render(); } }
@@ -170,32 +89,24 @@
         function render() {
             const container = document.getElementById('app');
             if (state.view === 'start') {
-                container.innerHTML = `<div class="text-center"><h1 class="text-5xl mb-8 font-black italic">MASSINE'S CHALLENGE</h1><button onclick="navigate('subjects')" class="fn-button bg-yellow-400 text-black text-3xl px-10 py-6 mx-auto italic">START</button></div>`;
+                container.innerHTML = `<div class="text-center"><h1 class="text-5xl mb-8 font-black italic">MASSINE'S CHALLENGE</h1><button onclick="startLesson(); navigate('subjects')" class="fn-button bg-yellow-400 text-black text-3xl px-10 py-6 mx-auto italic">START</button></div>`;
             } else if (state.view === 'subjects') {
-                const frProg = calculateSubjectProgress('FRANS');
-                const taProg = calculateSubjectProgress('TAAL');
-                const woProg = calculateSubjectProgress('WO');
+                const frProg = calculateSubjectProgress('FRANS'); const taProg = calculateSubjectProgress('TAAL'); const woProg = calculateSubjectProgress('WO');
                 container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><h2 class="text-2xl text-yellow-400 mb-4 text-center italic font-black uppercase">Missions</h2><div class="scroll-area grid grid-cols-1 gap-3"><button onclick="navigate('boss_selection')" class="fn-button bg-orange-600 text-white text-2xl py-8 italic shadow-lg">🔥 BOSS LEVELS 🔥</button><div class="subject-grid">
                     <button onclick="state.selectedSubject='FRANS'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><div class="progress-bg" style="width: ${frProg}%"></div><span class="subject-icon">🇫🇷</span><span>Frans</span></button>
                     <button onclick="state.selectedSubject='TAAL'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><div class="progress-bg" style="width: ${taProg}%"></div><span class="subject-icon">🇳🇱</span><span>Taal</span></button>
                     <button onclick="state.selectedSubject='WO'; navigate('lessons');" class="fn-button bg-white/20 border-l-[6px] border-yellow-400 text-xl py-6 italic"><div class="progress-bg" style="width: ${woProg}%"></div><span class="subject-icon">🌍</span><span>WO</span></button>
                 </div></div></div>`;
             } else if (state.view === 'lessons') {
-                const filtered = state.lessons.filter(l => l.subject === state.selectedSubject);
-                const themes = [...new Set(filtered.map(l => l.theme))];
+                const filtered = state.lessons.filter(l => l.subject === state.selectedSubject); const themes = [...new Set(filtered.map(l => l.theme))];
                 container.innerHTML = `<div class="glass p-3 w-full max-w-xl"><div class="flex items-center mb-4 relative"><button onclick="navigate('subjects')" class="bg-yellow-400 text-black fn-button back-btn italic z-10">← BACK</button><h2 class="text-xl italic absolute w-full text-center left-0 pointer-events-none uppercase font-black">${state.selectedSubject}</h2></div><div class="scroll-area">
                     ${themes.map(t => `<div class="mb-4 text-center"><h3 class="theme-label">${t}</h3>
                         ${filtered.filter(l => l.theme === t).map(l => {
-                            const cpKey = `${l.subject}-${l.theme}-${l.name}`;
-                            const cp = state.checkpoints[cpKey];
-                            const done = cp ? (cp.total - cp.items.length) : 0;
-                            const total = cp ? cp.total : l.items.length;
-                            const id = `btn-${Math.random().toString(36).substr(2, 5)}`;
+                            const cpKey = `${l.subject}-${l.theme}-${l.name}`; const cp = state.checkpoints[cpKey]; const done = cp ? (cp.total - cp.items.length) : 0; const total = cp ? cp.total : l.items.length; const id = `btn-${Math.random().toString(36).substr(2, 5)}`;
                             return `<div class="swipe-container"><div class="swipe-actions"><button onclick="executeReset('${l.subject}','${l.theme}','${l.name}')" class="action-btn btn-reset">RESET</button></div>
                                 ${cp ? `<div class="resume-pill">CONT.</div>` : ''}
                                 <button id="${id}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, '${id}')" onclick="startLesson('${l.subject}','${l.theme}','${l.name}')" class="fn-button bg-white/10 border-l-[6px] border-white/30 text-lg py-5 italic text-left pl-6 relative">
-                                    <span>${l.name}</span>
-                                    <div class="lesson-progress-bar" style="width: ${(done/total)*100}%"></div>
+                                    <span>${l.name}</span><div class="lesson-progress-bar" style="width: ${(done/total)*100}%"></div>
                                 </button></div>`}).join('')}</div>`).join('')}</div></div>`;
             } else if (state.view === 'quiz') {
                 const q = state.quizItems[0];
@@ -208,12 +119,7 @@
                             <h2 id="q-text" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, 'q-text')" class="quiz-q-text text-3xl text-center px-4 quiz-q-inner w-full font-black">${q.word}</h2>
                         </div>
                         <div class="w-full flex flex-col gap-2">${q.options.map(opt => {
-                            let cl = "bg-white/10";
-                            if (state.status !== 'idle') {
-                                if (opt === q.correct) cl = (state.selected === q.correct) ? "btn-correct-full" : "btn-correct-subtle";
-                                else if (opt === state.selected) cl = "btn-wrong-hard";
-                                else cl = "btn-dimmed";
-                            }
+                            let cl = "bg-white/10"; if (state.status !== 'idle') { if (opt === q.correct) cl = (state.selected === q.correct) ? "btn-correct-full" : "btn-correct-subtle"; else if (opt === state.selected) cl = "btn-wrong-hard"; else cl = "btn-dimmed"; }
                             return `<button onclick="checkAnswer('${opt}')" class="fn-button p-4 text-lg italic font-black h-[60px] ${cl}">${opt}</button>`}).join('')}</div>
                         ${state.status !== 'idle' ? `<button onclick="nextQuestion()" class="mt-4 h-12 w-full bg-yellow-400 text-black fn-button italic font-black">VOLGENDE →</button>` : ''}</div></div>`;
             } else if (state.view === 'boss_selection') {
