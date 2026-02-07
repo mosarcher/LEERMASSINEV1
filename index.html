@@ -1,10 +1,3 @@
-Ik begrijp het. Je wilt terug naar de stabiele basis waarbij alles lokaal in het bestand staat, zonder de afhankelijkheid van de "Robot" (YAML/data.js), maar mét de functies die we later hebben toegevoegd zoals de START-knop en de Boss Mode.
-
-Hier is de volledige code van de index.html. Je kunt de map .github en het bestand data.js op GitHub verwijderen of negeren, want alle data staat nu weer direct in dit bestand onder het kopje const LOKALE_DATA.
-
-De Volledige Code (Alles-in-één)
-HTML
-
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -30,44 +23,72 @@ HTML
     <div id="app" class="w-full flex justify-center"></div>
 
     <script>
-        // HIER KUN JE JE LESSEN HANDMATIG AANPASSEN
-        const LOKALE_DATA = [
-            {
-                subject: "FRANS",
-                theme: "Unité 1",
-                name: "Vocabulaire",
-                items: [
-                    { word: "Bonjour", correct: "Goedendag", options: ["Goedendag", "Hoi", "Doei", "Gisteren"] },
-                    { word: "Merci", correct: "Bedankt", options: ["Bedankt", "Alstublieft", "Nee", "Ja"] }
-                ]
-            },
-            {
-                subject: "TAAL",
-                theme: "Thema 5",
-                name: "Spelling",
-                items: [
-                    { word: "Onmiddellijk", correct: "Direct", options: ["Direct", "Later", "Nooit", "Soms"] }
-                ]
-            }
-        ];
+        // VERVANG DEZE LINK DOOR JOUW GOOGLE SHEETS CSV LINK
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA7MUx5TsNqqMxQua7ieWURRHXrxlMn_j4M96pmerRHmCoRe9D-TKQ-kkuNIeeWzBsoJt5aF4ZXTkt/pub?output=csv";
 
         let state = { 
             view: 'start', 
-            lessons: LOKALE_DATA, 
+            lessons: [], 
             selectedSubject: '', 
             status: 'idle',
             quizItems: [],
-            selected: null
+            selected: null,
+            loading: true
         };
+
+        // Functie om data direct uit Google Sheets te laden
+        async function fetchData() {
+            try {
+                const response = await fetch(CSV_URL);
+                const csvData = await response.text();
+                const lines = csvData.split(/\r?\n/).filter(line => line.trim() !== '');
+                const lessonsMap = {};
+
+                lines.slice(1).forEach(line => {
+                    const c = line.split(/,(?=(?:(?:[^'\"]*\"[^'\"]*\"){2})*[^'\"]*$)/).map(x => x.replace(/^\"|\"$/g, '').trim());
+                    if(c.length >= 7 && c[5] && c[6]) {
+                        const subject = (c[0] || 'ALGEMEEN').toUpperCase();
+                        const theme = c[1] || 'Thema';
+                        const name = c[2] || 'Les';
+                        const key = subject + '-' + theme + '-' + name;
+                        
+                        if(!lessonsMap[key]) {
+                            lessonsMap[key] = { subject, theme, name, items: [] };
+                        }
+                        
+                        const correct = c[6];
+                        let distractors = c[7] ? c[7].split('|').map(x => x.trim()).filter(x => x !== '') : [];
+                        
+                        lessonsMap[key].items.push({ 
+                            word: c[5], 
+                            correct: correct, 
+                            distractors: distractors 
+                        });
+                    }
+                });
+
+                state.lessons = Object.values(lessonsMap);
+                state.loading = false;
+                render();
+            } catch (error) {
+                console.error("Fout bij laden data:", error);
+                document.getElementById('app').innerHTML = `<div class="glass text-center font-black italic">ERROR LOADING SHEET. CHECK LINK.</div>`;
+            }
+        }
 
         function render() {
             const container = document.getElementById('app');
             
+            if (state.loading) {
+                container.innerHTML = `<div class="glass text-center py-20 font-black italic animate-pulse tracking-widest uppercase text-yellow-500">Connecting to HQ...</div>`;
+                return;
+            }
+
             if (state.view === 'start') {
                 container.innerHTML = `<div class="glass text-center">
                     <h1 class="text-4xl font-black italic mb-8 text-yellow-400 uppercase tracking-tighter">Massine's Challenge</h1>
                     <button onclick="state.view='subjects'; render();" class="fn-button bg-yellow-400 text-black w-full py-8 text-2xl mb-4 italic">START MISSION</button>
-                    <p class="text-[10px] opacity-30 italic uppercase">Offline Mode Active</p>
+                    <p class="text-[10px] opacity-30 italic uppercase tracking-widest">Live Sync: Active</p>
                 </div>`;
             } 
             else if (state.view === 'subjects') {
@@ -101,7 +122,7 @@ HTML
                     </div>
                     <h2 class="text-4xl text-center mb-10 font-black italic uppercase tracking-tighter">${q.word}</h2>
                     <div class="grid gap-3">
-                        ${q.options.map(opt => `
+                        ${q.currentOptions.map(opt => `
                             <button onclick="checkAnswer('${opt}', '${q.correct}')" 
                                     class="fn-button py-6 text-lg italic ${state.status !== 'idle' ? (opt === q.correct ? 'bg-green-500 text-black' : (opt === state.selected ? 'bg-red-600' : 'opacity-20')) : 'bg-white/10 border border-white/5'}">
                                 ${opt}
@@ -116,10 +137,10 @@ HTML
         function startLesson(name) {
             const lesson = state.lessons.find(l => l.name === name && l.subject === state.selectedSubject);
             if (!lesson) return;
-            state.quizItems = lesson.items.map(item => ({
-                ...item,
-                options: [...item.options].sort(() => Math.random() - 0.5)
-            })).sort(() => Math.random() - 0.5);
+            state.quizItems = lesson.items.map(item => {
+                let options = [item.correct, ...item.distractors].sort(() => Math.random() - 0.5).slice(0, 4);
+                return { ...item, currentOptions: options };
+            }).sort(() => Math.random() - 0.5);
             state.status = 'idle';
             state.view = 'quiz';
             render();
@@ -157,7 +178,8 @@ HTML
             render();
         }
 
-        render();
+        // Start het ophalen van de data zodra de pagina laadt
+        fetchData();
     </script>
 </body>
 </html>
