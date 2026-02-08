@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V29.8</title>
+    <title>MASSINE CHALLENGE V29.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -24,8 +24,9 @@
         .swiped .swipe-main { transform: translateX(-80px); }
         .swiped .swipe-actions { transform: translateX(0); }
         .btn-reset-red { background: #ef4444; color: white; padding: 0 20px; font-weight: 900; font-size: 10px; height: 100%; display: flex; align-items: center; border: none; }
-        .map-viewport { width: 100%; max-width: 320px; margin: 0 auto 1rem auto; height: 320px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); border-radius: 1rem; background: #000; position: relative; cursor: grab; touch-action: none; }
-        .skelet-kaart { width: 100%; position: absolute; top: 0; left: 0; transform-origin: 0 0; transition: transform 0.1s ease-out; pointer-events: none; }
+        .map-viewport { width: 100%; max-width: 320px; margin: 0 auto 1rem auto; height: 320px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); border-radius: 1rem; background: #000; position: relative; touch-action: none; }
+        .skelet-kaart { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; transform-origin: center center; transition: transform 0.1s ease-out; pointer-events: none; }
+        .btn-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 2px solid rgba(255,255,255,0.4); margin-bottom: 8px; }
     </style>
 </head>
 <body onclick="initAudio(); closeAllSwipes();">
@@ -39,7 +40,7 @@
             errs: JSON.parse(localStorage.getItem('m_e_v29_8') || '[]')
         };
         const skeletUrl = "https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png"; 
-        let scale = 1, posX = 0, posY = 0, lastX = 0, lastY = 0, lastDist = 0, isDragging = false;
+        let scale = 1, lastDist = 0;
 
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function playSound(f, t, d) { initAudio(); try { const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d); } catch(e) {} }
@@ -71,23 +72,17 @@
             const container = document.querySelector('.map-viewport');
             const img = document.querySelector('.skelet-kaart');
             if (!container || !img) return;
-            container.onpointerdown = (e) => { isDragging = true; lastX = e.clientX; lastY = e.clientY; container.setPointerCapture(e.pointerId); };
-            container.onpointermove = (e) => {
-                if (!isDragging) return;
-                posX += e.clientX - lastX; posY += e.clientY - lastY;
-                lastX = e.clientX; lastY = e.clientY;
-                img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-            };
-            container.onpointerup = () => isDragging = false;
+            
             container.ontouchmove = (e) => {
                 if (e.touches.length === 2) {
                     let dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                    if (lastDist > 0) { scale = Math.min(Math.max(1, scale * (dist / lastDist)), 4); }
+                    if (lastDist > 0) { scale = Math.min(Math.max(1, scale * (dist / lastDist)), 5); }
                     lastDist = dist;
-                    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+                    img.style.transform = `scale(${scale})`;
                 }
             };
             container.ontouchend = () => { lastDist = 0; };
+            container.onwheel = (e) => { e.preventDefault(); scale = Math.min(Math.max(1, scale * (e.deltaY > 0 ? 0.9 : 1.1)), 5); img.style.transform = `scale(${scale})`; };
         }
 
         function render() {
@@ -109,26 +104,28 @@
                     return `<div class="swipe-container" id="cont-cat-${idx}">
                         <div class="swipe-actions"><button onclick="resetCat('${cat}')" class="btn-reset-red">RESET</button></div>
                         <div class="swipe-main" ontouchstart="handleTS(event)" ontouchmove="handleTM(event, 'cat-${idx}')">
-                            <button onclick="${action}" class="fn-button w-full bg-white/10 py-8 text-xl border border-white/5 uppercase tracking-widest text-yellow-400">${cat}</button>
+                            <button onclick="${action}" class="fn-button w-full bg-white/10 py-10 text-2xl border border-white/5 uppercase tracking-widest text-yellow-400">${cat}</button>
                         </div>
                     </div>`;
                 }).join('')}</div></div>`;
             } else if (state.v === 'lessons') {
                 const lessons = [...new Set(DATA.filter(i => i.s === state.sub && cleanCatName(i.t) === state.cat).map(i => i.n))].sort();
-                app.innerHTML = `<div class="glass p-4"><div class="flex justify-between items-center mb-6 px-2"><button onclick="state.v='categories';render()" class="bg-yellow-400 text-black px-4 py-2 font-black uppercase text-[10px]">← BACK</button><span class="font-black italic text-yellow-400 uppercase tracking-widest text-sm">${state.cat}</span></div><div class="grid grid-cols-2 gap-3">${lessons.map((n, idx) => `
-                    <div class="swipe-container" id="cont-les-${idx}">
+                app.innerHTML = `<div class="glass p-4"><div class="flex justify-between items-center mb-6 px-2"><button onclick="state.v='categories';render()" class="bg-yellow-400 text-black px-4 py-2 font-black uppercase text-[10px]">← BACK</button><span class="font-black italic text-yellow-400 uppercase tracking-widest text-sm">${state.cat}</span></div><div class="grid grid-cols-1 gap-4">${lessons.map((n, idx) => {
+                    const isSkelet = n.toUpperCase().includes("SKELET");
+                    const thumb = isSkelet ? `<img src="${skeletUrl}" class="btn-thumb mx-auto">` : "";
+                    return `<div class="swipe-container" id="cont-les-${idx}">
                         <div class="swipe-actions"><button onclick="resetLes('${n}')" class="btn-reset-red">RESET</button></div>
                         <div class="swipe-main" ontouchstart="handleTS(event)" ontouchmove="handleTM(event, 'les-${idx}')">
-                            <button onclick="startSpecificQuiz('${n}')" class="fn-button w-full h-28 bg-white/10 flex flex-col items-center justify-center border border-white/5 uppercase italic font-black text-[10px] text-center px-1"><span>${n}</span></button>
+                            <button onclick="startSpecificQuiz('${n}')" class="fn-button w-full h-32 bg-white/10 flex flex-col items-center justify-center border border-white/5 uppercase italic font-black text-xl text-center px-1">${thumb}<span>${n}</span></button>
                         </div>
-                    </div>`).join('')}</div></div>`;
+                    </div>`;
+                }).join('')}</div></div>`;
             } else if (state.v === 'quiz') {
                 const q = state.items[0];
                 const showMap = q.n.toUpperCase().includes("KAART");
                 const currentCat = cleanCatName(q.t);
                 const isFlash = (q.s === 'FRANS' && (currentCat === "WOORDENSCHAT" || currentCat === "WERKWOORDEN"));
                 const progress = ((state.total - state.items.length) / state.total) * 100;
-                
                 let instruction = "KIES";
                 if(q.s === 'FRANS') instruction = "VERTAAL NAAR NEDERLANDS";
                 if(currentCat === "SPELLING") instruction = "KIES DE JUISTE SPELLING";
@@ -150,7 +147,7 @@
                         ${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-6 mt-4 text-xl shadow-2xl">VOLGENDE →</button>` : ''}
                     `)}
                 </div>`;
-                if(showMap) { scale = 1; posX = 0; posY = 0; setTimeout(handleZoom, 100); }
+                if(showMap) { scale = 1; setTimeout(handleZoom, 100); }
             }
         }
 
