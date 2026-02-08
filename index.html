@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V27.0</title>
+    <title>MASSINE CHALLENGE V27.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -31,28 +31,27 @@
     </style>
 </head>
 <body onclick="initAudio(); closeAllSwipes();">
-    <div id="bg-container"></div><div class="overlay"></div>
     <div id="app" class="w-full max-w-2xl mx-auto py-2 px-4"></div>
+    <div id="bg-container"></div><div class="overlay"></div>
     <script>
         let audioCtx; let DATA = []; let startX = 0;
         let state = {
-            v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null, revealed: false,
-            progress: JSON.parse(localStorage.getItem('m_prog_v27') || '{}'),
-            errs: JSON.parse(localStorage.getItem('m_e_v27') || '[]')
+            v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null,
+            progress: JSON.parse(localStorage.getItem('m_prog_v27_4') || '{}'),
+            errs: JSON.parse(localStorage.getItem('m_e_v27_4') || '[]')
         };
         const skeletUrl = "https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png"; 
 
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function playSound(f, t, d) { initAudio(); try { const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d); } catch(e) {} }
         function cleanCategory(cat) { const u = cat.toUpperCase(); if (u.includes("SPELLING")) return "SPELLING"; if (u.includes("WOORDENSCHAT")) return "WOORDENSCHAT"; if (u.includes("VERBES")) return "VERBES"; return cat.toUpperCase(); }
-        function save() { localStorage.setItem('m_prog_v27', JSON.stringify(state.progress)); localStorage.setItem('m_e_v27', JSON.stringify(state.errs)); }
+        function save() { localStorage.setItem('m_prog_v27_4', JSON.stringify(state.progress)); localStorage.setItem('m_e_v27_4', JSON.stringify(state.errs)); }
         function handleTM(e, id) { let diff = startX - e.touches[0].clientX; let el = document.getElementById('cont-' + id); if (el && diff > 50) { closeAllSwipes(); el.classList.add('swiped'); } else if (el && diff < -50) el.classList.remove('swiped'); }
         function closeAllSwipes() { document.querySelectorAll('.swipe-container').forEach(e => e.classList.remove('swiped')); }
 
         function loadCSV() {
-            // Forceert download van nieuwste CSV door unieke parameter
-            const forceCache = new Date().getTime();
-            Papa.parse("vragen.csv?v=" + forceCache, {
+            // NOCACHE zorgt dat hij altijd de verse versie van GitHub trekt
+            Papa.parse("vragen.csv?nocache=" + new Date().getTime(), {
                 download: true, header: false, skipEmptyLines: true,
                 complete: function(res) {
                     DATA = res.data.slice(1).map(r => { 
@@ -63,7 +62,7 @@
                             n: String(r[2] || "").trim(), 
                             q: String(r[3]).trim(), // Exacte overname kolom 4
                             a: String(r[4]).trim(), // Exacte overname kolom 5
-                            d: [r[5], r[6], r[7]].filter(x => x && String(x).trim() !== "") 
+                            d: [r[5], r[6], r[7]].filter(x => x && String(x).trim() !== "") // Exacte overname kolom 6,7,8
                         }; 
                     }).filter(i => i !== null);
                     render();
@@ -116,24 +115,17 @@
             } else if (state.v === 'quiz') {
                 const q = state.items[0];
                 const showMap = q.n.toUpperCase().includes("KAART");
-                const isSpelling = state.cat === "SPELLING";
-                const isFlash = (state.sub === 'FRANS') && !isSpelling;
                 const progress = ((state.total - state.items.length) / state.total) * 100;
-                let instruction = "KIES";
-                if (isFlash) {
-                    const isFr = (state.cat === 'VERBES' || /^[a-z \']+/i.test(q.q));
-                    instruction = isFr ? "VERTAAL NAAR NEDERLANDS" : "VERTAAL NAAR FRANS";
-                }
+                
                 app.innerHTML = `<div class="glass p-4 quiz-container">
                     <div class="flex justify-between font-black text-yellow-400 mb-2 uppercase text-[10px] tracking-widest"> <button onclick="state.v='categories';render()" class="text-red-500 border border-red-500 px-2">← EXIT</button> <span>${state.total - state.items.length}/${state.total}</span></div>
                     <div class="prog-bar-container mb-3"><div class="prog-bar-fill" style="width: ${progress}%"></div></div>
                     ${showMap ? `<div class="map-viewport"><img src="${skeletUrl}" class="skelet-kaart" /></div>` : ''}
-                    <div class="question-box text-center mb-4" onclick="if(${isFlash}){state.revealed=true;render();}">
+                    <div class="question-box text-center mb-4">
                         <h2 class="text-2xl font-black italic uppercase leading-tight">${q.q}</h2>
-                        ${!state.revealed ? `<div class="mt-3 py-4 bg-yellow-400 rounded-xl mega-instruction flex items-center justify-center px-2"><p class="${instruction.length > 20 ? 'text-lg' : 'text-3xl'} font-black text-black uppercase tracking-tighter text-center leading-none">${instruction}</p></div>` : ''}
+                        <div class="mt-3 py-4 bg-yellow-400 rounded-xl mega-instruction flex items-center justify-center px-2"><p class="text-3xl font-black text-black uppercase tracking-tighter text-center leading-none">KIES</p></div>
                     </div>
-                    ${isFlash ? `<div id="flashcard-ui">${state.revealed ? `<div class="answer-box text-center animate-pulse mb-6"><p class="text-[9px] opacity-40 mb-1 tracking-[0.3em] uppercase">ANTWOORD</p><h2 class="text-2xl font-black italic text-green-400 uppercase leading-tight px-2">${q.a}</h2></div><div class="grid grid-cols-2 gap-4"><button handleFlash(true)" class="fn-button bg-green-600 py-6 text-xl">✅ JUIST</button><button onclick="handleFlash(false)" class="fn-button bg-red-600 py-6 text-xl">❌ FOUT</button></div>` : ''}</div>` : 
-                    `<div class="grid gap-3 mb-6">${q.opts.map(o => `<button onclick="check('${o}')" class="fn-button py-4 text-sm px-2 flex items-center justify-center text-center ${state.status!=='idle'?(o===q.a?'btn-correct':(o===state.sel?'btn-wrong':'opacity-20')):'bg-white/5 border border-white/10'}">${o}</button>`).join('')}</div><div id="next-anchor" class="min-h-[80px] text-center">${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-6 text-xl shadow-2xl">VOLGENDE →</button>` : ''}</div>`}
+                    <div class="grid gap-3 mb-6">${q.opts.map(o => `<button onclick="check('${o}')" class="fn-button py-4 text-sm px-2 flex items-center justify-center text-center ${state.status!=='idle'?(o===q.a?'btn-correct':(o===state.sel?'btn-wrong':'opacity-20')):'bg-white/5 border border-white/10'}">${o}</button>`).join('')}</div><div id="next-anchor" class="min-h-[80px] text-center">${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-6 text-xl shadow-2xl">VOLGENDE →</button>` : ''}</div>
                 </div>`;
                 if(showMap) setTimeout(initZoom, 100);
             }
@@ -142,19 +134,13 @@
         function startSpecificQ(sub, cat, lesson) { const items = DATA.filter(i => i.s === sub && cleanCategory(i.t) === cat && i.n === lesson); prepareQuiz(items, sub, cat, lesson); }
         function startDirectQuiz(sub, cat) { const items = DATA.filter(i => i.s === sub && cleanCategory(i.t) === cat); prepareQuiz(items, sub, cat, cat); }
         function prepareQuiz(items, sub, cat, lesson) {
-            const allA = [...new Set(DATA.filter(i=>cleanCategory(i.t)===cat).map(i=>i.a))];
             state.items = items.map(i => {
-                let opts = [i.a, ...i.d].filter(x => x && x.trim() !== "");
-                while(opts.length < 4) {
-                    let r = allA[Math.floor(Math.random()*allA.length)];
-                    if(!opts.includes(r)) opts.push(r);
-                }
-                return {...i, opts: opts.slice(0,4).sort(()=>Math.random()-0.5)};
+                let opts = [i.a, ...i.d].sort(()=>Math.random()-0.5);
+                return {...i, opts: opts};
             }).sort(()=>Math.random()-0.5);
             state.total = state.items.length; state.v = 'quiz'; state.sub = sub; state.cat = cat; state.status = 'idle'; state.sel = null; render();
         }
 
-        function handleFlash(isCorrect) { const q = state.items[0]; state.progress[q.q] = true; if (isCorrect) { playSound(660, 'sine', 0.15); confetti({particleCount:30, origin:{y:0.8}}); } else { playSound(150, 'sawtooth', 0.3); if (!state.errs.some(i => i.q === q.q)) state.errs.push(q); } save(); state.items.shift(); state.revealed = false; if(!state.items.length) { state.v = 'categories'; } render(); }
         function check(o) { if(state.status !== 'idle') return; state.sel = o; const q = state.items[0]; if(o === q.a) { state.status = 'correct'; playSound(660, 'sine', 0.15); confetti({particleCount:30, origin:{y:0.8}}); } else { state.status = 'wrong'; playSound(150, 'sawtooth', 0.3); if(!state.errs.some(i => i.q === q.q)) state.errs.push(q); } save(); render(); }
         function next() { state.items.shift(); state.status = 'idle'; state.sel = null; if(!state.items.length) { state.v = 'categories'; } render(); }
         render();
