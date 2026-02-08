@@ -36,7 +36,7 @@ WO,Lichaam,3 soorten spieren,Wat is een voorbeeld van een spier die automatisch 
 WO,Lichaam,3 soorten spieren,Wat is een voorbeeld van een bewuste spier?,De kauwspier,De maagspier,De darmspier,De hartspier
 WO,Lichaam,3 soorten spieren,Wat gebeurt er met een spier als je hem spant?,Hij wordt harder en dikker,Hij wordt zachter,Hij wordt langer,Hij wordt blauw
 WO,Lichaam,Spijsvertering,Hoe lang is de slokdarm ongeveer?,25 cm,5 meter,1.5 meter,10 cm
-WO,Lichaam,Spijsvertering,Welk orgaan is ongeveer 5 meter lang?,De dunne darm,De dikke darm,de slokdarm,De maag
+WO,Lichaam,Spijsvertering,Welk orgaan is ongeveer 5 meter lang?,De dunne darm,De dikke darm,De slokdarm,De maag
 WO,Lichaam,Spijsvertering,Welk orgaan is ongeveer 1 tot 1.5 meter lang?,De dikke darm,De dunne darm,De slokdarm,De lever
 WO,Lichaam,Spijsvertering,Waar worden de afvalstoffen opgeslagen?,De endeldarm,De lever,De maag,De slokdarm
 WO,Lichaam,Zintuigen,Hoe heet een seintje uit de omgeving?,Een prikkel,Een zenuw,Een reactie,Een spierpijn
@@ -45,8 +45,6 @@ WO,Lichaam,Proeven,Waar op de tong proef je vooral zoet?,Vooraan,Achteraan,Zijka
 WO,Lichaam,Proeven,Waar op de tong proef je vooral bitter?,Achteraan,Vooraan,Zijkanten,Onder de tong
 WO,Lichaam,Proeven,Wat betekent de vijfde smaak Umami?,Hartig,Heel zoet,Heel zuur,Heel zout
 WO,Lichaam,Gehoor,Wat is de functie van de oorschelp?,Geluidstrillingen opvangen,Het evenwicht bewaren,Hersensignalen maken,Slijm maken
-
-
 Frans,T5: Woordenschat,Multimedia,une radio,een radio,,,
 Frans,T5: Woordenschat,Multimedia,une photo,een foto,,,
 Frans,T5: Woordenschat,Multimedia,une tablette,een tablet,,,
@@ -68,7 +66,7 @@ Frans,T6: Woordenschat,Sporten,le basket,het basketbal,,,
 Frans,T6: Woordenschat,Sporten,le tennis,de tennis,,,
 Frans,T6: Woordenschat,Sporten,le vélo,het fietsen,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,la danse,de dans,,,
-Frans,T6: Woordenschat,Hobby & Vrije Tijd,la muziek,de muziek,,,
+Frans,T6: Woordenschat,Hobby & Vrije Tijd,la musique,de muziek,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,le dessin,het tekenen,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,une chanson,een liedje,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,un spel,een spel,,,
@@ -83,23 +81,19 @@ Frans,T5: Woordenschat,Hoeveelheden,beaucoup de,veel,,,
 Frans,T5: Woordenschat,Hoeveelheden,moins de,minder,,,
 Frans,T5: Woordenschat,Hoeveelheden,plus de,meer,,,
 Frans,T5: Woordenschat,Hoeveelheden,trop de,te veel,,,
-
-
 Frans,T6: Verbes,Faire du sport,faire du sport,sporten,,,
 Frans,T6: Verbes,Nager,nager,zwemmen,,,
 Frans,T6: Verbes,Danser,danser,dansen,,,
 Frans,T6: Verbes,Chanter,chanter,zingen,,,
 Frans,T6: Verbes,Dessiner,dessiner,tekenen,,,
 Frans,T6: Verbes,Jouer,jouer,spelen,,,
-
-
 Frans,T5: Spelling,Au Magasin,een winkel,un magasin,une magasin,un magazin,un magassin
 Frans,T5: Spelling,Au Magasin,een supermarkt,un supermarché,une supermarché,un supermarche,un suppermarché
 Frans,T5: Spelling,Maten,één kilo,un kilo,une kilo,un quilo,un killo
 Frans,T5: Spelling,Maten,een gram,un gramme,une gramme,un grame,un gramm
 Frans,T5: Spelling,Personen,mijnheer,un monsieur,une monsieur,un monssieur,un messieur
 Frans,T5: Spelling,Au Magasin,een prijs,un prix,une prix,un prik,un pris
-Frans,T5: Spelling,Geld,een euro,un euro,une euro,un uuro,un oero,un eurro
+Frans,T5: Spelling,Geld,een euro,un euro,une euro,un uuro,un oero
 Frans,T5: Spelling,Geld,een (euro)cent,un centime,une centime,un santime,un centiem
 Frans,T5: Spelling,Au Magasin,een kassa,une caisse,un caisse,une caise,une kasse
 Frans,T5: Spelling,Personen,een mevrouw,une madame,un madame,une maddame,une madam
@@ -107,7 +101,7 @@ Frans,T5: Spelling,Personen,juffrouw,mademoiselle,un mademoiselle,mademmoiselle,
 Frans,T5: Spelling,Werkwoorden,wegen,peser,un peser,pessere,pezer
 Frans,T5: Spelling,Werkwoorden,kopen,acheter,une acheter,achtere,asheter
 Frans,T5: Spelling,Werkwoorden,verkopen,vendre,un vendre,vander,vendere
-Frans,T5: Spelling,Werkwoorden,betalen,payer,une payer,paier,payere,paiyer
+Frans,T5: Spelling,Werkwoorden,betalen,payer,une payer,paier,payere
 Frans,T5: Spelling,Getallen,veertig,quarante,carante,quaranteh,quarande
 Frans,T5: Spelling,Getallen,vijftig,cinquante,sinquante,cincante,cinquande
 Frans,T5: Spelling,Getallen,zestig,soixante,souaxante,soisante,soissante
@@ -116,16 +110,16 @@ Frans,T5: Spelling,Getallen,tachtig,quatre-vingts,quatre-vingt,katre-vingt,quatr
 Frans,T5: Spelling,Getallen,negentig,quatre-vingt-dix,quatre-vingts-dix,nonante,katre-vingt-dis
 Frans,T5: Spelling,Getallen,honderd,cent,un cent,sant,cend
 Frans,T5: Spelling,Vraagwoorden,hoeveel?,combien,un combien,conbien,combiem
-Frans,T5: Spelling,Cuisine,een groente,un légume,une leggume,un legume,un leggume
-Frans,T5: Spelling,Cuisine,een vrucht,un fruit,une fruit,un fruid,un fruite
-Frans,T5: Spelling,Cuisine,een ei,un œuf,une œuf,un oeuf,un euf
-Frans,T5: Spelling,Cuisine,de suiker,le sucre,la sucre,le succre,le sukkre
-Frans,T5: Spelling,Cuisine,de kaas,le fromage,la fromage,le frommage,le froomage
-Frans,T5: Spelling,Cuisine,een recept,une recette,un recette,une recete,une ressette
-Frans,T5: Spelling,Cuisine,een aardappel,une pomme de terre,un pomme de terre,une pome de terre,une pomme du terre
-Frans,T5: Spelling,Cuisine,een stokbrood,une baguette,un baguette,une bagette,une bagguette
-Frans,T5: Spelling,Cuisine,een boterham,une tartine,un tartine,une tartinne,une tartiene
-Frans,T5: Spelling,Cuisine,de jam,la confiture,le confiture,la confitur,la konfiture
-Frans,T5: Spelling,Cuisine,het water,l'eau,le eau,la eau,l'eaux
-Frans,T5: Spelling,Cuisine,de vis,le poisson,la poisson,le poison,le poissone
-Frans,T5: Spelling,Cuisine,heerlijk,délicieux,delicieux,delicieuse,delecieux
+Frans,T5: Spelling,Cuisine,een groente,un légume,une leggume,un legume
+Frans,T5: Spelling,Cuisine,een vrucht,un fruit,une fruit,un fruid
+Frans,T5: Spelling,Cuisine,een ei,un œuf,une œuf,un oeuf
+Frans,T5: Spelling,Cuisine,de suiker,le sucre,la sucre,le succre
+Frans,T5: Spelling,Cuisine,de kaas,le fromage,la fromage,le frommage
+Frans,T5: Spelling,Cuisine,een recept,une recette,un recette,une recete
+Frans,T5: Spelling,Cuisine,een aardappel,une pomme de terre,un pomme de terre,une pome de terre
+Frans,T5: Spelling,Cuisine,een stokbrood,une baguette,un baguette,une bagette
+Frans,T5: Spelling,Cuisine,een boterham,une tartine,un tartine,une tartinne
+Frans,T5: Spelling,Cuisine,de jam,la confiture,le confiture,la confitur
+Frans,T5: Spelling,Cuisine,het water,l'eau,le eau,la eau
+Frans,T5: Spelling,Cuisine,de vis,le poisson,la poisson,le poison
+Frans,T5: Spelling,Cuisine,heerlijk,délicieux,delicieux,delicieuse
