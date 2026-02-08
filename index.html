@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V30.2</title>
+    <title>MASSINE CHALLENGE V30.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -125,10 +125,11 @@
                 const currentCat = cleanCatName(q.t);
                 const isFlash = (q.s === 'FRANS' && (currentCat === "WOORDENSCHAT" || currentCat === "WERKWOORDEN"));
                 const progress = ((state.total - state.items.length) / state.total) * 100;
-                let instruction = "KIES";
+                
+                // Instructies gebaseerd op categorie
+                let instruction = "KIES HET JUISTE ANTWOORD";
                 if(q.s === 'FRANS') instruction = "VERTAAL NAAR NEDERLANDS";
                 if(currentCat === "SPELLING") instruction = "KIES DE JUISTE SPELLING";
-                if(showMap) instruction = "KIES HET JUISTE BOT";
 
                 app.innerHTML = `<div class="glass p-4">
                     <div class="flex justify-between font-black text-yellow-400 mb-2 uppercase text-[10px]"> <button onclick="state.v='menu';render()">← EXIT</button> <span>${state.total - state.items.length}/${state.total}</span></div>
