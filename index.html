@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V26.2</title>
+    <title>MASSINE CHALLENGE V28.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -18,24 +18,37 @@
         .prog-bar-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); transition: width 0.5s ease; }
         .btn-correct { background: #22c55e !important; color: #000 !important; box-shadow: 0 0 20px #22c55e; }
         .btn-wrong { background: #ef4444 !important; color: #fff !important; animation: shake 0.3s; box-shadow: 0 0 20px #ef4444; }
+        
+        .swipe-container { position: relative; overflow: hidden; border-radius: 1rem; margin-bottom: 0.5rem; }
+        .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 10; transform: translateX(100%); transition: transform 0.3s ease; }
+        .swipe-main { transition: transform 0.3s ease; width: 100%; }
+        .swiped .swipe-main { transform: translateX(-80px); }
+        .swiped .swipe-actions { transform: translateX(0); }
+        .btn-reset-red { background: #ef4444; color: white; padding: 0 20px; font-weight: 900; font-size: 10px; height: 100%; display: flex; align-items: center; border: none; }
+
         .map-viewport { width: 100%; max-width: 320px; margin: 0 auto 1rem auto; height: 320px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); border-radius: 1rem; background: #000; position: relative; cursor: grab; touch-action: none; }
         .skelet-kaart { width: 100%; position: absolute; top: 0; left: 0; transform-origin: 0 0; transition: transform 0.1s ease-out; pointer-events: none; }
     </style>
 </head>
-<body onclick="initAudio();">
+<body onclick="initAudio(); closeAllSwipes();">
     <div id="app" class="w-full max-w-2xl mx-auto py-2 px-4"></div>
     <div id="bg-container"></div><div class="overlay"></div>
     <script>
-        let audioCtx; let DATA = [];
+        let audioCtx; let DATA = []; let startX = 0;
         let state = {
             v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null,
-            progress: JSON.parse(localStorage.getItem('m_prog_v26') || '{}')
+            progress: JSON.parse(localStorage.getItem('m_prog_v28') || '{}')
         };
         const skeletUrl = "https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png"; 
         let scale = 1, posX = 0, posY = 0, lastX = 0, lastY = 0, isDragging = false;
 
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function playSound(f, t, d) { initAudio(); try { const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d); } catch(e) {} }
+        function save() { localStorage.setItem('m_prog_v28', JSON.stringify(state.progress)); }
+
+        function handleTM(e) { startX = e.touches[0].clientX; }
+        function handleMM(e, id) { let diff = startX - e.touches[0].clientX; let el = document.getElementById('cont-' + id); if (el && diff > 50) { closeAllSwipes(); el.classList.add('swiped'); } else if (el && diff < -50) el.classList.remove('swiped'); }
+        function closeAllSwipes() { document.querySelectorAll('.swipe-container').forEach(e => e.classList.remove('swiped')); }
 
         function loadCSV() {
             Papa.parse("vragen.csv?v=" + new Date().getTime(), {
@@ -75,10 +88,23 @@
                 app.innerHTML = `<div class="glass p-6 text-center"><h1 class="text-3xl text-yellow-400 font-black italic mb-6 uppercase text-left ml-2">Missions</h1><div class="grid grid-cols-2 gap-4">${subs.map(sub => `<button onclick="state.sub='${sub}';state.v='categories';render()" class="fn-button bg-white/10 py-12 text-xl border border-white/5 uppercase tracking-tighter">${sub}</button>`).join('')}</div></div>`;
             } else if (state.v === 'categories') {
                 const cats = [...new Set(DATA.filter(i => i.s === state.sub).map(i => i.t))].sort();
-                app.innerHTML = `<div class="glass p-6 text-center"><button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 mb-4 font-black uppercase text-[10px]">← BACK</button><div class="grid grid-cols-1 gap-4">${cats.map(cat => `<button onclick="state.cat='${cat}';state.v='lessons';render()" class="fn-button w-full bg-white/10 py-8 text-xl border border-white/5 uppercase tracking-widest text-yellow-400">${cat}</button>`).join('')}</div></div>`;
+                app.innerHTML = `<div class="glass p-6 text-center"><button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 mb-4 font-black uppercase text-[10px]">← BACK</button><div class="grid grid-cols-1 gap-4">${cats.map((cat, idx) => `
+                    <div class="swipe-container" id="cont-cat-${idx}">
+                        <div class="swipe-actions"><button onclick="resetCat('${cat}')" class="btn-reset-red">RESET</button></div>
+                        <div class="swipe-main" ontouchstart="handleTM(event)" ontouchmove="handleMM(event, 'cat-${idx}')">
+                            <button onclick="state.cat='${cat}';state.v='lessons';render()" class="fn-button w-full bg-white/10 py-8 text-xl border border-white/5 uppercase tracking-widest text-yellow-400">${cat}</button>
+                        </div>
+                    </div>`).join('')}</div></div>`;
             } else if (state.v === 'lessons') {
-                const lessons = [...new Set(DATA.filter(i => i.s === state.sub && i.t === state.cat).map(i => i.n))].sort();
-                app.innerHTML = `<div class="glass p-4"><button onclick="state.v='categories';render()" class="bg-yellow-400 text-black px-4 py-2 mb-4 font-black uppercase text-[10px]">← BACK</button><div class="grid grid-cols-2 gap-3">${lessons.map(n => `<button onclick="startQuiz('${n}')" class="fn-button w-full h-24 bg-white/10 flex items-center justify-center border border-white/5 uppercase italic font-black text-[10px] text-center px-1">${n}</button>`).join('')}</div></div>`;
+                const isVerbes = state.cat.toUpperCase().includes("VERBES");
+                const lessons = isVerbes ? ["START OEFENING"] : [...new Set(DATA.filter(i => i.s === state.sub && i.t === state.cat).map(i => i.n))].sort();
+                app.innerHTML = `<div class="glass p-4"><button onclick="state.v='categories';render()" class="bg-yellow-400 text-black px-4 py-2 mb-4 font-black uppercase text-[10px]">← BACK</button><div class="grid grid-cols-2 gap-3">${lessons.map((n, idx) => `
+                    <div class="swipe-container" id="cont-les-${idx}">
+                        <div class="swipe-actions"><button onclick="resetLes('${n}')" class="btn-reset-red">RESET</button></div>
+                        <div class="swipe-main" ontouchstart="handleTM(event)" ontouchmove="handleMM(event, 'les-${idx}')">
+                            <button onclick="startQuiz('${n}', ${isVerbes})" class="fn-button w-full h-24 bg-white/10 flex items-center justify-center border border-white/5 uppercase italic font-black text-[10px] text-center px-1">${n}</button>
+                        </div>
+                    </div>`).join('')}</div></div>`;
             } else if (state.v === 'quiz') {
                 const q = state.items[0];
                 const showMap = q.n.toUpperCase().includes("KAART");
@@ -100,8 +126,9 @@
             }
         }
 
-        function startQuiz(n) {
-            state.items = DATA.filter(i => i.s === state.sub && i.t === state.cat && i.n === n).map(i => {
+        function startQuiz(n, allInCat) {
+            let filter = allInCat ? DATA.filter(i => i.s === state.sub && i.t === state.cat) : DATA.filter(i => i.s === state.sub && i.t === state.cat && i.n === n);
+            state.items = filter.map(i => {
                 let opts = [i.a, ...i.d].sort(()=>Math.random()-0.5);
                 while(opts.length < 4) opts.push("---");
                 return {...i, opts: opts.slice(0,4)};
@@ -122,6 +149,10 @@
             if(!state.items.length) { state.v = 'menu'; }
             render();
         }
+
+        function resetCat(cat) { DATA.filter(i => i.t === cat).forEach(q => delete state.progress[q.q]); save(); render(); }
+        function resetLes(n) { DATA.filter(i => i.n === n).forEach(q => delete state.progress[q.q]); save(); render(); }
+
         render();
     </script>
 </body>
