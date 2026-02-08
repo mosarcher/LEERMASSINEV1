@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V29.5</title>
+    <title>MASSINE CHALLENGE V29.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -72,43 +72,24 @@
             const container = document.querySelector('.map-viewport');
             const img = document.querySelector('.skelet-kaart');
             if (!container || !img) return;
-            
-            container.onpointerdown = (e) => { 
-                isDragging = true; 
-                lastX = e.clientX; 
-                lastY = e.clientY; 
-                container.setPointerCapture(e.pointerId); 
-            };
-            
+            container.onpointerdown = (e) => { isDragging = true; lastX = e.clientX; lastY = e.clientY; container.setPointerCapture(e.pointerId); };
             container.onpointermove = (e) => {
                 if (!isDragging) return;
-                posX += e.clientX - lastX; 
-                posY += e.clientY - lastY;
-                lastX = e.clientX; 
-                lastY = e.clientY;
+                posX += e.clientX - lastX; posY += e.clientY - lastY;
+                lastX = e.clientX; lastY = e.clientY;
                 img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
             };
-            
             container.onpointerup = () => isDragging = false;
-
             container.ontouchmove = (e) => {
                 if (e.touches.length === 2) {
                     let dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                    if (lastDist > 0) { 
-                        scale = Math.min(Math.max(1, scale * (dist / lastDist)), 4); 
-                    }
+                    if (lastDist > 0) { scale = Math.min(Math.max(1, scale * (dist / lastDist)), 4); }
                     lastDist = dist;
                     img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
                 }
             };
-            
             container.ontouchend = () => { lastDist = 0; };
-            
-            container.onwheel = (e) => { 
-                e.preventDefault(); 
-                scale = Math.min(Math.max(1, scale * (e.deltaY > 0 ? 0.9 : 1.1)), 4); 
-                img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`; 
-            };
+            container.onwheel = (e) => { e.preventDefault(); scale = Math.min(Math.max(1, scale * (e.deltaY > 0 ? 0.9 : 1.1)), 4); img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`; };
         }
 
         function render() {
@@ -123,7 +104,7 @@
                     let icon = sub === 'WO' ? '🌍' : (sub === 'FRANS' ? '🇫🇷' : '📚');
                     return `<button onclick="state.sub='${sub}';state.v='categories';render()" class="fn-button bg-white/10 py-12 text-xl border border-white/5 uppercase tracking-tighter flex flex-col items-center gap-2"><span>${icon}</span><span>${sub}</span></button>`;
                 }).join('')}</div></div>`;
-            } else if (state.v === 'categories') {
+            } else if (state.v='categories') {
                 const cats = [...new Set(DATA.filter(i => i.s === state.sub).map(i => cleanCatName(i.t)))].sort();
                 app.innerHTML = `<div class="glass p-6 text-center"><div class="flex justify-between items-center mb-6"><button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 font-black uppercase text-[10px]">← BACK</button><span class="font-black italic text-yellow-400 uppercase tracking-widest text-sm">${state.sub}</span></div><div class="grid grid-cols-1 gap-4">${cats.map((cat, idx) => {
                     const action = (state.sub === 'FRANS') ? `startCleanQuiz('${cat}')` : `state.cat='${cat}';state.v='lessons';render()`;
@@ -162,7 +143,7 @@
                     ${showMap ? `<div class="map-viewport"><img src="${skeletUrl}" class="skelet-kaart" /></div>` : ''}
                     <div class="question-box text-center mb-4" onclick="${isFlash?'state.revealed=true;render();':''}">
                         <h2 class="text-2xl font-black italic uppercase leading-tight">${q.q}</h2>
-                        ${isFlash && !state.revealed ? `<div class="mt-3 py-4 bg-yellow-400 rounded-xl flex items-center justify-center px-2"><p class="text-3xl font-black text-black uppercase tracking-tighter">TIK VOOR ANTWOORD</p></div>` : `<div class="mt-3 py-4 bg-yellow-400 rounded-xl flex items-center justify-center px-2"><p class="text-3xl font-black text-black uppercase tracking-tighter">${instruction}</p></div>`}
+                        ${isFlash && !state.revealed ? `<div class="mt-3 py-3 bg-yellow-400 rounded-xl flex items-center justify-center px-2"><p class="text-2xl font-black text-black uppercase tracking-tighter">ZEG LUIDOP & TIK</p></div>` : `<div class="mt-3 py-4 bg-yellow-400 rounded-xl flex items-center justify-center px-2"><p class="text-3xl font-black text-black uppercase tracking-tighter">${instruction}</p></div>`}
                     </div>
                     ${isFlash && state.revealed ? `
                         <div class="text-center mb-6 animate-pulse"><p class="text-[9px] opacity-40 mb-1 tracking-widest uppercase">ANTWOORD</p><h2 class="text-3xl font-black italic text-green-400 uppercase">${q.a}</h2></div>
@@ -199,16 +180,9 @@
         function next() { state.items.shift(); state.status = 'idle'; state.sel = null; if(!state.items.length) { state.v = 'menu'; } render(); }
         function resetCat(cat) { DATA.filter(i => cleanCatName(i.t) === cat).forEach(q => delete state.progress[q.q]); save(); render(); }
         function resetLes(n) { DATA.filter(i => i.n === n).forEach(q => delete state.progress[q.q]); save(); render(); }
-        
         function handleTS(e) { startX = e.touches[0].clientX; }
-        function handleTM(e, id) { 
-            let diff = startX - e.touches[0].clientX; 
-            let el = document.getElementById('cont-' + id); 
-            if (diff > 50) { closeAllSwipes(); el.classList.add('swiped'); } 
-            else if (diff < -50) el.classList.remove('swiped'); 
-        }
+        function handleTM(e, id) { let diff = startX - e.touches[0].clientX; let el = document.getElementById('cont-' + id); if (diff > 50) { closeAllSwipes(); el.classList.add('swiped'); } else if (diff < -50) el.classList.remove('swiped'); }
         function closeAllSwipes() { document.querySelectorAll('.swipe-container').forEach(e => e.classList.remove('swiped')); }
-        
         render();
     </script>
 </body>
