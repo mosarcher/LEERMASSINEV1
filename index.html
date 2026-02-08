@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V30.9</title>
+    <title>MASSINE CHALLENGE V30.10</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -36,15 +36,15 @@
         let audioCtx; let DATA = []; let startX = 0;
         let state = {
             v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null, revealed: false, mode: 'normal',
-            progress: JSON.parse(localStorage.getItem('m_p_v30_9') || '{}'),
-            errs: JSON.parse(localStorage.getItem('m_e_v30_9') || '[]')
+            progress: JSON.parse(localStorage.getItem('m_p_v30_10') || '{}'),
+            errs: JSON.parse(localStorage.getItem('m_e_v30_10') || '[]')
         };
         const skeletUrl = "https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png"; 
         let scale = 1, lastDist = 0;
 
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function playSound(f, t, d) { initAudio(); try { const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d); } catch(e) {} }
-        function save() { localStorage.setItem('m_p_v30_9', JSON.stringify(state.progress)); localStorage.setItem('m_e_v30_9', JSON.stringify(state.errs)); }
+        function save() { localStorage.setItem('m_p_v30_10', JSON.stringify(state.progress)); localStorage.setItem('m_e_v30_10', JSON.stringify(state.errs)); }
 
         function loadCSV() {
             Papa.parse("vragen.csv?v=" + Date.now(), {
@@ -172,18 +172,4 @@
             save(); render();
         }
 
-        function next() { state.items.shift(); state.status = 'idle'; state.sel = null; if(!state.items.length) { state.v = 'menu'; } render(); }
-        function resetCat(cat) { DATA.filter(i => cleanCatName(i.t) === cat).forEach(q => delete state.progress[q.q]); save(); render(); }
-        function resetLes(n) { DATA.filter(i => i.n === n).forEach(q => delete state.progress[q.q]); save(); render(); }
-        function handleTS(e) { startX = e.touches[0].clientX; }
-        function handleTM(e, id) { 
-            let diff = startX - e.touches[0].clientX; 
-            let el = document.getElementById('cont-' + id); 
-            if (el && diff > 50) { closeAllSwipes(); el.classList.add('swiped'); } 
-            else if (el && diff < -50) el.classList.remove('swiped'); 
-        }
-        function closeAllSwipes() { document.querySelectorAll('.swipe-container').forEach(e => e.classList.remove('swiped')); }
-        render();
-    </script>
-</body>
-</html>
+        function next() { state.items.shift(); state.status = 'idle'; state.sel = null; if(!state.items.length) { state.v = 'menu'; } render();
