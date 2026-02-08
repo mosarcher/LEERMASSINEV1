@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V22.6</title>
+    <title>MASSINE CHALLENGE V22.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -25,6 +25,7 @@
         .swiped .swipe-main { transform: translateX(-100px); }
         .swiped .swipe-actions { transform: translateX(0); }
         .btn-reset-red { background: #ef4444; color: white; padding: 0 15px; font-weight: 900; font-size: 10px; height: 100%; display: flex; align-items: center; text-transform: uppercase; }
+        .quiz-container { padding-top: 15vh; }
     </style>
 </head>
 <body onclick="closeAllSwipes()">
@@ -34,14 +35,15 @@
         let audioCtx; let DATA = []; let startX = 0;
         let state = {
             v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null, curK: '', revealed: false,
-            progress: JSON.parse(localStorage.getItem('m_prog_v22') || '{}'),
-            errs: JSON.parse(localStorage.getItem('m_e_v22') || '[]')
+            progress: JSON.parse(localStorage.getItem('m_prog_v22.9') || '{}'),
+            errs: JSON.parse(localStorage.getItem('m_e_v22.9') || '[]')
         };
 
         const iconMap = {
             'VOEDING': '🍎', 'DRANKEN': '🥤', 'MUZIEK': '🎸', 'MULTIMEDIA': '📱', 'SPORT': '⚽', 
             'HOBBY': '🎨', 'HOEVEELHEDEN': '⚖️', 'GRAMMATICA': '⚙️', 'COMPETITIE': '🏆', 
-            'DIVERSEN': '📦', 'LICHAAM': '🦴', 'FAMILLE': '🏠', 'MAGASIN': '🛒', 'NOMBRES': '🔢', 'CUISINE': '🍴'
+            'DIVERSEN': '📦', 'LICHAAM': '🦴', 'FAMILLE': '🏠', 'MAGASIN': '🛒', 'NOMBRES': '🔢', 
+            'CUISINE': '🍴', 'SPELLING': '✍️'
         };
 
         function getIcon(text, cat) {
@@ -50,18 +52,21 @@
             for (const [key, icon] of Object.entries(iconMap)) {
                 if (upper.includes(key)) return icon;
             }
-            return null;
+            return '📚';
         }
 
-        function save() { localStorage.setItem('m_prog_v22', JSON.stringify(state.progress)); localStorage.setItem('m_e_v22', JSON.stringify(state.errs)); }
+        function save() { 
+            localStorage.setItem('m_prog_v22.9', JSON.stringify(state.progress)); 
+            localStorage.setItem('m_e_v22.9', JSON.stringify(state.errs)); 
+        }
         
         Papa.parse("vragen.csv", {
-            download: true, header: true, skipEmptyLines: true,
+            download: true, header: true, skipEmptyLines: 'graceful',
             complete: function(res) {
-                DATA = res.data.filter(r => r.Vraag && r.Antwoord && r.Vak).map(r => ({
-                    s: String(r.Vak).toUpperCase().trim(), 
-                    t: String(r.Thema || "Algemeen").trim(),
-                    n: String(r.Lesnaam || "Les").trim(), 
+                DATA = res.data.filter(r => r.Vraag && r.Antwoord).map(r => ({
+                    s: String(r.Vak || "").toUpperCase().trim(), 
+                    t: String(r.Thema || "ALGEMEEN").trim(),
+                    n: String(r.Lesnaam || "LES").trim(), 
                     q: String(r.Vraag).trim(), 
                     a: String(r.Antwoord).trim(),
                     d: [r["Fout 1"], r["Fout 2"], r["Fout 3"]].filter(x => x && String(x).trim() !== "")
@@ -73,22 +78,25 @@
         function render() {
             const app = document.getElementById('app');
             if (state.v === 'landing') {
-                app.innerHTML = `<div class="glass p-10 text-center mt-20"><h1 class="text-5xl font-black italic text-yellow-400 mb-2 uppercase tracking-tighter">Massine's</h1><h2 class="text-2xl font-black italic text-white mb-10 uppercase tracking-widest">Challenge</h2><button onclick="initAudio(); state.v='menu'; render();" class="fn-button bg-yellow-400 text-black py-8 px-12 text-2xl w-full">START GAME</button></div>`;
+                app.innerHTML = `<div class="glass p-10 text-center mt-20"><h1 class="text-5xl font-black italic text-yellow-400 mb-2 uppercase tracking-tighter">Massine's</h1><h2 class="text-2xl font-black italic text-white mb-10 uppercase tracking-widest">Challenge</h2><button onclick="initAudio(); state.v='menu'; render();" class="fn-button bg-yellow-400 text-black py-8 px-12 text-2xl w-full text-center">START GAME</button></div>`;
             } else if (state.v === 'menu') {
-                const subs = [...new Set(DATA.map(i => i.s))];
+                const subs = [...new Set(DATA.map(i => i.s))].filter(s => s !== "");
                 app.innerHTML = `<div class="glass p-6 text-center"><h1 class="text-3xl text-yellow-400 font-black italic mb-6 uppercase">Missions</h1><button onclick="state.v='boss';render()" class="fn-button w-full bg-red-600 py-6 mb-8 text-xl flex items-center justify-center gap-3 shadow-lg"><span>🔥 BOSS LEVEL</span><span class="bg-black/20 px-3 py-1 rounded-full text-sm font-mono">${state.errs.length}</span></button><div class="grid grid-cols-2 gap-4">${subs.map(sub => `<button onclick="state.sub='${sub}';state.v='categories';render()" class="fn-button bg-white/10 py-12 text-xl border border-white/5">${sub}</button>`).join('')}</div></div>`;
             } else if (state.v === 'categories') {
                 const subData = DATA.filter(i => i.s === state.sub);
                 const categories = [...new Set(subData.map(i => {
                     const parts = i.t.split(':');
-                    return parts.length > 1 ? parts[1].trim().toUpperCase() : i.t.toUpperCase();
+                    let name = parts.length > 1 ? parts[1].trim().toUpperCase() : i.t.toUpperCase();
+                    if (name.includes('VERBES')) return 'VERBES';
+                    return name;
                 }))].sort();
 
                 app.innerHTML = `<div class="glass p-6 text-center"><div class="flex justify-between items-center mb-8"><button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 font-black italic uppercase text-[10px]">← BACK</button><span class="font-black italic text-yellow-400 uppercase tracking-widest text-sm">${state.sub}</span></div><div class="grid grid-cols-1 gap-4">${categories.map(cat => `<button onclick="state.cat='${cat}';state.v='lessons';render()" class="fn-button bg-white/10 py-8 text-xl border border-white/5 uppercase italic tracking-widest text-yellow-400">${cat}</button>`).join('')}</div></div>`;
             } else if (state.v === 'lessons') {
                 const lessonsInCategory = DATA.filter(i => {
                     const p = i.t.split(':');
-                    const tName = p.length > 1 ? p[1].trim().toUpperCase() : i.t.toUpperCase();
+                    let tName = p.length > 1 ? p[1].trim().toUpperCase() : i.t.toUpperCase();
+                    if (tName.includes('VERBES')) tName = 'VERBES';
                     return i.s === state.sub && tName === state.cat;
                 });
                 const uniqueLessonNames = [...new Set(lessonsInCategory.map(i => i.n))];
@@ -100,15 +108,17 @@
                     const lid = 'l-' + Math.random().toString(36).substr(2, 5);
                     return `<div class="swipe-container" id="cont-${lid}"><div class="swipe-actions"><button onclick="lessonQs.forEach(q => delete state.progress[q.q]); save(); render();" class="btn-reset-red italic text-[8px]">RESET</button></div><div class="swipe-main" ontouchstart="handleTS(event)" ontouchmove="handleTM(event, '${lid}')"><button onclick="startQ_Custom('${state.sub}', '${state.cat}', '${n}')" class="fn-button w-full h-28 bg-white/10 flex flex-col items-center justify-center border border-white/5 relative">
                         ${icon ? `<span class="text-3xl mb-1">${icon}</span>` : ''}
-                        <span class="${icon ? 'text-[9px]' : 'text-lg'} text-center px-1 leading-tight opacity-90">${n}</span>
+                        <span class="${icon ? 'text-[10px]' : 'text-xl'} text-center px-1 leading-tight opacity-90">${n}</span>
                         <span class="text-[8px] font-mono opacity-40 absolute bottom-1">${attCount}/${lessonQs.length}</span>
                     </button></div></div>`;
                 }).join('')}</div></div>`;
             } else if (state.v === 'quiz') {
                 const q = state.items[0]; 
-                const isFlash = q.s.includes("FRANS") || q.t.toUpperCase().includes("WOORDENSCHAT");
+                const isSpelling = state.cat.includes("SPELLING");
+                const isFlash = !isSpelling && (q.s.includes("FRANS") || q.t.toUpperCase().includes("WOORDENSCHAT"));
                 const progress = ((state.total - state.items.length) / state.total) * 100;
-                app.innerHTML = `<div class="glass p-6"><div class="flex justify-between font-black text-yellow-400 mb-2 uppercase text-[10px] tracking-widest"> <button onclick="state.v='lessons';render()" class="text-red-500 border border-red-500 px-2">← BACK</button> <span>${state.total - state.items.length}/${state.total}</span></div><div class="prog-bar-container mb-8"><div class="prog-bar-fill" style="width: ${progress}%"></div></div><div class="question-box text-center" onclick="if(${isFlash}){state.revealed=true;render();}"><p class="text-[10px] opacity-40 mb-2 tracking-[0.3em] uppercase">${isFlash ? 'FRANS' : 'VRAAG'}</p><h2 class="text-3xl font-black italic uppercase leading-tight">${q.q}</h2>${isFlash && !state.revealed ? '<p class="mt-4 text-xs italic text-blue-400 animate-pulse">Tik voor antwoord</p>' : ''}</div>${isFlash ? `<div id="flashcard-ui">${state.revealed ? `<div class="answer-box text-center animate-pulse"><p class="text-[10px] opacity-40 mb-2 tracking-[0.3em] uppercase">ANTWOORD</p><h2 class="text-2xl font-black italic text-green-400">${q.a}</h2></div><div class="grid grid-cols-2 gap-4"><button onclick="handleFlash(true)" class="fn-button bg-green-600 py-6 text-xl">✅ JUIST</button><button onclick="handleFlash(false)" class="fn-button bg-red-600 py-6 text-xl">❌ FOUT</button></div>` : ''}</div>` : `<div class="grid gap-4 mb-10">${q.opts.map(o => { let cl = "bg-white/5 border border-white/10"; if(state.status !== 'idle'){ if(o === q.a) cl = "btn-correct"; else if(o === state.sel) cl = "btn-wrong"; else cl = "opacity-20"; } return `<button onclick="check('${o}')" class="fn-button py-6 text-lg ${cl}">${o}</button>`; }).join('')}</div><div id="next-anchor" class="min-h-[100px]">${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-8 text-xl shadow-2xl">CONTINUE →</button>` : ''}</div>`}</div>`;
+
+                app.innerHTML = `<div class="glass p-6 quiz-container"><div class="flex justify-between font-black text-yellow-400 mb-2 uppercase text-[10px] tracking-widest"> <button onclick="state.v='lessons';render()" class="text-red-500 border border-red-500 px-2">← BACK</button> <span>${state.total - state.items.length}/${state.total}</span></div><div class="prog-bar-container mb-8"><div class="prog-bar-fill" style="width: ${progress}%"></div></div><div class="question-box text-center" onclick="if(${isFlash}){state.revealed=true;render();}"><p class="text-[10px] opacity-40 mb-2 tracking-[0.3em] uppercase">${isFlash ? 'FRANS' : (isSpelling ? 'KIES DE JUISTE SPELLING' : 'VRAAG')}</p><h2 class="text-3xl font-black italic uppercase leading-tight">${q.q}</h2>${isFlash && !state.revealed ? '<p class="mt-4 text-xs italic text-blue-400 animate-pulse">Tik voor antwoord</p>' : ''}</div>${isFlash ? `<div id="flashcard-ui">${state.revealed ? `<div class="answer-box text-center animate-pulse"><p class="text-[10px] opacity-40 mb-2 tracking-[0.3em] uppercase">ANTWOORD</p><h2 class="text-2xl font-black italic text-green-400">${q.a}</h2></div><div class="grid grid-cols-2 gap-4"><button onclick="handleFlash(true)" class="fn-button bg-green-600 py-6 text-xl">✅ JUIST</button><button onclick="handleFlash(false)" class="fn-button bg-red-600 py-6 text-xl">❌ FOUT</button></div>` : ''}</div>` : `<div class="grid gap-4 mb-10">${q.opts.map(o => { let cl = "bg-white/5 border border-white/10"; if(state.status !== 'idle'){ if(o === q.a) cl = "btn-correct"; else if(o === state.sel) cl = "btn-wrong"; else cl = "opacity-20"; } return `<button onclick="check('${o}')" class="fn-button py-6 text-lg ${cl}">${o}</button>`; }).join('')}</div><div id="next-anchor" class="min-h-[100px]">${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-8 text-xl shadow-2xl">CONTINUE →</button>` : ''}</div>`}</div>`;
             } else if (state.v === 'boss') {
                 const bSubs = [...new Set(state.errs.map(i => i.s))];
                 app.innerHTML = `<div class="glass p-4 min-h-[80vh]"><button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 font-black italic mb-6 text-[10px]">← MISSIONS</button><h2 class="text-red-500 font-black mb-4 italic uppercase text-center text-2xl tracking-tighter">Revenge Mode</h2>${state.errs.length ? bSubs.map(s => `<div class="bg-white/5 p-4 mb-4 rounded-xl border border-white/5"><div class="text-red-500 font-black mb-3 italic uppercase text-[10px] tracking-widest">${s}</div><div class="grid grid-cols-2 gap-2">${[...new Set(state.errs.filter(i=>i.s===s).map(i=>i.n))].map(n => {
@@ -119,10 +129,11 @@
         }
 
         function startQ_Custom(sub, category, lesson) {
-            initAudio(); window.scrollTo(0,0); state.revealed = false;
+            initAudio(); window.scrollTo(0,0); state.revealed = false; state.status = 'idle'; state.sel = null;
             state.items = DATA.filter(i => {
                 const p = i.t.split(':');
-                const tName = p.length > 1 ? p[1].trim().toUpperCase() : i.t.toUpperCase();
+                let tName = p.length > 1 ? p[1].trim().toUpperCase() : i.t.toUpperCase();
+                if (tName.includes('VERBES')) tName = 'VERBES';
                 return i.s === sub && tName === category && i.n === lesson;
             }).map(i => ({...i, opts: [i.a, ...i.d].sort(()=>Math.random()-0.5)})).sort(()=>Math.random()-0.5);
             state.total = state.items.length; state.v = 'quiz'; state.curK = `${sub}-${category}-${lesson}`; render();
@@ -134,6 +145,7 @@
             else { playSound(150, 'sawtooth', 0.3); if(!state.errs.some(i => i.q === q.q)) state.errs.push(q); }
             save(); state.items.shift(); state.revealed = false; if(!state.items.length) { state.v = 'lessons'; } render();
         }
+
         function check(o) {
             if(state.status !== 'idle') return;
             state.sel = o; const q = state.items[0]; state.progress[q.q] = true;
@@ -141,7 +153,8 @@
             else { state.status = 'wrong'; playSound(150, 'sawtooth', 0.3); if(!state.errs.some(i => i.q === q.q)) state.errs.push(q); }
             save(); render();
         }
-        function startBossQ(s, n) { initAudio(); window.scrollTo(0,0); state.revealed = false; state.items = state.errs.filter(i => i.s === s && i.n === n).map(i => ({...i, opts: [i.a, ...i.d].sort(()=>Math.random()-0.5)})).sort(()=>Math.random()-0.5); state.total = state.items.length; state.v = 'quiz'; state.curK = `BOSS-${s}-${n}`; render(); }
+
+        function startBossQ(s, n) { initAudio(); window.scrollTo(0,0); state.revealed = false; state.status = 'idle'; state.sel = null; state.items = state.errs.filter(i => i.s === s && i.n === n).map(i => ({...i, opts: [i.a, ...i.d].sort(()=>Math.random()-0.5)})).sort(()=>Math.random()-0.5); state.total = state.items.length; state.v = 'quiz'; state.curK = `BOSS-${s}-${n}`; render(); }
         function next() { state.items.shift(); state.status = 'idle'; state.sel = null; if(!state.items.length) { state.v = state.curK.startsWith('BOSS') ? 'boss' : 'lessons'; } window.scrollTo(0,0); render(); }
         function handleTS(e) { startX = e.touches[0].clientX; }
         function handleTM(e, id) { let diff = startX - e.touches[0].clientX; let el = document.getElementById('cont-' + id); if (diff > 60) { closeAllSwipes(); el.classList.add('swiped'); } else if (diff < -60) el.classList.remove('swiped'); }
