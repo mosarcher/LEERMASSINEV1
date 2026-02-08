@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V30.3</title>
+    <title>MASSINE CHALLENGE V30.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -36,15 +36,15 @@
         let audioCtx; let DATA = []; let startX = 0;
         let state = {
             v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null, revealed: false, mode: 'normal',
-            progress: JSON.parse(localStorage.getItem('m_p_v29_8') || '{}'),
-            errs: JSON.parse(localStorage.getItem('m_e_v29_8') || '[]')
+            progress: JSON.parse(localStorage.getItem('m_p_v30_4') || '{}'),
+            errs: JSON.parse(localStorage.getItem('m_e_v30_4') || '[]')
         };
         const skeletUrl = "https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png"; 
         let scale = 1, lastDist = 0;
 
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function playSound(f, t, d) { initAudio(); try { const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d); } catch(e) {} }
-        function save() { localStorage.setItem('m_p_v29_8', JSON.stringify(state.progress)); localStorage.setItem('m_e_v29_8', JSON.stringify(state.errs)); }
+        function save() { localStorage.setItem('m_p_v30_4', JSON.stringify(state.progress)); localStorage.setItem('m_e_v30_4', JSON.stringify(state.errs)); }
 
         function loadCSV() {
             Papa.parse("vragen.csv?v=" + Date.now(), {
@@ -81,7 +81,6 @@
                 }
             };
             container.ontouchend = () => { lastDist = 0; };
-            container.onwheel = (e) => { e.preventDefault(); scale = Math.min(Math.max(1, scale * (e.deltaY > 0 ? 0.9 : 1.1)), 5); img.style.transform = `scale(${scale})`; };
         }
 
         function render() {
@@ -125,11 +124,6 @@
                 const currentCat = cleanCatName(q.t);
                 const isFlash = (q.s === 'FRANS' && (currentCat === "WOORDENSCHAT" || currentCat === "WERKWOORDEN"));
                 const progress = ((state.total - state.items.length) / state.total) * 100;
-                
-                // Instructies gebaseerd op categorie
-                let instruction = "KIES HET JUISTE ANTWOORD";
-                if(q.s === 'FRANS') instruction = "VERTAAL NAAR NEDERLANDS";
-                if(currentCat === "SPELLING") instruction = "KIES DE JUISTE SPELLING";
 
                 app.innerHTML = `<div class="glass p-4">
                     <div class="flex justify-between font-black text-yellow-400 mb-2 uppercase text-[10px]"> <button onclick="state.v='menu';render()">← EXIT</button> <span>${state.total - state.items.length}/${state.total}</span></div>
@@ -137,7 +131,7 @@
                     ${showMap ? `<div class="map-viewport"><img src="${skeletUrl}" class="skelet-kaart" /></div>` : ''}
                     <div class="question-box text-center mb-4">
                         <h2 class="text-2xl font-black italic uppercase leading-tight">${q.q}</h2>
-                        ${isFlash && !state.revealed ? `<button onclick="state.revealed=true;render();" class="mt-3 w-full py-8 bg-yellow-400 rounded-xl flex items-center justify-center px-4 fn-button text-2xl font-black text-black uppercase tracking-tighter leading-tight">VERTAAL LUIDOP <br> & tik voor het juiste antwoord</button>` : (isFlash ? '' : `<div class="mt-3 py-4 bg-yellow-400 rounded-xl flex items-center justify-center px-2"><p class="text-3xl font-black text-black uppercase tracking-tighter">${instruction}</p></div>`)}
+                        ${isFlash && !state.revealed ? `<button onclick="state.revealed=true;render();" class="mt-3 w-full py-8 bg-yellow-400 rounded-xl flex items-center justify-center px-4 fn-button text-2xl font-black text-black uppercase tracking-tighter leading-tight">VERTAAL LUIDOP <br> & tik voor het juiste antwoord</button>` : ''}
                     </div>
                     ${isFlash && state.revealed ? `
                         <div class="text-center mb-6 animate-pulse"><p class="text-[9px] opacity-40 mb-1 tracking-widest uppercase">ANTWOORD</p><h2 class="text-3xl font-black italic text-green-400 uppercase">${q.a}</h2></div>
