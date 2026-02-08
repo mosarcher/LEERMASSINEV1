@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V22.0</title>
+    <title>MASSINE CHALLENGE V22.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -48,7 +48,7 @@
         };
 
         function getIcon(text, cat) {
-            if (cat.includes('VERBES')) return null;
+            if (cat.toUpperCase().includes('VERBES')) return null;
             const upper = text.toUpperCase();
             for (const [key, icon] of Object.entries(iconMap)) {
                 if (upper.includes(key)) return icon;
@@ -105,7 +105,7 @@
                                 const icon = getIcon(n, cat);
                                 return `<div class="swipe-container" id="cont-${lid}"><div class="swipe-actions"><button onclick="lessonQs.forEach(q => delete state.progress[q.q]); save(); render();" class="btn-reset-red italic text-[8px]">RESET</button></div><div class="swipe-main" ontouchstart="handleTS(event)" ontouchmove="handleTM(event, '${lid}')"><button onclick="startQ_Custom('${state.sub}', '${cat}', '${n}')" class="fn-button w-full h-24 bg-white/10 flex flex-col items-center justify-center border border-white/5 relative">
                                     ${icon ? `<span class="text-3xl mb-1">${icon}</span>` : ''}
-                                    <span class="${icon ? 'text-[9px]' : 'text-lg'} text-center px-1 leading-tight opacity-90">${n}</span>
+                                    <span class="${icon ? 'text-[9px]' : 'text-xl'} text-center px-1 leading-tight opacity-90">${n}</span>
                                     <span class="text-[8px] font-mono opacity-40 absolute bottom-1">${attCount}/${lessonQs.length}</span>
                                 </button></div></div>`;
                             }).join('')}
@@ -116,7 +116,6 @@
                 const q = state.items[0]; 
                 const isFlash = q.s.includes("FRANS") || q.t.toUpperCase().includes("WOORDENSCHAT");
                 const progress = ((state.total - state.items.length) / state.total) * 100;
-                
                 app.innerHTML = `<div class="glass p-6"><div class="flex justify-between font-black text-yellow-400 mb-2 uppercase text-[10px] tracking-widest"> <button onclick="state.v='list';render()" class="text-red-500 border border-red-500 px-2">← BACK</button> <span>${state.total - state.items.length}/${state.total}</span></div><div class="prog-bar-container mb-8"><div class="prog-bar-fill" style="width: ${progress}%"></div></div><div class="question-box text-center" onclick="if(${isFlash}){state.revealed=true;render();}"><p class="text-[10px] opacity-40 mb-2 tracking-[0.3em] uppercase">${isFlash ? 'FRANS (LEES LUIDOP)' : 'VRAAG'}</p><h2 class="text-3xl font-black italic uppercase leading-tight">${q.q}</h2>${isFlash && !state.revealed ? '<p class="mt-4 text-xs italic text-blue-400 animate-pulse">Tik voor antwoord</p>' : ''}</div>${isFlash ? `<div id="flashcard-ui">${state.revealed ? `<div class="answer-box text-center animate-pulse"><p class="text-[10px] opacity-40 mb-2 tracking-[0.3em] uppercase">ANTWOORD</p><h2 class="text-2xl font-black italic text-green-400">${q.a}</h2></div><div class="grid grid-cols-2 gap-4"><button onclick="handleFlash(true)" class="fn-button bg-green-600 py-6 text-xl">✅ JUIST</button><button onclick="handleFlash(false)" class="fn-button bg-red-600 py-6 text-xl">❌ FOUT</button></div>` : ''}</div>` : `<div class="grid gap-4 mb-10">${q.opts.map(o => { let cl = "bg-white/5 border border-white/10"; if(state.status !== 'idle'){ if(o === q.a) cl = "btn-correct"; else if(o === state.sel) cl = "btn-wrong"; else cl = "opacity-20"; } return `<button onclick="check('${o}')" class="fn-button py-6 text-lg ${cl}">${o}</button>`; }).join('')}</div><div id="next-anchor" class="min-h-[100px]">${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-8 text-xl shadow-2xl">CONTINUE →</button>` : ''}</div>`}</div>`;
             } else if (state.v === 'boss') {
                 const bSubs = [...new Set(state.errs.map(i => i.s))];
@@ -125,7 +124,7 @@
                     const icon = getIcon(n, "");
                     return `<div class="swipe-container" id="cont-${bid}"><div class="swipe-actions"><button onclick="state.errs = state.errs.filter(i => !(i.s === '${s}' && i.n === '${n}')); save(); render();" class="btn-reset-red italic text-[8px]">WISSEN</button></div><div class="swipe-main" ontouchstart="handleTS(event)" ontouchmove="handleTM(event, '${bid}')"><button onclick="startBossQ('${s}','${n}')" class="fn-button w-full h-24 bg-red-900/20 flex flex-col items-center justify-center border border-red-500/20 relative">
                         ${icon ? `<span class="text-3xl mb-1">${icon}</span>` : ''}
-                        <span class="${icon ? 'text-[9px]' : 'text-lg'} text-center px-1 opacity-80">${n}</span>
+                        <span class="${icon ? 'text-[9px]' : 'text-xl'} text-center px-1 opacity-80">${n}</span>
                         <span class="text-[8px] font-mono bg-red-600 px-2 py-0.5 rounded absolute bottom-1">${state.errs.filter(x=>x.s===s&&x.n===n).length}</span>
                     </button></div></div>`;
                 }).join('')}</div></div>`).join('') : '<div class="text-center mt-20 opacity-30 italic font-black uppercase tracking-widest text-white">No Targets Acquired</div>'}</div>`;
