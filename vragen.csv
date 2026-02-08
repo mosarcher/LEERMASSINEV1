@@ -47,64 +47,6 @@ WO,Lichaam,Proeven,Wat betekent de vijfde smaak Umami?,Hartig,Heel zoet,Heel zuu
 WO,Lichaam,Gehoor,Wat is de functie van de oorschelp?,Geluidstrillingen opvangen,Het evenwicht bewaren,Hersensignalen maken,Slijm maken
 Vak,Thema,Lesnaam,Vraag,Antwoord,Fout 1,Fout 2,Fout 3
 ,,,,,,,
-Frans,T5: Les Nombres,Getallen 10-30,11,onze,dix,douze,seize
-Frans,T5: Les Nombres,Getallen 10-30,13,treize,trois,trente,seize
-Frans,T5: Les Nombres,Getallen 10-30,14,quatorze,quatre,quarante,quinze
-Frans,T5: Les Nombres,Getallen 10-30,15,quinze,cinq,cinquante,seize
-Frans,T5: Les Nombres,Getallen 10-30,16,seize,six,soixante,sept
-Frans,T5: Les Nombres,Getallen 30-60,30,trente,treize,trois,quarante
-Frans,T5: Les Nombres,Getallen 30-60,40,quarante,quatre,quatorze,cinquante
-Frans,T5: Les Nombres,Getallen 30-60,50,cinquante,cinq,quinze,quarante
-Frans,T5: Les Nombres,Getallen 30-60,60,soixante,seize,six,soixante-dix
-Frans,T5: La Famille,Mijn familie,de vader,le père,la mère,le frère,la soeur
-Frans,T5: La Famille,Mijn familie,de moeder,la mère,le père,la tante,le frère
-Frans,T5: La Famille,Mijn familie,de broer,le frère,le père,la soeur,le cousin
-Frans,T5: La Famille,Mijn familie,de zus,la soeur,le frère,la mère,la tante
-Frans,T5: La Famille,Mijn familie,de opa,le grand-père,le père,la grand-mère,l'oncle
-Frans,T5: Verbes,Être (zijn),ik ben,je suis,j'ai,tu es,il est
-Frans,T5: Verbes,Être (zijn),jij bent,tu es,je suis,il est,nous sommes
-Frans,T5: Verbes,Être (zijn),hij is,il est,elle est,tu es,je suis
-Frans,T5: Verbes,Avoir (hebben),ik heb,j'ai,je suis,tu as,il a
-Frans,T5: Verbes,Avoir (hebben),jij hebt,tu as,j'ai,il a,vous avez
-Frans,T5: Verbes,Avoir (hebben),hij heeft,il a,j'ai,elle a,tu as
-Frans,T5: La Cuisine,In de keuken,het mes,le couteau,le pain,le bol,le chat
-Frans,T5: La Cuisine,In de keuken,de vork,la fourchette,le verre,le prix,la mère
-Frans,T5: La Cuisine,In de keuken,de lepel,la cuillère,le pain,le café,le fils
-Frans,T5: La Cuisine,In de keuken,het glas,le verre,le bol,le lit,la porte
-Frans,T5: La Cuisine,In de keuken,het bord,l'assiette,le prof,le sac,le bus
-Frans,T5: Au Magasin,De winkel,de kaas,le fromage,le lait,le pain,l'eau
-Frans,T5: Au Magasin,De winkel,de melk,le lait,le sucre,le pain,le jus
-Frans,T5: Au Magasin,De winkel,het brood,le pain,le fruit,le bonbon,le sel
-Frans,T5: Au Magasin,De winkel,het ei,l'oeuf,la pomme,le riz,la soupe
-Frans,T5: Au Magasin,De winkel,de appel,la pomme,la poire,la banane,la fraise
-Frans,T5: Au Magasin,De winkel,de winkel,le magasin,l'école,le jardin,la rue
-Frans,T5: Au Magasin,Geld,het geld,l'argent,le livre,le vélo,le jeu
-Frans,T5: Au Magasin,Geld,het is gratis,c'est gratuit,c'est cher,c'est bon,c'est grand
-Frans,T5: Au Magasin,Geld,ik koop,j'achète,je suis,j'ai,je m'appelle
-Taal,T5: Woordenschat,Les 1,de dader,de schuldige,het slachtoffer,de getuige,de politie
-Taal,T5: Woordenschat,Les 1,het slachtoffer,de persoon met pech,de boef,de dader,de helper
-Taal,T5: Woordenschat,Les 1,de getuige,iemand die het zag,de rechter,de boef,de advocaat
-Taal,T5: Woordenschat,Les 1,het alibi,bewijs van plek,de smoes,de straf,het motief
-Taal,T5: Woordenschat,Les 1,het motief,de reden,het wapen,het plan,het bewijs
-Taal,T5: Woordenschat,Les 1,de handlanger,de helper,de vijand,de agent,de baas
-Taal,T5: Woordenschat,Les 1,de achtervolging,iemand achterna rennen,weglopen,stilstaan,kijken
-Taal,T5: Woordenschat,Les 1,vluchten,ontsnappen,blijven,vechten,slapen
-Taal,T5: Woordenschat,Les 2,onopvallend,stiekem,druk,luidruchtig,opvallend
-Taal,T5: Woordenschat,Les 2,de detective,de speurder,de boef,de bakker,de meester
-Taal,T5: Woordenschat,Les 2,onschuldig,niet schuldig,strafbaar,slecht,de dader
-Taal,T5: Woordenschat,Les 2,de kluis,de brandkast,de mand,de lade,de kast
-Taal,T5: Woordenschat,Les 2,het bewijs,het feit,de leugen,de droom,het plan
-Taal,T5: Woordenschat,Les 2,de rechter,de magistraat,de boef,de getuige,de bakker
-Taal,T5: Woordenschat,Les 2,de advocaat,de verdediger,de aanklager,de dader,de cipier
-Taal,T5: Woordenschat,Les 2,het mysterie,het raadsel,de waarheid,de krant,het nieuws
-Taal,T5: Woordenschat,Les 3,immens,enorm groot,piepklein,smal,kort
-Taal,T5: Woordenschat,Les 3,het territorium,het grondgebied,de lucht,de zee,de droom
-Taal,T5: Woordenschat,Les 3,de horizon,de gezichtslijn,de grond,de muur,de start
-Taal,T5: Woordenschat,Les 3,navigeren,de weg vinden,verdwalen,stilstaan,slapen
-Taal,T5: Woordenschat,Les 3,de expeditie,de ontdekkingsreis,de vakantie,de file,de rust
-Taal,T5: Woordenschat,Les 3,compact,klein en handig,reusachtig,slap,los
-Taal,T5: Woordenschat,Les 3,de metropool,de wereldstad,het dorp,het bos,de woestijn
-Taal,T5: Woordenschat,Les 3,robuust,sterk en stevig,zwak,dun,klein
 Frans,T5: Woordenschat,Multimedia,une radio,een radio,,,
 Frans,T5: Woordenschat,Multimedia,une photo,een foto,,,
 Frans,T5: Woordenschat,Multimedia,une tablette,een tablet,,,
@@ -112,16 +54,16 @@ Frans,T5: Woordenschat,Multimedia,un GSM,een gsm,,,
 Frans,T5: Woordenschat,Multimedia,un CD,een cd,,,
 Frans,T5: Woordenschat,Multimedia,un DVD,een dvd,,,
 Frans,T5: Woordenschat,Multimedia,la radio,de radio,,,
-Frans,T5: Woordenschat,Muziekinstrumenten,une guitare,een gitaar,,,
-Frans,T5: Woordenschat,Muziekinstrumenten,un instrument,een instrument,,,
-Frans,T5: Woordenschat,Muziekinstrumenten,un piano,een piano,,,
-Frans,T5: Woordenschat,Muziekinstrumenten,un tambour,een trommel,,,
-Frans,T5: Woordenschat,Muziekinstrumenten,une trompette,een trompet,,,
-Frans,T5: Woordenschat,Muziekinstrumenten,un saxophone,een saxofoon,,,
-Frans,T5: Woordenschat,Muziekinstrumenten,une flûte,een fluit,,,
-Frans,T5: Woordenschat,Muziekinstrumenten,un violon,een viool,,,
-Frans,T5: Woordenschat,Muziekinstrumenten,la guitare,de gitaar,,,
-Frans,T5: Woordenschat,Muziekinstrumenten,le piano,de piano,,,
+Frans,T5: Woordenschat,Muziek,une guitare,een gitaar,,,
+Frans,T5: Woordenschat,Muziek,un instrument,een instrument,,,
+Frans,T5: Woordenschat,un piano,een piano,,,
+Frans,T5: Woordenschat,un tambour,een trommel,,,
+Frans,T5: Woordenschat,une trompette,een trompet,,,
+Frans,T5: Woordenschat,un saxophone,een saxofoon,,,
+Frans,T5: Woordenschat,une flûte,een fluit,,,
+Frans,T5: Woordenschat,un violon,een viool,,,
+Frans,T5: Woordenschat,la guitare,de gitaar,,,
+Frans,T5: Woordenschat,le piano,de piano,,,
 Frans,T5: Woordenschat,Voeding,un fruit,een vrucht,,,
 Frans,T5: Woordenschat,Voeding,une pomme,een appel,,,
 Frans,T5: Woordenschat,Voeding,une banane,een banaan,,,
@@ -159,7 +101,7 @@ Frans,T6: Woordenschat,Sporten,la natation,het zwemmen,,,
 Frans,T6: Woordenschat,Sporten,l'équitation,het paardrijden,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,la danse,de dans,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,la musique,de muziek,,,
-Frans,T6: Woordenschat,Hobby & Vrije Tijd,le dessin,het tekenen,,,
+Frans,T6: Woordenschat,Hobby & Vrije Tijd,le deesign,het tekenen,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,les échecs,het schaken,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,une chanson,een liedje,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,un jeu,een spel,,,
