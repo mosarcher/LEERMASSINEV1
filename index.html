@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V23.5</title>
+    <title>MASSINE CHALLENGE V24.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -18,14 +18,14 @@
         .prog-bar-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); transition: width 0.5s ease; }
         .btn-correct { background: #22c55e !important; color: #000 !important; box-shadow: 0 0 20px #22c55e; }
         .btn-wrong { background: #ef4444 !important; color: #fff !important; animation: shake 0.3s; box-shadow: 0 0 20px #ef4444; }
-        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
         .swipe-container { position: relative; overflow: hidden; border-radius: 1rem; margin-bottom: 1rem; }
         .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 10; transform: translateX(100%); transition: transform 0.3s ease; }
         .swipe-main { transition: transform 0.3s ease; width: 100%; }
         .swiped .swipe-main { transform: translateX(-100px); }
         .swiped .swipe-actions { transform: translateX(0); }
         .btn-reset-red { background: #ef4444; color: white; padding: 0 15px; font-weight: 900; font-size: 10px; height: 100%; display: flex; align-items: center; text-transform: uppercase; }
-        .quiz-container { padding-top: 15vh; }
+        .quiz-container { padding-top: 2vh; }
+        .skelet-kaart { width: 100%; max-width: 280px; margin: 0 auto 1rem auto; border: 2px solid rgba(255,255,255,0.3); border-radius: 1rem; display: block; }
     </style>
 </head>
 <body onclick="closeAllSwipes()">
@@ -35,35 +35,23 @@
         let audioCtx; let DATA = []; let startX = 0;
         let state = {
             v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null, curK: '', revealed: false,
-            progress: JSON.parse(localStorage.getItem('m_prog_v23.5') || '{}'),
-            errs: JSON.parse(localStorage.getItem('m_e_v23.5') || '[]')
+            progress: JSON.parse(localStorage.getItem('m_prog_v24.0') || '{}'),
+            errs: JSON.parse(localStorage.getItem('m_e_v24.0') || '[]')
         };
 
-        const iconMap = [
-            { key: 'CUISINE', icon: '🍴' }, { key: 'MAGASIN', icon: '🛒' }, { key: 'LICHAAM', icon: '🦴' },
-            { key: 'SKELET', icon: '💀' }, { key: 'SPIEREN', icon: '💪' }, { key: 'ADEMHALING', icon: '🫁' },
-            { key: 'SPIJSVERTERING', icon: '🍕' }, { key: 'ZINTUIGEN', icon: '👁️' }, { key: 'MULTIMEDIA', icon: '📱' },
-            { key: 'MUZIEK', icon: '🎸' }, { key: 'SPORT', icon: '⚽' }, { key: 'HOBBY', icon: '🎨' },
-            { key: 'GELD', icon: '💶' }, { key: 'GETALLEN', icon: '🔢' }, { key: 'SPELLING', icon: '✍️' }
-        ];
-
-        function getIcon(lesson, category) {
-            const combined = (lesson + " " + category).toUpperCase();
-            for (const item of iconMap) { if (combined.includes(item.key)) return item.icon; }
-            return '📚';
-        }
+        const skeletUrl = "https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png"; 
 
         function cleanCategory(cat) {
-            const upper = cat.toUpperCase();
-            if (upper.includes("SPELLING")) return "SPELLING";
-            if (upper.includes("WOORDENSCHAT")) return "WOORDENSCHAT";
-            if (upper.includes("VERBES")) return "VERBES";
+            const u = cat.toUpperCase();
+            if (u.includes("SPELLING")) return "SPELLING";
+            if (u.includes("WOORDENSCHAT")) return "WOORDENSCHAT";
+            if (u.includes("VERBES")) return "VERBES";
             return cat.toUpperCase();
         }
 
         function save() { 
-            localStorage.setItem('m_prog_v23.5', JSON.stringify(state.progress)); 
-            localStorage.setItem('m_e_v23.5', JSON.stringify(state.errs)); 
+            localStorage.setItem('m_prog_v24.0', JSON.stringify(state.progress)); 
+            localStorage.setItem('m_e_v24.0', JSON.stringify(state.errs)); 
         }
         
         Papa.parse("vragen.csv", {
@@ -90,30 +78,48 @@
                 app.innerHTML = `<div class="glass p-10 text-center mt-20"><h1 class="text-5xl font-black italic text-yellow-400 mb-2 uppercase tracking-tighter">Massine's</h1><h2 class="text-2xl font-black italic text-white mb-10 uppercase tracking-widest">Challenge</h2><button onclick="initAudio(); state.v='menu'; render();" class="fn-button bg-yellow-400 text-black py-8 px-12 text-2xl w-full">START GAME</button></div>`;
             } else if (state.v === 'menu') {
                 const subs = [...new Set(DATA.map(i => i.s))].sort();
-                app.innerHTML = `<div class="glass p-6 text-center"><h1 class="text-3xl text-yellow-400 font-black italic mb-6 uppercase">Missions</h1><button onclick="state.v='boss';render()" class="fn-button w-full bg-red-600 py-6 mb-8 text-xl flex items-center justify-center gap-3 shadow-lg"><span>🔥 BOSS LEVEL</span><span class="bg-black/20 px-3 py-1 rounded-full text-sm font-mono">${state.errs.length}</span></button><div class="grid grid-cols-2 gap-4">${subs.map(sub => `<button onclick="state.sub='${sub}';state.v='categories';render()" class="fn-button bg-white/10 py-12 text-xl border border-white/5 uppercase tracking-tighter">${sub}</button>`).join('')}</div></div>`;
+                app.innerHTML = `<div class="glass p-6 text-center"><h1 class="text-3xl text-yellow-400 font-black italic mb-6 uppercase">Missions</h1><button onclick="state.v='boss';render()" class="fn-button w-full bg-red-600 py-6 mb-8 text-xl flex items-center justify-center gap-3 shadow-lg"><span>🔥 BOSS LEVEL</span><span class="bg-black/20 px-3 py-1 rounded-full text-sm font-mono">${state.errs.length}</span></button><div class="grid grid-cols-2 gap-4">${subs.map(sub => {
+                    let icon = sub === 'FRANS' ? '🇫🇷' : (sub === 'WO' ? '🌍' : '📚');
+                    return `<button onclick="state.sub='${sub}';state.v='categories';render()" class="fn-button bg-white/10 py-12 text-xl border border-white/5 uppercase tracking-tighter flex flex-col items-center gap-2"><span>${icon}</span><span>${sub}</span></button>`;
+                }).join('')}</div></div>`;
             } else if (state.v === 'categories') {
-                const rawCats = [...new Set(DATA.filter(i => i.s === state.sub).map(i => i.t))];
-                const cleanCats = [...new Set(rawCats.map(c => cleanCategory(c)))].sort();
+                const cleanCats = [...new Set(DATA.filter(i => i.s === state.sub).map(i => cleanCategory(i.t)))].sort();
                 app.innerHTML = `<div class="glass p-6 text-center"><div class="flex justify-between items-center mb-8"><button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 font-black italic uppercase text-[10px]">← BACK</button><span class="font-black italic text-yellow-400 uppercase tracking-widest text-sm">${state.sub}</span></div><div class="grid grid-cols-1 gap-4">${cleanCats.map(cat => `<button onclick="state.cat='${cat}';state.v='lessons';render()" class="fn-button bg-white/10 py-8 text-xl border border-white/5 uppercase italic tracking-widest text-yellow-400">${cat}</button>`).join('')}</div></div>`;
             } else if (state.v === 'lessons') {
                 const lessons = [...new Set(DATA.filter(i => i.s === state.sub && cleanCategory(i.t) === state.cat).map(i => i.n))];
                 app.innerHTML = `<div class="glass p-4 min-h-[80vh]"><div class="flex justify-between items-center mb-8 px-2"><button onclick="state.v='categories';render()" class="bg-yellow-400 text-black px-4 py-2 font-black italic uppercase text-[10px]">← BACK</button><span class="font-black italic text-yellow-400 uppercase tracking-widest text-sm">${state.cat}</span></div><div class="grid grid-cols-2 gap-3">${lessons.map(n => {
                     const lessonQs = DATA.filter(i => i.s === state.sub && cleanCategory(i.t) === state.cat && i.n === n);
                     const attCount = lessonQs.filter(q => state.progress[q.q]).length;
-                    const icon = getIcon(n, state.cat);
                     const lid = 'l-' + Math.random().toString(36).substr(2, 5);
                     return `<div class="swipe-container" id="cont-${lid}"><div class="swipe-actions"><button onclick="lessonQs.forEach(q => delete state.progress[q.q]); save(); render();" class="btn-reset-red italic text-[8px]">RESET</button></div><div class="swipe-main" ontouchstart="handleTS(event)" ontouchmove="handleTM(event, '${lid}')"><button onclick="startQ('${state.sub}', '${state.cat}', '${n}')" class="fn-button w-full h-28 bg-white/10 flex flex-col items-center justify-center border border-white/5 relative">
-                        ${icon ? `<span class="text-3xl mb-1">${icon}</span>` : ''}
-                        <span class="${icon ? 'text-[10px]' : 'text-sm'} text-center px-1 leading-tight uppercase font-black italic">${n}</span>
+                        <span class="text-sm text-center px-1 leading-tight uppercase font-black italic">${n}</span>
                         <span class="text-[8px] font-mono opacity-40 absolute bottom-1">${attCount}/${lessonQs.length}</span>
                     </button></div></div>`;
                 }).join('')}</div></div>`;
             } else if (state.v === 'quiz') {
                 const q = state.items[0];
+                const showMap = q.n.toUpperCase().includes("KAART");
                 const isSpelling = state.cat === "SPELLING";
-                const isFlash = !isSpelling && (q.s.includes("FRANS") || state.cat === "WOORDENSCHAT");
+                const isFlash = q.d.length === 0 || (!isSpelling && (q.s.includes("FRANS") || state.cat === "WOORDENSCHAT"));
                 const progress = ((state.total - state.items.length) / state.total) * 100;
-                app.innerHTML = `<div class="glass p-6 quiz-container"><div class="flex justify-between font-black text-yellow-400 mb-2 uppercase text-[10px] tracking-widest"> <button onclick="state.v='lessons';render()" class="text-red-500 border border-red-500 px-2">← BACK</button> <span>${state.total - state.items.length}/${state.total}</span></div><div class="prog-bar-container mb-8"><div class="prog-bar-fill" style="width: ${progress}%"></div></div><div class="question-box text-center mb-10" onclick="if(${isFlash}){state.revealed=true;render();}"><p class="text-[10px] opacity-40 mb-2 tracking-[0.3em] uppercase">${isFlash ? 'FRANS' : (isSpelling ? 'KIES DE JUISTE SPELLING' : 'VRAAG')}</p><h2 class="text-3xl font-black italic uppercase leading-tight">${q.q}</h2>${isFlash && !state.revealed ? '<p class="mt-4 text-[10px] font-black text-yellow-400 uppercase animate-bounce tracking-widest">Zeg luidop!</p><p class="mt-1 text-xs italic text-blue-400 opacity-50">Tik voor antwoord</p>' : ''}</div>${isFlash ? `<div id="flashcard-ui">${state.revealed ? `<div class="answer-box text-center animate-pulse mb-8"><p class="text-[10px] opacity-40 mb-2 tracking-[0.3em] uppercase">ANTWOORD</p><h2 class="text-2xl font-black italic text-green-400">${q.a}</h2></div><div class="grid grid-cols-2 gap-4"><button onclick="handleFlash(true)" class="fn-button bg-green-600 py-6 text-xl">✅ JUIST</button><button onclick="handleFlash(false)" class="fn-button bg-red-600 py-6 text-xl">❌ FOUT</button></div>` : ''}</div>` : `<div class="grid gap-4 mb-10">${q.opts.map(o => { let cl = "bg-white/5 border border-white/10"; if(state.status !== 'idle'){ if(o === q.a) cl = "btn-correct"; else if(o === state.sel) cl = "btn-wrong"; else cl = "opacity-20"; } return `<button onclick="check('${o}')" class="fn-button py-6 text-lg ${cl}">${o}</button>`; }).join('')}</div><div id="next-anchor" class="min-h-[100px] text-center">${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-8 text-xl shadow-2xl">CONTINUE →</button>` : ''}</div>`}</div>`;
+                
+                app.innerHTML = `<div class="glass p-6 quiz-container">
+                    <div class="flex justify-between font-black text-yellow-400 mb-2 uppercase text-[10px] tracking-widest"> 
+                        <button onclick="state.v='lessons';render()" class="text-red-500 border border-red-500 px-2">← BACK</button> 
+                        <span>${state.total - state.items.length}/${state.total}</span>
+                    </div>
+                    <div class="prog-bar-container mb-4"><div class="prog-bar-fill" style="width: ${progress}%"></div></div>
+                    
+                    ${showMap ? `<img src="${skeletUrl}" class="skelet-kaart" />` : ''}
+
+                    <div class="question-box text-center mb-6" onclick="if(${isFlash}){state.revealed=true;render();}">
+                        <h2 class="text-3xl font-black italic uppercase leading-tight">${q.q}</h2>
+                        ${isFlash && !state.revealed ? '<div class="mt-4 py-4 bg-yellow-400 rounded-xl animate-bounce"><p class="text-2xl font-black text-black uppercase tracking-tighter">ZEG LUIDOP!</p></div>' : ''}
+                    </div>
+
+                    ${isFlash ? `<div id="flashcard-ui">${state.revealed ? `<div class="answer-box text-center animate-pulse mb-8"><p class="text-[10px] opacity-40 mb-2 tracking-[0.3em] uppercase">ANTWOORD</p><h2 class="text-2xl font-black italic text-green-400">${q.a}</h2></div><div class="grid grid-cols-2 gap-4"><button onclick="handleFlash(true)" class="fn-button bg-green-600 py-6 text-xl">✅ JUIST</button><button onclick="handleFlash(false)" class="fn-button bg-red-600 py-6 text-xl">❌ FOUT</button></div>` : ''}</div>` : 
+                    `<div class="grid gap-4 mb-10">${q.opts.map(o => { let cl = "bg-white/5 border border-white/10"; if(state.status !== 'idle'){ if(o === q.a) cl = "btn-correct"; else if(o === state.sel) cl = "btn-wrong"; else cl = "opacity-20"; } return `<button onclick="check('${o}')" class="fn-button py-6 text-lg ${cl}">${o}</button>`; }).join('')}</div><div id="next-anchor" class="min-h-[100px] text-center">${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-8 text-xl shadow-2xl">CONTINUE →</button>` : ''}</div>`}
+                </div>`;
             } else if (state.v === 'boss') {
                 const bSubs = [...new Set(state.errs.map(i => i.s))];
                 app.innerHTML = `<div class="glass p-4 min-h-[80vh]"><button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 font-black italic mb-6 text-[10px]">← MISSIONS</button><h2 class="text-red-500 font-black mb-4 italic uppercase text-center text-2xl tracking-tighter">Revenge Mode</h2>${state.errs.length ? bSubs.map(s => `<div class="bg-white/5 p-4 mb-4 rounded-xl border border-white/5"><div class="text-red-500 font-black mb-3 italic uppercase text-[10px] tracking-widest">${s}</div><div class="grid grid-cols-2 gap-2">${[...new Set(state.errs.filter(i=>i.s===s).map(i=>i.n))].map(n => {
