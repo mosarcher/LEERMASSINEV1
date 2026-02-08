@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V27.8</title>
+    <title>MASSINE CHALLENGE V28.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -18,8 +18,8 @@
         .prog-bar-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); transition: width 0.5s ease; }
         .btn-correct { background: #22c55e !important; color: #000 !important; box-shadow: 0 0 20px #22c55e; }
         .btn-wrong { background: #ef4444 !important; color: #fff !important; animation: shake 0.3s; box-shadow: 0 0 20px #ef4444; }
-        .map-viewport { width: 100%; max-width: 320px; margin: 0 auto 1rem auto; height: 240px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); border-radius: 1rem; background: #000; position: relative; touch-action: none; }
-        .skelet-kaart { width: 100%; position: absolute; top: 0; left: 0; transform-origin: center center; transition: transform 0.1s ease-out; }
+        .map-viewport { width: 100%; max-width: 320px; margin: 0 auto 1rem auto; height: 320px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); border-radius: 1rem; background: #000; position: relative; cursor: grab; touch-action: none; }
+        .skelet-kaart { width: 100%; position: absolute; top: 0; left: 0; transform-origin: 0 0; transition: transform 0.1s ease-out; pointer-events: none; }
         .btn-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 4px; }
     </style>
 </head>
@@ -29,22 +29,23 @@
     <script>
         let audioCtx; let DATA = [];
         let state = {
-            v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null,
-            progress: JSON.parse(localStorage.getItem('m_prog_v27_8') || '{}'),
-            errs: JSON.parse(localStorage.getItem('m_e_v27_8') || '[]')
+            v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null, revealed: false,
+            progress: JSON.parse(localStorage.getItem('m_prog_v28_1') || '{}'),
+            errs: JSON.parse(localStorage.getItem('m_e_v28_1') || '[]')
         };
         const skeletUrl = "https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png"; 
+        let scale = 1, posX = 0, posY = 0, lastX = 0, lastY = 0, isDragging = false;
 
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function playSound(f, t, d) { initAudio(); try { const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d); } catch(e) {} }
-        function save() { localStorage.setItem('m_prog_v27_8', JSON.stringify(state.progress)); localStorage.setItem('m_e_v27_8', JSON.stringify(state.errs)); }
+        function save() { localStorage.setItem('m_prog_v28_1', JSON.stringify(state.progress)); localStorage.setItem('m_e_v28_1', JSON.stringify(state.errs)); }
 
         function loadCSV() {
             Papa.parse("vragen.csv?v=" + new Date().getTime(), {
                 download: true, header: false, skipEmptyLines: true,
                 complete: function(res) {
                     DATA = res.data.slice(1).map(r => { 
-                        if (r.length < 5) return null;
+                        if (!r[0] || !r[3] || !r[4]) return null;
                         return { 
                             s: String(r[0]).toUpperCase().trim(), 
                             t: String(r[1] || "").trim(), 
@@ -60,41 +61,63 @@
         }
         loadCSV();
 
+        function handleZoom(e) {
+            const container = document.querySelector('.map-viewport');
+            const img = document.querySelector('.skelet-kaart');
+            if (!container || !img) return;
+            container.onpointerdown = (ev) => { isDragging = true; lastX = ev.clientX; lastY = ev.clientY; container.setPointerCapture(ev.pointerId); };
+            container.onpointermove = (ev) => {
+                if (!isDragging) return;
+                posX += ev.clientX - lastX; posY += ev.clientY - lastY;
+                lastX = ev.clientX; lastY = ev.clientY;
+                img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+            };
+            container.onpointerup = () => isDragging = false;
+            container.onwheel = (ev) => { ev.preventDefault(); const delta = ev.deltaY > 0 ? 0.9 : 1.1; scale = Math.min(Math.max(1, scale * delta), 4); img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`; };
+        }
+
         function render() {
             const app = document.getElementById('app');
             if (state.v === 'landing') {
                 app.innerHTML = `<div class="glass p-8 text-center mt-10"><h1 class="text-5xl font-black italic text-yellow-400 mb-2 uppercase tracking-tighter">Massine's</h1><h2 class="text-2xl font-black italic text-white mb-10 uppercase tracking-widest">Challenge</h2><button onclick="state.v='menu'; render();" class="fn-button bg-yellow-400 text-black py-8 px-12 text-2xl w-full">START GAME</button></div>`;
             } else if (state.v === 'menu') {
                 const subs = [...new Set(DATA.map(i => i.s))].sort();
-                app.innerHTML = `<div class="glass p-6 text-center"><h1 class="text-3xl text-yellow-400 font-black italic mb-6 uppercase">Missions</h1><div class="grid grid-cols-2 gap-4">${subs.map(sub => `<button onclick="state.sub='${sub}';state.v='categories';render()" class="fn-button bg-white/10 py-12 text-xl border border-white/5 uppercase tracking-tighter flex flex-col items-center gap-2"><span>${sub==='WO'?'🌍':'📚'}</span><span>${sub}</span></button>`).join('')}</div></div>`;
+                app.innerHTML = `<div class="glass p-6 text-center"><h1 class="text-3xl text-yellow-400 font-black italic mb-6 uppercase">Missions</h1><div class="grid grid-cols-2 gap-4">${subs.map(sub => {
+                    let icon = sub === 'WO' ? '🌍' : (sub === 'FRANS' ? '🇫🇷' : '📚');
+                    return `<button onclick="state.sub='${sub}';state.v='categories';render()" class="fn-button bg-white/10 py-12 text-xl border border-white/5 uppercase tracking-tighter flex flex-col items-center gap-2"><span>${icon}</span><span>${sub}</span></button>`;
+                }).join('')}</div></div>`;
             } else if (state.v === 'categories') {
                 const cats = [...new Set(DATA.filter(i => i.s === state.sub).map(i => i.t))].sort();
                 app.innerHTML = `<div class="glass p-6 text-center"><button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 mb-4 font-black uppercase text-[10px]">← BACK</button><div class="grid grid-cols-1 gap-4">${cats.map(cat => `<button onclick="state.cat='${cat}';state.v='lessons';render()" class="fn-button w-full bg-white/10 py-8 text-xl border border-white/5 uppercase tracking-widest text-yellow-400">${cat}</button>`).join('')}</div></div>`;
             } else if (state.v === 'lessons') {
-                const lessons = [...new Set(DATA.filter(i => i.s === state.sub && i.t === state.cat).map(i => i.n))];
+                const lessons = [...new Set(DATA.filter(i => i.s === state.sub && i.t === state.cat).map(i => i.n))].sort();
                 app.innerHTML = `<div class="glass p-4"><button onclick="state.v='categories';render()" class="bg-yellow-400 text-black px-4 py-2 mb-4 font-black uppercase text-[10px]">← BACK</button><div class="grid grid-cols-2 gap-3">${lessons.map(n => {
-                    const isMap = n.toUpperCase().includes("KAART");
-                    const thumb = isMap ? `<img src="${skeletUrl}" class="btn-thumb">` : "";
-                    return `<button onclick="startSpecificQ('${state.sub}', '${state.cat}', '${n}')" class="fn-button w-full h-28 bg-white/10 flex flex-col items-center justify-center border border-white/5 uppercase italic font-black text-[10px] text-center px-1">
-                        ${thumb}
-                        <span>${n}</span>
-                    </button>`;
+                    const thumb = n.toUpperCase().includes("KAART") ? `<img src="${skeletUrl}" class="btn-thumb mx-auto">` : "";
+                    return `<button onclick="startSpecificQ('${state.sub}', '${state.cat}', '${n}')" class="fn-button w-full h-32 bg-white/10 flex flex-col items-center justify-center border border-white/5 uppercase italic font-black text-[10px] text-center px-1">${thumb}<span>${n}</span></button>`;
                 }).join('')}</div></div>`;
             } else if (state.v === 'quiz') {
                 const q = state.items[0];
                 const showMap = q.n.toUpperCase().includes("KAART");
+                const isFlash = (state.sub === 'FRANS' && !state.cat.toUpperCase().includes("SPELLING"));
                 const progress = ((state.total - state.items.length) / state.total) * 100;
                 
                 app.innerHTML = `<div class="glass p-4">
                     <div class="flex justify-between font-black text-yellow-400 mb-2 uppercase text-[10px]"> <button onclick="state.v='menu';render()" class="text-red-500">← EXIT</button> <span>${state.total - state.items.length}/${state.total}</span></div>
                     <div class="prog-bar-container mb-3"><div class="prog-bar-fill" style="width: ${progress}%"></div></div>
-                    ${showMap ? `<div class="map-viewport"><img src="${skeletUrl}" class="skelet-kaart" style="width:100%" /></div>` : ''}
-                    <div class="question-box text-center mb-4">
+                    ${showMap ? `<div class="map-viewport"><img src="${skeletUrl}" class="skelet-kaart" /></div>` : ''}
+                    <div class="question-box text-center mb-4" onclick="${isFlash?'state.revealed=true;render();':''}">
                         <h2 class="text-2xl font-black italic uppercase leading-tight">${q.q}</h2>
+                        ${isFlash && !state.revealed ? `<div class="mt-3 py-4 bg-yellow-400 rounded-xl flex items-center justify-center px-2"><p class="text-3xl font-black text-black uppercase tracking-tighter">TIK VOOR ANTWOORD</p></div>` : ''}
                     </div>
-                    <div class="grid gap-3">${q.opts.map(o => `<button onclick="check('${o}')" class="fn-button py-4 text-sm px-2 ${state.status!=='idle'?(o===q.a?'btn-correct':(o===state.sel?'btn-wrong':'opacity-20')):'bg-white/5 border border-white/10'}">${o}</button>`).join('')}</div>
-                    ${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-6 mt-4 text-xl">VOLGENDE →</button>` : ''}
+                    ${isFlash && state.revealed ? `
+                        <div class="text-center mb-6 animate-pulse"><p class="text-[9px] opacity-40 mb-1 tracking-widest uppercase">NEDERLANDS</p><h2 class="text-3xl font-black italic text-green-400 uppercase">${q.a}</h2></div>
+                        <div class="grid grid-cols-2 gap-4"><button onclick="nextFlash(true)" class="fn-button bg-green-600 py-6 text-xl">✅ JUIST</button><button onclick="nextFlash(false)" class="fn-button bg-red-600 py-6 text-xl">❌ FOUT</button></div>
+                    ` : `
+                        <div class="grid gap-3">${q.opts.map(o => `<button onclick="check('${o}')" class="fn-button py-4 text-sm px-2 ${state.status!=='idle'?(o===q.a?'btn-correct':(o===state.sel?'btn-wrong':'opacity-20')):'bg-white/5 border border-white/10'}">${o}</button>`).join('')}</div>
+                        ${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-6 mt-4 text-xl">VOLGENDE →</button>` : ''}
+                    `}
                 </div>`;
+                if(showMap) { scale = 1; posX = 0; posY = 0; setTimeout(handleZoom, 100); }
             }
         }
 
@@ -104,11 +127,12 @@
                 while(opts.length < 4) opts.push("---");
                 return {...i, opts: opts.slice(0,4)};
             }).sort(()=>Math.random()-0.5);
-            state.total = state.items.length; state.v = 'quiz'; state.sub = sub; state.cat = cat; state.status = 'idle'; state.sel = null; render();
+            state.total = state.items.length; state.v = 'quiz'; state.sub = sub; state.cat = cat; state.status = 'idle'; state.sel = null; state.revealed = false; render();
         }
 
         function check(o) { if(state.status !== 'idle' || o === '---') return; state.sel = o; const q = state.items[0]; if(o === q.a) { state.status = 'correct'; playSound(660, 'sine', 0.15); confetti({particleCount:30, origin:{y:0.8}}); } else { state.status = 'wrong'; playSound(150, 'sawtooth', 0.3); if(!state.errs.some(i => i.q === q.q)) state.errs.push(q); } render(); }
         function next() { state.items.shift(); state.status = 'idle'; state.sel = null; if(!state.items.length) { state.v = 'menu'; } render(); }
+        function nextFlash(correct) { if(!correct) { state.errs.push(state.items[0]); } else { playSound(660, 'sine', 0.15); } state.items.shift(); state.revealed = false; if(!state.items.length) { state.v = 'menu'; } render(); }
         render();
     </script>
 </body>
