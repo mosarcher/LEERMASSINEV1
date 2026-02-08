@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V30.4</title>
+    <title>MASSINE CHALLENGE V30.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -36,15 +36,15 @@
         let audioCtx; let DATA = []; let startX = 0;
         let state = {
             v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null, revealed: false, mode: 'normal',
-            progress: JSON.parse(localStorage.getItem('m_p_v30_4') || '{}'),
-            errs: JSON.parse(localStorage.getItem('m_e_v30_4') || '[]')
+            progress: JSON.parse(localStorage.getItem('m_p_v30_5') || '{}'),
+            errs: JSON.parse(localStorage.getItem('m_e_v30_5') || '[]')
         };
         const skeletUrl = "https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png"; 
         let scale = 1, lastDist = 0;
 
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function playSound(f, t, d) { initAudio(); try { const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d); } catch(e) {} }
-        function save() { localStorage.setItem('m_p_v30_4', JSON.stringify(state.progress)); localStorage.setItem('m_e_v30_4', JSON.stringify(state.errs)); }
+        function save() { localStorage.setItem('m_p_v30_5', JSON.stringify(state.progress)); localStorage.setItem('m_e_v30_5', JSON.stringify(state.errs)); }
 
         function loadCSV() {
             Papa.parse("vragen.csv?v=" + Date.now(), {
@@ -52,7 +52,14 @@
                 complete: function(res) {
                     DATA = res.data.slice(1).map(r => { 
                         if (!r[0] || !r[3] || !r[4]) return null;
-                        return { s: String(r[0]).toUpperCase().trim(), t: String(r[1] || "").trim(), n: String(r[2] || "").trim(), q: String(r[3]).trim(), a: String(r[4]).trim(), d: [r[5], r[6], r[7]].filter(x => x && String(x).trim() !== "") }; 
+                        return { 
+                            s: String(r[0]).toUpperCase().trim(), 
+                            t: String(r[1] || "").trim(), 
+                            n: String(r[2] || "").trim(), 
+                            q: String(r[3]).trim(), // DIT IS DE VRAGEKOLOM
+                            a: String(r[4]).trim(), 
+                            d: [r[5], r[6], r[7]].filter(x => x && String(x).trim() !== "") 
+                        }; 
                     }).filter(i => i !== null);
                     render();
                 }
