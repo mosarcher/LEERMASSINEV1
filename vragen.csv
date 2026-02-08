@@ -47,23 +47,6 @@ WO,Lichaam,Proeven,Wat betekent de vijfde smaak Umami?,Hartig,Heel zoet,Heel zuu
 WO,Lichaam,Gehoor,Wat is de functie van de oorschelp?,Geluidstrillingen opvangen,Het evenwicht bewaren,Hersensignalen maken,Slijm maken
 Vak,Thema,Lesnaam,Vraag,Antwoord,Fout 1,Fout 2,Fout 3
 ,,,,,,,
-Dat is een scherpe observatie. Die fout in de CSV-structuur (waarschijnlijk een ontbrekende komma of een verkeerd citaat-teken) kan er inderdaad voor zorgen dat de app die specifieke regel niet goed leest.
-
-Ik heb de volledige lijst gecorrigeerd. Elke regel heeft nu exact 8 kolommen. Ook heb ik alle eerdere afspraken toegepast:
-
-Terminologie: "Vocabulaire" is vervangen door "Woordenschat".
-
-Thema-opmaak: Gebruik van het T5: Woordenschat formaat voor een betere groepering.
-
-Flashcard-volgorde: Voor Frans staat het Franse woord als eerste (Vraag) en het Nederlandse woord als tweede (Antwoord).
-
-Correctie: Regel 138/139 is hersteld naar de volledige 8 kolommen.
-
-Hier is de volledige, verbeterde tekst die je direct in je vragen.csv kunt plakken:
-
-Codefragment
-
-Vak,Thema,Lesnaam,Vraag,Antwoord,Fout 1,Fout 2,Fout 3
 Frans,T5: Woordenschat,Multimedia,une radio,een radio,,,
 Frans,T5: Woordenschat,Multimedia,une guitare,een gitaar,,,
 Frans,T5: Woordenschat,Multimedia,une photo,een foto,,,
@@ -121,7 +104,7 @@ Frans,T6: Woordenschat,Hobby & Vrije Tijd,la muziek,de muziek,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,le dessin,het tekenen,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,les échecs,het schaken,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,une chanson,een liedje,,,
-Frans,T6: Woordenschat,Hobby & Vrije Tijd,un spel,een spel,,,
+Frans,T6: Woordenschat,Hobby & Vrije Tijd,un jeu,een spel,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,un sport,een sport,,,
 Frans,T6: Woordenschat,Hobby & Vrije Tijd,un hobby,een hobby,,,
 Frans,T6: Woordenschat,Competitie,un club,een club,,,
@@ -146,10 +129,10 @@ Frans,T5: Woordenschat,Hoeveelheden,Je veux un kilo de pommes.,Ik wil één kilo
 Frans,T5: Woordenschat,Hoeveelheden,un peu de,een beetje,,,
 Frans,T5: Woordenschat,Hoeveelheden,Je voudrais un peu de fraises.,Ik zou graag een beetje aardbeien willen.,,,
 Frans,T5: Woordenschat,Hoeveelheden,beaucoup de,veel,,,
-Frans,T5: Woordenschat,Hoeveelheden,J’ai veel vleeswaren.,Ik heb veel vleeswaren.,,,
+Frans,T5: Woordenschat,Hoeveelheden,J'ai veel vleeswaren.,Ik heb veel vleeswaren.,,,
 Frans,T5: Woordenschat,Hoeveelheden,moins de,minder,,,
 Frans,T5: Woordenschat,Hoeveelheden,Tu as moins de concombres.,Jij hebt minder komkommers.,,,
 Frans,T5: Woordenschat,Hoeveelheden,plus de,meer,,,
 Frans,T5: Woordenschat,Hoeveelheden,Il a plus de pommes.,Hij heeft meer appels.,,,
 Frans,T5: Woordenschat,Hoeveelheden,trop de,te veel,,,
-Frans,T5: Woordenschat,Hoeveelheden,J’ai trop de fromage.,Ik heb te veel kaas.,,,
+Frans,T5: Woordenschat,Hoeveelheden,J'ai trop de fromage.,Ik heb te veel kaas.,,,
