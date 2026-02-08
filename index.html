@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V25.6</title>
+    <title>MASSINE CHALLENGE V25.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -37,15 +37,15 @@
         let audioCtx; let DATA = []; let startX = 0;
         let state = {
             v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null, curK: '', revealed: false,
-            progress: JSON.parse(localStorage.getItem('m_prog_v25.6') || '{}'),
-            errs: JSON.parse(localStorage.getItem('m_e_v25.6') || '[]')
+            progress: JSON.parse(localStorage.getItem('m_prog_v25.9') || '{}'),
+            errs: JSON.parse(localStorage.getItem('m_e_v25.9') || '[]')
         };
         const skeletUrl = "https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png"; 
 
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function playSound(f, t, d) { initAudio(); try { const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d); } catch(e) {} }
         function cleanCategory(cat) { const u = cat.toUpperCase(); if (u.includes("SPELLING")) return "SPELLING"; if (u.includes("WOORDENSCHAT")) return "WOORDENSCHAT"; if (u.includes("VERBES")) return "VERBES"; return cat.toUpperCase(); }
-        function save() { localStorage.setItem('m_prog_v25.6', JSON.stringify(state.progress)); localStorage.setItem('m_e_v25.6', JSON.stringify(state.errs)); }
+        function save() { localStorage.setItem('m_prog_v25.9', JSON.stringify(state.progress)); localStorage.setItem('m_e_v25.9', JSON.stringify(state.errs)); }
         function handleTS(e) { startX = e.touches[0].clientX; }
         function handleTM(e, id) { let diff = startX - e.touches[0].clientX; let el = document.getElementById('cont-' + id); if (el && diff > 50) { closeAllSwipes(); el.classList.add('swiped'); } else if (el && diff < -50) el.classList.remove('swiped'); }
         function closeAllSwipes() { document.querySelectorAll('.swipe-container').forEach(e => e.classList.remove('swiped')); }
@@ -105,12 +105,15 @@
                 const isSpelling = state.cat === "SPELLING";
                 const isFlash = (state.sub === 'FRANS') && !isSpelling;
                 const progress = ((state.total - state.items.length) / state.total) * 100;
+                
                 let displayQuestion = q.q;
-                let instruction = "KIES";
                 if (showMap) {
                     const nrMatch = q.q.match(/\d+/);
-                    if (nrMatch) displayQuestion = `Wat is nr ${nrMatch[0]}?`;
-                } else if (isFlash) {
+                    displayQuestion = nrMatch ? `Wat is nr ${nrMatch[0]}?` : "Wat is dit nr?";
+                }
+                
+                let instruction = "KIES";
+                if (isFlash) {
                     const isFr = (state.cat === 'VERBES' || /^[a-z \']+/i.test(q.q));
                     instruction = isFr ? "VERTAAL NAAR NEDERLANDS" : "VERTAAL NAAR FRANS";
                 }
@@ -132,11 +135,9 @@
         function startDirectQuiz(sub, cat) { const items = DATA.filter(i => i.s === sub && cleanCategory(i.t) === cat); prepareQuiz(items, sub, cat, cat); }
         function startSpecificQ(sub, cat, lesson) { const items = DATA.filter(i => i.s === sub && cleanCategory(i.t) === cat && i.n === lesson); prepareQuiz(items, sub, cat, lesson); }
         function prepareQuiz(items, sub, cat, lesson) {
-            const allPossibleAnswers = [...new Set(DATA.filter(i=>cleanCategory(i.t)===cat).map(i=>i.a))];
             state.items = items.map(i => {
-                let opts = [i.a, ...i.d];
-                while(opts.length < 4) { let rand = allPossibleAnswers[Math.floor(Math.random()*allPossibleAnswers.length)]; if(!opts.includes(rand)) opts.push(rand); }
-                return {...i, opts: opts.slice(0,4).sort(()=>Math.random()-0.5)};
+                let opts = [i.a, ...i.d].filter(x => x && x.trim() !== "");
+                return {...i, opts: opts.sort(()=>Math.random()-0.5)};
             }).sort(()=>Math.random()-0.5);
             state.total = state.items.length; state.v = 'quiz'; state.sub = sub; state.cat = cat; state.status = 'idle'; state.sel = null; render();
         }
