@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V24.8</title>
+    <title>MASSINE CHALLENGE V25.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -23,20 +23,46 @@
         .skelet-kaart { width: 100%; display: block; }
         .mega-instruction { animation: pulse-yellow 1s infinite; border: 4px solid #facc15; }
         @keyframes pulse-yellow { 0%, 100% { transform: scale(1); box-shadow: 0 0 0px #facc15; } 50% { transform: scale(1.02); box-shadow: 0 0 30px #facc15; } }
+        
+        /* Swipe Styles */
+        .swipe-container { position: relative; overflow: hidden; border-radius: 1rem; margin-bottom: 0.75rem; }
+        .swipe-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 10; transform: translateX(100%); transition: transform 0.3s ease; }
+        .swipe-main { transition: transform 0.3s ease; width: 100%; }
+        .swiped .swipe-main { transform: translateX(-80px); }
+        .swiped .swipe-actions { transform: translateX(0); }
+        .btn-reset-red { background: #ef4444; color: white; padding: 0 15px; font-weight: 900; font-size: 10px; height: 100%; display: flex; align-items: center; text-transform: uppercase; border: none; cursor: pointer; }
     </style>
 </head>
-<body onclick="if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();">
+<body onclick="initAudio(); closeAllSwipes();">
     <div id="bg-container"></div><div class="overlay"></div>
     <div id="app" class="w-full max-w-2xl mx-auto py-4 px-4"></div>
     <script>
-        let audioCtx; let DATA = [];
+        let audioCtx; let DATA = []; let startX = 0;
         let state = {
             v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null, curK: '', revealed: false,
-            progress: JSON.parse(localStorage.getItem('m_prog_v24.8') || '{}'),
-            errs: JSON.parse(localStorage.getItem('m_e_v24.8') || '[]')
+            progress: JSON.parse(localStorage.getItem('m_prog_v25.2') || '{}'),
+            errs: JSON.parse(localStorage.getItem('m_e_v25.2') || '[]')
         };
 
         const skeletUrl = "https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png"; 
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(f, t, d) {
+            initAudio();
+            try {
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
+                g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
+                o.connect(g); g.connect(audioCtx.destination);
+                o.start(); o.stop(audioCtx.currentTime + d);
+            } catch(e) {}
+        }
 
         function isFrench(text) {
             const lower = text.toLowerCase();
@@ -53,8 +79,24 @@
         }
 
         function save() { 
-            localStorage.setItem('m_prog_v24.8', JSON.stringify(state.progress)); 
-            localStorage.setItem('m_e_v24.8', JSON.stringify(state.errs)); 
+            localStorage.setItem('m_prog_v25.2', JSON.stringify(state.progress)); 
+            localStorage.setItem('m_e_v25.2', JSON.stringify(state.errs)); 
+        }
+
+        // Swipe Handlers
+        function handleTS(e) { startX = e.touches[0].clientX; }
+        function handleTM(e, id) { 
+            let diff = startX - e.touches[0].clientX; 
+            let el = document.getElementById('cont-' + id); 
+            if (diff > 50) { closeAllSwipes(); el.classList.add('swiped'); } 
+            else if (diff < -50) el.classList.remove('swiped'); 
+        }
+        function closeAllSwipes() { document.querySelectorAll('.swipe-container').forEach(e => e.classList.remove('swiped')); }
+
+        function resetProgress(lessonQs) {
+            lessonQs.forEach(q => delete state.progress[q.q]);
+            save();
+            render();
         }
         
         Papa.parse("vragen.csv", {
@@ -88,8 +130,12 @@
             } else if (state.v === 'categories') {
                 const cleanCats = [...new Set(DATA.filter(i => i.s === state.sub).map(i => cleanCategory(i.t)))].sort();
                 app.innerHTML = `<div class="glass p-6 text-center"><div class="flex justify-between items-center mb-8"><button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 font-black italic uppercase text-[10px]">← BACK</button><span class="font-black italic text-yellow-400 uppercase tracking-widest text-sm">${state.sub}</span></div><div class="grid grid-cols-1 gap-4">${cleanCats.map(cat => {
-                    const action = (state.sub === 'FRANS') ? `startDirectQuiz('${state.sub}', '${cat}')` : `state.cat='${cat}';state.v='lessons';render()`;
-                    return `<button onclick="${action}" class="fn-button bg-white/10 py-8 text-xl border border-white/5 uppercase italic tracking-widest text-yellow-400">${cat}</button>`;
+                    const isFrDirect = (state.sub === 'FRANS');
+                    const lessonQs = DATA.filter(i => i.s === state.sub && cleanCategory(i.t) === cat);
+                    const action = isFrDirect ? `startDirectQuiz('${state.sub}', '${cat}')` : `state.cat='${cat}';state.v='lessons';render()`;
+                    const lid = 'cat-' + Math.random().toString(36).substr(2, 5);
+                    
+                    return `<div class="swipe-container" id="cont-${lid}"><div class="swipe-actions"><button onclick="event.stopPropagation(); resetProgress(${JSON.stringify(lessonQs).replace(/"/g, '&quot;')})" class="btn-reset-red">RESET</button></div><div class="swipe-main" ontouchstart="handleTS(event)" ontouchmove="handleTM(event, '${lid}')"><button onclick="${action}" class="fn-button w-full bg-white/10 py-8 text-xl border border-white/5 uppercase italic tracking-widest text-yellow-400">${cat}</button></div></div>`;
                 }).join('')}</div></div>`;
             } else if (state.v === 'lessons') {
                 const lessons = [...new Set(DATA.filter(i => i.s === state.sub && cleanCategory(i.t) === state.cat).map(i => i.n))];
@@ -97,28 +143,32 @@
                     const lessonQs = DATA.filter(i => i.s === state.sub && cleanCategory(i.t) === state.cat && i.n === n);
                     const attCount = lessonQs.filter(q => state.progress[q.q]).length;
                     const isMap = n.toUpperCase().includes("KAART");
-                    return `<button onclick="startSpecificQ('${state.sub}', '${state.cat}', '${n}')" class="fn-button w-full h-28 bg-white/10 flex flex-col items-center justify-center border border-white/5 relative">
+                    const lid = 'les-' + Math.random().toString(36).substr(2, 5);
+                    
+                    return `<div class="swipe-container" id="cont-${lid}"><div class="swipe-actions"><button onclick="event.stopPropagation(); resetProgress(${JSON.stringify(lessonQs).replace(/"/g, '&quot;')})" class="btn-reset-red">RESET</button></div><div class="swipe-main" ontouchstart="handleTS(event)" ontouchmove="handleTM(event, '${lid}')"><button onclick="startSpecificQ('${state.sub}', '${state.cat}', '${n}')" class="fn-button w-full h-28 bg-white/10 flex flex-col items-center justify-center border border-white/5 relative">
                         ${isMap ? '<span class="text-3xl mb-1">💀</span>' : ''}
                         <span class="text-[10px] text-center px-1 leading-tight uppercase font-black italic">${n}</span>
                         <span class="text-[8px] font-mono opacity-40 absolute bottom-1">${attCount}/${lessonQs.length}</span>
-                    </button>`;
+                    </button></div></div>`;
                 }).join('')}</div></div>`;
             } else if (state.v === 'quiz') {
                 const q = state.items[0];
                 const showMap = q.n.toUpperCase().includes("KAART");
                 const isSpelling = state.cat === "SPELLING";
-                // Spelling is NOOIT flashcard, andere Franse dingen wel als er geen fouten zijn
-                const isFlash = !isSpelling && (q.d.length === 0 || (state.sub === 'FRANS'));
+                const isFlash = !showMap && !isSpelling && (q.d.length === 0 || (state.sub === 'FRANS'));
                 const progress = ((state.total - state.items.length) / state.total) * 100;
                 
                 let displayQuestion = q.q;
                 let instruction = "ZEG LUIDOP!";
-
+                
                 if (showMap) {
                     const nrMatch = q.q.match(/\d+/);
                     if (nrMatch) displayQuestion = `Welk bot is nr ${nrMatch[0]}?`;
+                    instruction = "KIES HET JUISTE WOORD";
                 } else if (isSpelling) {
                     instruction = "KIES DE JUISTE SPELLING";
+                } else if (state.cat === 'VERBES') {
+                    instruction = "VERTAAL NAAR NEDERLANDS";
                 } else if (state.sub === 'FRANS') {
                     instruction = isFrench(q.q) ? "VERTAAL NAAR NEDERLANDS" : "VERTAAL NAAR FRANS";
                 }
@@ -132,10 +182,16 @@
                     ${showMap ? `<div class="map-viewport"><img src="${skeletUrl}" class="skelet-kaart" /></div>` : ''}
                     <div class="question-box text-center mb-6" onclick="if(${isFlash}){state.revealed=true;render();}">
                         <h2 class="text-3xl font-black italic uppercase leading-tight">${displayQuestion}</h2>
-                        ${!state.revealed ? `<div class="mt-4 py-6 bg-yellow-400 rounded-xl mega-instruction"><p class="${instruction.length > 15 ? 'text-2xl' : 'text-4xl'} font-black text-black uppercase tracking-tighter">${instruction}</p></div>` : ''}
+                        ${!state.revealed ? `<div class="mt-4 py-8 bg-yellow-400 rounded-xl mega-instruction"><p class="${instruction.length > 15 ? 'text-2xl' : 'text-4xl'} font-black text-black uppercase tracking-tighter">${instruction}</p></div>` : ''}
                     </div>
                     ${isFlash ? `<div id="flashcard-ui">${state.revealed ? `<div class="answer-box text-center animate-pulse mb-8"><p class="text-[10px] opacity-40 mb-2 tracking-[0.3em] uppercase">ANTWOORD</p><h2 class="text-3xl font-black italic text-green-400 uppercase">${q.a}</h2></div><div class="grid grid-cols-2 gap-4"><button onclick="handleFlash(true)" class="fn-button bg-green-600 py-8 text-2xl">✅ JUIST</button><button onclick="handleFlash(false)" class="fn-button bg-red-600 py-8 text-2xl">❌ FOUT</button></div>` : ''}</div>` : 
-                    `<div class="grid gap-4 mb-10">${q.opts.map(o => { let cl = "bg-white/5 border border-white/10"; if(state.status !== 'idle'){ if(o === q.a) cl = "btn-correct"; else if(o === state.sel) cl = "btn-wrong"; else cl = "opacity-20"; } return `<button onclick="check('${o}')" class="fn-button py-6 text-lg ${cl}">${o}</button>`; }).join('')}</div><div id="next-anchor" class="min-h-[100px] text-center">${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-8 text-xl shadow-2xl">VOLGENDE →</button>` : ''}</div>`}
+                    `<div class="grid gap-4 mb-10">${q.opts.map(o => { 
+                        let cl = "bg-white/5 border border-white/10"; 
+                        if(state.status !== 'idle'){ 
+                            if(o === q.a) cl = "btn-correct"; else if(o === state.sel) cl = "btn-wrong"; else cl = "opacity-20"; 
+                        } 
+                        return `<button onclick="check('${o}')" class="fn-button py-6 text-lg ${cl}">${o}</button>`; 
+                    }).join('')}</div><div id="next-anchor" class="min-h-[100px] text-center">${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-8 text-xl shadow-2xl">VOLGENDE →</button>` : ''}</div>`}
                 </div>`;
             }
         }
@@ -155,8 +211,8 @@
         function handleFlash(isCorrect) { 
             const q = state.items[0]; 
             state.progress[q.q] = true; 
-            if (!isCorrect && !state.errs.some(i => i.q === q.q)) state.errs.push(q);
-            if (isCorrect) confetti({particleCount:30, origin:{y:0.8}});
+            if (isCorrect) { playSound(660, 'sine', 0.15); confetti({particleCount:30, origin:{y:0.8}}); } 
+            else { playSound(150, 'sawtooth', 0.3); if (!state.errs.some(i => i.q === q.q)) state.errs.push(q); }
             save(); state.items.shift(); state.revealed = false; 
             if(!state.items.length) state.v = 'categories'; render(); 
         }
@@ -164,8 +220,8 @@
         function check(o) { 
             if(state.status !== 'idle') return; 
             state.sel = o; const q = state.items[0]; 
-            if(o === q.a) { state.status = 'correct'; confetti({particleCount:30, origin:{y:0.8}}); } 
-            else { state.status = 'wrong'; if(!state.errs.some(i => i.q === q.q)) state.errs.push(q); } 
+            if(o === q.a) { state.status = 'correct'; playSound(660, 'sine', 0.15); confetti({particleCount:30, origin:{y:0.8}}); } 
+            else { state.status = 'wrong'; playSound(150, 'sawtooth', 0.3); if(!state.errs.some(i => i.q === q.q)) state.errs.push(q); } 
             save(); render(); 
         }
 
