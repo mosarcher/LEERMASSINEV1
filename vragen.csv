@@ -60,56 +60,35 @@ Frans,T5: Woordenschat,Muziek,un saxophone,een saxofoon,,,
 Frans,T5: Woordenschat,Muziek,une flûte,een fluit,,,
 Frans,T5: Woordenschat,Muziek,un violon,een viool,,,
 Frans,T5: Woordenschat,Muziek,le piano,de piano,,,
-Frans,T6: Woordenschat,Sporten,la gym,het turnen,,,
-Frans,T6: Woordenschat,Sporten,le foot,de voetbal,,,
-Frans,T6: Woordenschat,Sporten,le basket,het basketbal,,,
-Frans,T6: Woordenschat,Sporten,le tennis,de tennis,,,
-Frans,T6: Woordenschat,Sporten,le vélo,het fietsen,,,
-Frans,T6: Woordenschat,Hobby & Vrije Tijd,la danse,de dans,,,
-Frans,T6: Woordenschat,Hobby & Vrije Tijd,la musique,de muziek,,,
-Frans,T6: Woordenschat,Hobby & Vrije Tijd,le dessin,het tekenen,,,
-Frans,T6: Woordenschat,Hobby & Vrije Tijd,une chanson,een liedje,,,
-Frans,T6: Woordenschat,Hobby & Vrije Tijd,un spel,een spel,,,
-Frans,T6: Woordenschat,Hobby & Vrije Tijd,un sport,een sport,,,
-Frans,T6: Woordenschat,Hobby & Vrije Tijd,un hobby,een hobby,,,
-Frans,T6: Woordenschat,Hobby & Vrije Tijd,un match,een wedstrijd,,,
-Frans,T6: Woordenschat,Hobby & Vrije Tijd,un ballon,een bal,,,
-Frans,T5: Woordenschat,Hoeveelheden,cent grammes de,honderd gram van,,,
-Frans,T5: Woordenschat,Hoeveelheden,un kilo de,één kilo,,,
-Frans,T5: Woordenschat,Hoeveelheden,un peu de,een beetje,,,
-Frans,T5: Woordenschat,Hoeveelheden,beaucoup de,veel,,,
-Frans,T5: Woordenschat,Hoeveelheden,moins de,minder,,,
-Frans,T5: Woordenschat,Hoeveelheden,plus de,meer,,,
-Frans,T5: Woordenschat,Hoeveelheden,trop de,te veel,,,
 Frans,T6: Verbes,Faire du sport,faire du sport,sporten,,,
 Frans,T6: Verbes,Nager,nager,zwemmen,,,
 Frans,T6: Verbes,Danser,danser,dansen,,,
 Frans,T6: Verbes,Chanter,chanter,zingen,,,
 Frans,T6: Verbes,Dessiner,dessiner,tekenen,,,
 Frans,T6: Verbes,Jouer,jouer,spelen,,,
-Frans,T5: Spelling,Au Magasin,een winkel,un magasin,une magasin,un magazin,un magassin
-Frans,T5: Spelling,Au Magasin,een supermarkt,un supermarché,une supermarché,un supermarche,un suppermarché
-Frans,T5: Spelling,Maten,één kilo,un kilo,une kilo,un quilo,un killo
-Frans,T5: Spelling,Maten,een gram,un gramme,une gramme,un grame,un gramm
-Frans,T5: Spelling,Personen,mijnheer,un monsieur,une monsieur,un monssieur,un messieur
-Frans,T5: Spelling,Au Magasin,een prijs,un prix,une prix,un prik,un pris
-Frans,T5: Spelling,Geld,een euro,un euro,une euro,un uuro,un oero
-Frans,T5: Spelling,Geld,een (euro)cent,un centime,une centime,un santime,un centiem
-Frans,T5: Spelling,Au Magasin,een kassa,une caisse,un caisse,une caise,une kasse
-Frans,T5: Spelling,Personen,een mevrouw,une madame,un madame,une maddame,une madam
-Frans,T5: Spelling,Personen,juffrouw,mademoiselle,un mademoiselle,mademmoiselle,madmoiselle
-Frans,T5: Spelling,Werkwoorden,wegen,peser,un peser,pessere,pezer
-Frans,T5: Spelling,Werkwoorden,kopen,acheter,une acheter,achtere,asheter
-Frans,T5: Spelling,Werkwoorden,verkopen,vendre,un vendre,vander,vendere
-Frans,T5: Spelling,Werkwoorden,betalen,payer,une payer,paier,payere
-Frans,T5: Spelling,Getallen,veertig,quarante,carante,quaranteh,quarande
-Frans,T5: Spelling,Getallen,vijftig,cinquante,sinquante,cincante,cinquande
-Frans,T5: Spelling,Getallen,zestig,soixante,souaxante,soisante,soissante
-Frans,T5: Spelling,Getallen,zeventig,soixante-dix,soissante-dix,septante,soixante-dis
-Frans,T5: Spelling,Getallen,tachtig,quatre-vingts,quatre-vingt,katre-vingt,quatre-vints
-Frans,T5: Spelling,Getallen,negentig,quatre-vingt-dix,quatre-vingts-dix,nonante,katre-vingt-dis
-Frans,T5: Spelling,Getallen,honderd,cent,un cent,sant,cend
-Frans,T5: Spelling,Vraagwoorden,hoeveel?,combien,un combien,conbien,combiem
+Frans,T5: Spelling,Au Magasin,een winkel,un magasin,une magasin,un magazin
+Frans,T5: Spelling,Au Magasin,een supermarkt,un supermarché,une supermarché,un supermarche
+Frans,T5: Spelling,Maten,één kilo,un kilo,une kilo,un quilo
+Frans,T5: Spelling,Maten,een gram,un gramme,une gramme,un grame
+Frans,T5: Spelling,Personen,mijnheer,un monsieur,une monsieur,un monssieur
+Frans,T5: Spelling,Au Magasin,een prijs,un prix,une prix,un prik
+Frans,T5: Spelling,Geld,een euro,un euro,une euro,un uuro
+Frans,T5: Spelling,Geld,een (euro)cent,un centime,une centime,un santime
+Frans,T5: Spelling,Au Magasin,een kassa,une caisse,un caisse,une caise
+Frans,T5: Spelling,Personen,een mevrouw,une madame,un madame,une maddame
+Frans,T5: Spelling,Personen,juffrouw,mademoiselle,un mademoiselle,mademmoiselle
+Frans,T5: Spelling,Werkwoorden,wegen,peser,un peser,pessere
+Frans,T5: Spelling,Werkwoorden,kopen,acheter,une acheter,achtere
+Frans,T5: Spelling,Werkwoorden,verkopen,vendre,un vendre,vander
+Frans,T5: Spelling,Werkwoorden,betalen,payer,une payer,paier
+Frans,T5: Spelling,Getallen,veertig,quarante,carante,quaranteh
+Frans,T5: Spelling,Getallen,vijftig,cinquante,sinquante,cincante
+Frans,T5: Spelling,Getallen,zestig,soixante,souaxante,soisante
+Frans,T5: Spelling,Getallen,zeventig,soixante-dix,soissante-dix,septante
+Frans,T5: Spelling,Getallen,tachtig,quatre-vingts,quatre-vingt,katre-vingt
+Frans,T5: Spelling,Getallen,negentig,quatre-vingt-dix,quatre-vingts-dix,nonante
+Frans,T5: Spelling,Getallen,honderd,cent,un cent,sant
+Frans,T5: Spelling,Vraagwoorden,hoeveel?,combien,un combien,conbien
 Frans,T5: Spelling,Cuisine,een groente,un légume,une leggume,un legume
 Frans,T5: Spelling,Cuisine,een vrucht,un fruit,une fruit,un fruid
 Frans,T5: Spelling,Cuisine,een ei,un œuf,une œuf,un oeuf
