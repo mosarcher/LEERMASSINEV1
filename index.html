@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V24.6</title>
+    <title>MASSINE CHALLENGE V24.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -19,24 +19,8 @@
         .btn-correct { background: #22c55e !important; color: #000 !important; box-shadow: 0 0 20px #22c55e; }
         .btn-wrong { background: #ef4444 !important; color: #fff !important; animation: shake 0.3s; box-shadow: 0 0 20px #ef4444; }
         .quiz-container { padding-top: 2vh; }
-        
-        /* Zoom-functionaliteit voor de kaart */
-        .map-viewport { 
-            width: 100%; 
-            max-width: 320px; 
-            margin: 0 auto 1.5rem auto; 
-            overflow: auto; 
-            border: 2px solid rgba(255,255,255,0.3); 
-            border-radius: 1rem;
-            background: rgba(0,0,0,0.3);
-            touch-action: pinch-zoom; /* Staat inzoomen toe */
-        }
-        .skelet-kaart { 
-            width: 100%; 
-            display: block; 
-            transition: transform 0.2s;
-        }
-
+        .map-viewport { width: 100%; max-width: 320px; margin: 0 auto 1.5rem auto; overflow: auto; border: 2px solid rgba(255,255,255,0.3); border-radius: 1rem; background: rgba(0,0,0,0.3); touch-action: pinch-zoom; }
+        .skelet-kaart { width: 100%; display: block; }
         .mega-instruction { animation: pulse-yellow 1s infinite; border: 4px solid #facc15; }
         @keyframes pulse-yellow { 0%, 100% { transform: scale(1); box-shadow: 0 0 0px #facc15; } 50% { transform: scale(1.02); box-shadow: 0 0 30px #facc15; } }
     </style>
@@ -48,11 +32,17 @@
         let audioCtx; let DATA = [];
         let state = {
             v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null, curK: '', revealed: false,
-            progress: JSON.parse(localStorage.getItem('m_prog_v24.6') || '{}'),
-            errs: JSON.parse(localStorage.getItem('m_e_v24.6') || '[]')
+            progress: JSON.parse(localStorage.getItem('m_prog_v24.8') || '{}'),
+            errs: JSON.parse(localStorage.getItem('m_e_v24.8') || '[]')
         };
 
         const skeletUrl = "https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png"; 
+
+        function isFrench(text) {
+            const lower = text.toLowerCase();
+            const frMarkers = ['le ', 'la ', 'les ', 'un ', 'une ', ' l\'', 'é', 'à', 'ê', 'ç'];
+            return frMarkers.some(m => lower.includes(m));
+        }
 
         function cleanCategory(cat) {
             const u = cat.toUpperCase();
@@ -63,8 +53,8 @@
         }
 
         function save() { 
-            localStorage.setItem('m_prog_v24.6', JSON.stringify(state.progress)); 
-            localStorage.setItem('m_e_v24.6', JSON.stringify(state.errs)); 
+            localStorage.setItem('m_prog_v24.8', JSON.stringify(state.progress)); 
+            localStorage.setItem('m_e_v24.8', JSON.stringify(state.errs)); 
         }
         
         Papa.parse("vragen.csv", {
@@ -116,13 +106,21 @@
             } else if (state.v === 'quiz') {
                 const q = state.items[0];
                 const showMap = q.n.toUpperCase().includes("KAART");
-                const isFlash = q.d.length === 0 || (state.sub === 'FRANS');
+                const isSpelling = state.cat === "SPELLING";
+                // Spelling is NOOIT flashcard, andere Franse dingen wel als er geen fouten zijn
+                const isFlash = !isSpelling && (q.d.length === 0 || (state.sub === 'FRANS'));
                 const progress = ((state.total - state.items.length) / state.total) * 100;
                 
                 let displayQuestion = q.q;
+                let instruction = "ZEG LUIDOP!";
+
                 if (showMap) {
                     const nrMatch = q.q.match(/\d+/);
                     if (nrMatch) displayQuestion = `Welk bot is nr ${nrMatch[0]}?`;
+                } else if (isSpelling) {
+                    instruction = "KIES DE JUISTE SPELLING";
+                } else if (state.sub === 'FRANS') {
+                    instruction = isFrench(q.q) ? "VERTAAL NAAR NEDERLANDS" : "VERTAAL NAAR FRANS";
                 }
 
                 app.innerHTML = `<div class="glass p-6 quiz-container">
@@ -131,19 +129,12 @@
                         <span>${state.total - state.items.length}/${state.total}</span>
                     </div>
                     <div class="prog-bar-container mb-4"><div class="prog-bar-fill" style="width: ${progress}%"></div></div>
-                    
-                    ${showMap ? `
-                    <div class="map-viewport">
-                        <img src="${skeletUrl}" class="skelet-kaart" />
-                    </div>
-                    ` : ''}
-
+                    ${showMap ? `<div class="map-viewport"><img src="${skeletUrl}" class="skelet-kaart" /></div>` : ''}
                     <div class="question-box text-center mb-6" onclick="if(${isFlash}){state.revealed=true;render();}">
                         <h2 class="text-3xl font-black italic uppercase leading-tight">${displayQuestion}</h2>
-                        ${isFlash && !state.revealed ? '<div class="mt-4 py-8 bg-yellow-400 rounded-xl mega-instruction"><p class="text-5xl font-black text-black uppercase tracking-tighter">ZEG LUIDOP!</p><p class="text-black font-bold text-xs mt-1">Spreek het antwoord uit en tik dan op het scherm</p></div>' : ''}
+                        ${!state.revealed ? `<div class="mt-4 py-6 bg-yellow-400 rounded-xl mega-instruction"><p class="${instruction.length > 15 ? 'text-2xl' : 'text-4xl'} font-black text-black uppercase tracking-tighter">${instruction}</p></div>` : ''}
                     </div>
-
-                    ${isFlash ? `<div id="flashcard-ui">${state.revealed ? `<div class="answer-box text-center animate-pulse mb-8"><p class="text-[10px] opacity-40 mb-2 tracking-[0.3em] uppercase">HET JUISTE ANTWOORD IS:</p><h2 class="text-3xl font-black italic text-green-400 uppercase">${q.a}</h2></div><div class="grid grid-cols-2 gap-4"><button onclick="handleFlash(true)" class="fn-button bg-green-600 py-8 text-2xl">✅ JUIST</button><button onclick="handleFlash(false)" class="fn-button bg-red-600 py-8 text-2xl">❌ FOUT</button></div>` : ''}</div>` : 
+                    ${isFlash ? `<div id="flashcard-ui">${state.revealed ? `<div class="answer-box text-center animate-pulse mb-8"><p class="text-[10px] opacity-40 mb-2 tracking-[0.3em] uppercase">ANTWOORD</p><h2 class="text-3xl font-black italic text-green-400 uppercase">${q.a}</h2></div><div class="grid grid-cols-2 gap-4"><button onclick="handleFlash(true)" class="fn-button bg-green-600 py-8 text-2xl">✅ JUIST</button><button onclick="handleFlash(false)" class="fn-button bg-red-600 py-8 text-2xl">❌ FOUT</button></div>` : ''}</div>` : 
                     `<div class="grid gap-4 mb-10">${q.opts.map(o => { let cl = "bg-white/5 border border-white/10"; if(state.status !== 'idle'){ if(o === q.a) cl = "btn-correct"; else if(o === state.sel) cl = "btn-wrong"; else cl = "opacity-20"; } return `<button onclick="check('${o}')" class="fn-button py-6 text-lg ${cl}">${o}</button>`; }).join('')}</div><div id="next-anchor" class="min-h-[100px] text-center">${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-8 text-xl shadow-2xl">VOLGENDE →</button>` : ''}</div>`}
                 </div>`;
             }
