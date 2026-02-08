@@ -111,27 +111,94 @@ Taal,T5: Woordenschat,Les 3,de metropool,de wereldstad,het dorp,het bos,de woest
 Taal,T5: Woordenschat,Les 3,robuust,sterk en stevig,zwak,dun,klein
 ,,,,,,,
 ,,,,,,,
-Taal,T5: Woordenschat,Les 1,de dader,de schuldige,het slachtoffer,de getuige,de politie
-Taal,T5: Woordenschat,Les 1,het slachtoffer,de persoon met pech,de boef,de dader,de helper
-Taal,T5: Woordenschat,Les 1,de getuige,iemand die het zag,de rechter,de boef,de advocaat
-Taal,T5: Woordenschat,Les 1,het alibi,bewijs van plek,de smoes,de straf,het motief
-Taal,T5: Woordenschat,Les 1,het motief,de reden,het wapen,het plan,het bewijs
-Taal,T5: Woordenschat,Les 1,de handlanger,de helper,de vijand,de agent,de baas
-Taal,T5: Woordenschat,Les 1,de achtervolging,iemand achterna rennen,weglopen,stilstaan,kijken
-Taal,T5: Woordenschat,Les 1,vluchten,ontsnappen,blijven,vechten,slapen
-Taal,T5: Woordenschat,Les 2,onopvallend,stiekem,druk,luidruchtig,opvallend
-Taal,T5: Woordenschat,Les 2,de detective,de speurder,de boef,de bakker,de meester
-Taal,T5: Woordenschat,Les 2,onschuldig,niet schuldig,strafbaar,slecht,de dader
-Taal,T5: Woordenschat,Les 2,de kluis,de brandkast,de mand,de lade,de kast
-Taal,T5: Woordenschat,Les 2,het bewijs,het feit,de leugen,de droom,het plan
-Taal,T5: Woordenschat,Les 2,de rechter,de magistraat,de boef,de getuige,de bakker
-Taal,T5: Woordenschat,Les 2,de advocaat,de verdediger,de aanklager,de dader,de cipier
-Taal,T5: Woordenschat,Les 2,het mysterie,het raadsel,de waarheid,de krant,het nieuws
-Taal,T5: Woordenschat,Les 3,immens,enorm groot,piepklein,smal,kort
-Taal,T5: Woordenschat,Les 3,het territorium,het grondgebied,de lucht,de zee,de droom
-Taal,T5: Woordenschat,Les 3,de horizon,de gezichtslijn,de grond,de muur,de start
-Taal,T5: Woordenschat,Les 3,navigeren,de weg vinden,verdwalen,stilstaan,slapen
-Taal,T5: Woordenschat,Les 3,de expeditie,de ontdekkingsreis,de vakantie,de file,de rust
-Taal,T5: Woordenschat,Les 3,compact,klein en handig,reusachtig,slap,los
-Taal,T5: Woordenschat,Les 3,de metropool,de wereldstad,het dorp,het bos,de woestijn
-Taal,T5: Woordenschat,Les 3,robuust,sterk en stevig,zwak,dun,klein
+
+Frans	Thema 5	Vocabulaire	een radio	une radio
+Frans	Thema 5	Vocabulaire	een gitaar	une guitare
+Frans	Thema 5	Vocabulaire	een foto	une photo
+Frans	Thema 5	Vocabulaire	een tablet	une tablette
+Frans	Thema 5	Vocabulaire	een gsm	un GSM
+Frans	Thema 5	Vocabulaire	een cd	un CD
+Frans	Thema 5	Vocabulaire	een dvd	un DVD
+Frans	Thema 5	Vocabulaire	een instrument	un instrument
+Frans	Thema 5	Vocabulaire	een piano	un piano
+Frans	Thema 5	Vocabulaire	een trommel	un tambour
+Frans	Thema 5	Vocabulaire	een trompet	une trompette
+Frans	Thema 5	Vocabulaire	een saxofoon	un saxophone
+Frans	Thema 5	Vocabulaire	een fluit	une flûte
+Frans	Thema 5	Vocabulaire	een viool	un violon
+Frans	Thema 5	Vocabulaire	een vrucht	un fruit
+Frans	Thema 5	Vocabulaire	een appel	une pomme
+Frans	Thema 5	Vocabulaire	een banaan	une banane
+Frans	Thema 5	Vocabulaire	een sinaasappel	une orange
+Frans	Thema 5	Vocabulaire	een peer	une poire
+Frans	Thema 5	Vocabulaire	een aardbei	une fraise
+Frans	Thema 5	Vocabulaire	een citroen	un citron
+Frans	Thema 5	Vocabulaire	een ananas	un ananas
+Frans	Thema 5	Vocabulaire	een tomaat	une tomate
+Frans	Thema 5	Vocabulaire	een salade	une salade
+Frans	Thema 5	Vocabulaire	een wortel	une carotte
+Frans	Thema 5	Vocabulaire	een ei	un œuf
+Frans	Thema 5	Vocabulaire	het brood	le pain
+Frans	Thema 5	Vocabulaire	de kaas	le fromage
+Frans	Thema 5	Vocabulaire	de boter	le beurre
+Frans	Thema 5	Vocabulaire	de chocolade	le chocolat
+Frans	Thema 5	Vocabulaire	een koekje	un biscuit
+Frans	Thema 5	Vocabulaire	een snoepje	un bonbon
+Frans	Thema 5	Vocabulaire	het water	l'eau
+Frans	Thema 5	Vocabulaire	de melk	le lait
+Frans	Thema 5	Vocabulaire	het sap	le jus
+Frans	Thema 5	Vocabulaire	het sinaasappelsap	le jus d'orange
+Frans	Thema 5	Vocabulaire	het appelsap	le jus de pomme
+Frans	Thema 5	Vocabulaire	de koffie	le café
+Frans	Thema 5	Vocabulaire	de thee	le thé
+Frans	Thema 5	Vocabulaire	nu	maintenant
+Frans	Thema 5	Vocabulaire	spelen	jouer
+
+Frans	Thema 6	Vocabulaire	het turnen	la gym
+Frans	Thema 6	Vocabulaire	de voetbal	le foot
+Frans	Thema 6	Vocabulaire	het basketbal	le basket
+Frans	Thema 6	Vocabulaire	de tennis	le tennis
+Frans	Thema 6	Vocabulaire	het judo	le judo
+Frans	Thema 6	Vocabulaire	de dans	la danse
+Frans	Thema 6	Vocabulaire	het fietsen	le vélo
+Frans	Thema 6	Vocabulaire	het zwemmen	la natation
+Frans	Thema 6	Vocabulaire	het paardrijden	l'équitation
+Frans	Thema 6	Vocabulaire	de muziek	la musique
+Frans	Thema 6	Vocabulaire	het tekenen	le dessin
+Frans	Thema 6	Vocabulaire	het schaken	les échecs
+Frans	Thema 6	Vocabulaire	een liedje	une chanson
+Frans	Thema 6	Vocabulaire	een spel	un jeu
+Frans	Thema 6	Vocabulaire	een sport	un sport
+Frans	Thema 6	Vocabulaire	een hobby	un hobby
+Frans	Thema 6	Vocabulaire	een club	un club
+Frans	Thema 6	Vocabulaire	een team / een ploeg	une équipe
+Frans	Thema 6	Vocabulaire	een wedstrijd	un match
+Frans	Thema 6	Vocabulaire	een training	un entraînement
+Frans	Thema 6	Vocabulaire	een veld	un terrain
+Frans	Thema 6	Vocabulaire	een bal	een ballon
+Frans	Thema 6	Vocabulaire	de fiets	le vélo
+Frans	Thema 6	Vocabulaire	de gitaar	la guitare
+Frans	Thema 6	Vocabulaire	de piano	le piano
+Frans	Thema 6	Vocabulaire	de radio	la radio
+Frans	Thema 6	Verbes	sporten	faire du sport
+Frans	Thema 6	Verbes	turnen	faire de la gym
+Frans	Thema 6	Verbes	fietsen	faire du vélo
+Frans	Thema 6	Verbes	zwemmen	nager
+Frans	Thema 6	Verbes	dansen	danser
+Frans	Thema 6	Verbes	zingen	chanter
+Frans	Thema 6	Verbes	tekenen	dessiner
+Frans	Thema 6	Verbes	spelen	jouer
+Frans	Thema 5	Woordenschat	honderd gram	cent grammes de
+Frans	Thema 5	Woordenschat	Ik zou graag honderd gram ham willen.	Je voudrais cent grammes de jambon.
+Frans	Thema 5	Woordenschat	één kilo	un kilo de
+Frans	Thema 5	Woordenschat	Ik wil één kilo appels.	Je veux un kilo de pommes.
+Frans	Thema 5	Woordenschat	een beetje	un peu de
+Frans	Thema 5	Woordenschat	Ik zou graag een beetje aardbeien willen.	Je voudrais un peu de fraises.
+Frans	Thema 5	Woordenschat	veel	beaucoup de
+Frans	Thema 5	Woordenschat	Ik heb veel vleeswaren.	J’ai beaucoup de charcuterie.
+Frans	Thema 5	Woordenschat	minder	moins de
+Frans	Thema 5	Woordenschat	Jij hebt minder komkommers.	Tu as moins de concombres.
+Frans	Thema 5	Woordenschat	meer	plus de
+Frans	Thema 5	Woordenschat	Hij heeft meer appels.	Il a plus de pommes.
+Frans	Thema 5	Woordenschat	te veel	trop de
+Frans	Thema 5	Woordenschat	Ik heb te veel kaas.	J’ai trop de fromage.
