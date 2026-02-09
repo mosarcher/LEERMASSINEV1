@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MASSINE CHALLENGE V30.16</title>
+    <title>MASSINE CHALLENGE V30.17 - STRIKT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -17,7 +17,7 @@
         .btn-correct { background: #22c55e !important; color: #000 !important; }
         .btn-wrong { background: #ef4444 !important; color: #fff !important; }
         .map-viewport { width: 100%; max-width: 320px; margin: 0 auto 1rem; height: 320px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); border-radius: 1rem; background: #000; position: relative; }
-        .skelet-kaart { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; pointer-events: none; }
+        .skelet-img { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; pointer-events: none; }
     </style>
 </head>
 <body onclick="initAudio();">
@@ -26,12 +26,10 @@
     <script>
         let audioCtx; let DATA = [];
         let state = { v: 'landing', sub: '', cat: '', items: [], total: 0, status: 'idle', sel: null, 
-                      errs: JSON.parse(localStorage.getItem('m_e_v30_16') || '[]') };
-        const skeletUrl = "https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png";
+                      errs: JSON.parse(localStorage.getItem('m_e_v30_17') || '[]') };
 
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
         function playSound(f, d) { if(!audioCtx) return; const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d); }
-        function save() { localStorage.setItem('m_e_v30_16', JSON.stringify(state.errs)); }
 
         function loadCSV() {
             Papa.parse("vragen.csv?v=" + Date.now(), {
@@ -53,12 +51,12 @@
                 app.innerHTML = `<div class="glass p-8 text-center mt-10"><h1 class="text-5xl font-black italic text-yellow-400 mb-2 uppercase">Massine's</h1><button onclick="state.v='menu'; render();" class="fn-button bg-yellow-400 text-black py-8 px-12 text-2xl w-full">START</button></div>`;
             } else if (state.v === 'menu') {
                 const subs = [...new Set(DATA.map(i => i.s))].sort();
-                app.innerHTML = `<div class="glass p-6 text-center"><h1 class="text-3xl text-yellow-400 font-black mb-6 uppercase">Missions</h1>
-                <div class="grid grid-cols-2 gap-4">${subs.map(sub => `<button onclick="state.sub='${sub}';state.v='cats';render()" class="fn-button bg-white/10 py-12 border border-white/5 uppercase font-black">${sub}</button>`).join('')}</div></div>`;
+                app.innerHTML = `<div class="glass p-6 text-center"><h1 class="text-3xl text-yellow-400 font-black mb-6 uppercase text-left">Missions</h1>
+                <div class="grid grid-cols-2 gap-4">${subs.map(sub => `<button onclick="state.sub='${sub}';state.v='cats';render()" class="fn-button bg-white/10 py-12 border border-white/5 font-black">${sub}</button>`).join('')}</div></div>`;
             } else if (state.v === 'cats') {
                 const cats = [...new Set(DATA.filter(i => i.s === state.sub).map(i => i.t))].sort();
                 app.innerHTML = `<div class="glass p-6"><button onclick="state.v='menu';render()" class="bg-yellow-400 text-black px-4 py-2 font-black text-[10px] mb-4 uppercase">← BACK</button>
-                <div class="grid grid-cols-1 gap-4">${cats.map(cat => `<button onclick="state.cat='${cat}';state.v='lessons';render()" class="fn-button w-full bg-white/10 py-10 text-xl border border-white/5 text-yellow-400 uppercase">${cat}</button>`).join('')}</div></div>`;
+                <div class="grid grid-cols-1 gap-4">${cats.map(cat => `<button onclick="state.cat='${cat}';state.v='lessons';render()" class="fn-button w-full bg-white/10 py-10 text-xl border border-white/5 text-yellow-400 font-black uppercase">${cat}</button>`).join('')}</div></div>`;
             } else if (state.v === 'lessons') {
                 const lessons = [...new Set(DATA.filter(i => i.s === state.sub && i.t === state.cat).map(i => i.n))].sort();
                 app.innerHTML = `<div class="glass p-4"><button onclick="state.v='cats';render()" class="bg-yellow-400 text-black px-4 py-2 font-black text-[10px] mb-4 uppercase">← BACK</button>
@@ -68,7 +66,7 @@
                 const isKaart = q.n.toUpperCase().includes("KAART");
                 app.innerHTML = `<div class="glass p-4">
                     <div class="flex justify-between text-yellow-400 mb-4 font-black uppercase text-[10px]"><button onclick="state.v='menu';render()">← EXIT</button><span>${state.total - state.items.length + 1}/${state.total}</span></div>
-                    ${isKaart ? `<div class="map-viewport"><img src="${skeletUrl}" class="skelet-kaart"></div>` : ''}
+                    ${isKaart ? `<div class="map-viewport"><img src="https://raw.githubusercontent.com/mosarcher/LEERMASSINEV1/main/skelet-kaart.png" class="skelet-img"></div>` : ''}
                     <div class="text-center mb-6"><h2 class="text-3xl font-black italic uppercase leading-tight">${q.q}</h2></div>
                     <div class="grid grid-cols-2 gap-3">${q.opts.map(o => `<button onclick="check('${o}')" class="fn-button py-6 text-sm px-2 ${state.status!=='idle'?(o===q.a?'btn-correct text-black':'btn-wrong'):'bg-white/5 border border-white/10'}">${o}</button>`).join('')}</div>
                     ${state.status !== 'idle' ? `<button onclick="next()" class="fn-button w-full bg-white text-black py-6 mt-4 text-xl">VOLGENDE →</button>` : ''}
@@ -80,7 +78,7 @@
             const raw = DATA.filter(i => i.s === state.sub && i.t === state.cat && i.n === n);
             state.items = raw.map(i => {
                 let options = [i.a, ...i.d].sort(() => Math.random() - 0.5);
-                return { s: i.s, t: i.t, n: i.n, q: i.q, a: i.a, opts: options };
+                return { ...i, opts: options };
             }).sort(() => Math.random() - 0.5);
             state.total = state.items.length; state.v = 'quiz'; state.status = 'idle'; render();
         }
@@ -89,7 +87,7 @@
             if (state.status !== 'idle') return;
             state.sel = o; const q = state.items[0];
             if (o === q.a) { state.status = 'correct'; playSound(660, 0.2); confetti({particleCount: 40, origin: {y: 0.8}}); } 
-            else { state.status = 'wrong'; playSound(150, 0.3); if(!state.errs.some(e => e.q === q.q)) state.errs.push(q); save(); }
+            else { state.status = 'wrong'; playSound(150, 0.3); }
             render();
         }
 
