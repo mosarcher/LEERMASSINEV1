@@ -9,24 +9,7 @@ WO,Lichaam,Bloedsomloop,Wat vertrekt er vanuit de linkerkamer?,Zuurstofrijk bloe
 WO,Lichaam,Bloedsomloop,Wat gebeurt er in de kleine bloedsomloop?,Koolstofdioxide afgeven en zuurstof opnemen,Voedsel verteren,Botten maken,Spieren rusten
 WO,Lichaam,Skelet,Uit hoeveel wervels bestaat de ruggengraat?,32,206,12,50
 WO,Lichaam,Skelet,Hoeveel botten heeft een volwassen mens?,206,32,100,500
-WO,Lichaam,Skelet (Kaart),Hoe heet het bot van het hoofd?,Schedel,Bekken,Borstbeen,Schouderblad
-WO,Lichaam,Skelet (Kaart),Hoe heet het bot bij de keel/nek?,Halswervels,Ruggenwervels,Sleutelbeen,Borstbeen
-WO,Lichaam,Skelet (Kaart),Welk bot loopt van de schouder naar het borstbeen?,Sleutelbeen,Rib,Opperarmbeen,Spaakbeen
-WO,Lichaam,Skelet (Kaart),Hoe heet het platte bot op je rug bij de schouder?,Schouderblad,Borstbeen,Bekken,Schedel
-WO,Lichaam,Skelet (Kaart),Hoe heet het bot in het midden van de borstkas?,Borstbeen,Sleutelbeen,Rib,Wervelkolom
-WO,Lichaam,Skelet (Kaart),Hoe heten de botten die de borstkas vormen?,Ribben,Halswervels,Bekken,Handwortelbeentjes
-WO,Lichaam,Skelet (Kaart),Hoe heet het bot in de bovenarm?,Opperarmbeen,Dijbeen,Spaakbeen,Ellepijp
-WO,Lichaam,Skelet (Kaart),Welk bot in de onderarm ligt aan de kant van de duim?,Spaakbeen,Ellepijp,Opperarmbeen,Sleutelbeen
-WO,Lichaam,Skelet (Kaart),Welk bot in de onderarm ligt aan de kant van de pink?,Ellepijp,Spaakbeen,Dijbeen,Kuitbeen
-WO,Lichaam,Skelet (Kaart),Hoe heten de botjes in de pols?,Handwortelbeentjes,Voetwortelbeentjes,Vingerkootjes,Bekken
-WO,Lichaam,Skelet (Kaart),Hoe heten de botjes van de vingers?,Vingerkootjes,Handwortelbeentjes,Teenkootjes,Ribben
-WO,Lichaam,Skelet (Kaart),Hoe heet het grote bot onderaan de ruggengraat?,Bekken,Borstbeen,Schedel,Knieschijf
-WO,Lichaam,Skelet (Kaart),Hoe heet het bot in het bovenbeen?,Dijbeen,Opperarmbeen,Scheenbeen,Kuitbeen
-WO,Lichaam,Skelet (Kaart),Hoe heet het botje bij de knie?,Knieschijf,Elleboog,Bekken,Schedel
-WO,Lichaam,Skelet (Kaart),Hoe heet het dikste bot in het onderbeen?,Scheenbeen,Kuitbeen,Dijbeen,Spaakbeen
-WO,Lichaam,Skelet (Kaart),Hoe heet het dunne bot in het onderbeen?,Kuitbeen,Scheenbeen,Ellepijp,Borstbeen
-WO,Lichaam,Skelet (Kaart),Hoe heten de botjes in de enkel?,Voetwortelbeentjes,Handwortelbeentjes,Teenkootjes,Ribben
-WO,Lichaam,Skelet (Kaart),Hoe heten de botjes van de tenen?,Teenkootjes,Vingerkootjes,Handwortelbeentjes,Bekken
+
 WO,Lichaam,Gewrichten,Hoe heet het gladde oppervlak bij beenderen?,Kraakbeen,Een pees,Een spier,Een zenuw
 WO,Lichaam,Gewrichten,Wat houden de gewrichten bij elkaar?,Spieren en pezen,Alleen huid,Alleen bloedvaten,Lucht
 WO,Lichaam,Spieren,Wat is de kleur van onze spieren?,Rood,Blauw,Wit,Geel
@@ -205,6 +188,7 @@ WO,Lichaam,Skelet (Kaart),Wat is nr 14,Kuitbeen,Scheenbeen,Dijbeen,Spaakbeen
 WO,Lichaam,Skelet (Kaart),Wat is nr 15,Enkelgewricht,Polsgewricht,Kniegewricht,Ellebooggewricht
 WO,Lichaam,Skelet (Kaart),Wat is nr 16,Heupgewricht,Bekken,Schoudergewricht,Kniegewricht
 WO,Lichaam,Skelet (Kaart),Wat is nr 17,Polsgewricht,Enkelgewricht,Ellebooggewricht,Spaakbeen
+
 
 
 
